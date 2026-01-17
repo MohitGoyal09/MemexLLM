@@ -1,5 +1,11 @@
-import { Globe } from "lucide-react"
+import { Globe, Book, Bot, MoreVertical, Trash2, Pencil } from "lucide-react"
 import { SynapseLogo } from "./synapse-logo"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface NotebookCardProps {
   notebook: {
@@ -11,37 +17,64 @@ interface NotebookCardProps {
     sources: number
     isPublic: boolean
   }
-  variant: "featured" | "recent"
+  variant?: "featured" | "recent"
 }
 
 export function NotebookCard({ notebook, variant }: NotebookCardProps) {
+  // Simple logic to pick a color based on ID or just random-ish
+  const colors = [
+    "bg-amber-900/20 hover:bg-amber-900/30",
+    "bg-blue-900/20 hover:bg-blue-900/30", 
+    "bg-emerald-900/20 hover:bg-emerald-900/30",
+    "bg-slate-900/50 hover:bg-slate-900/60",
+    "bg-purple-900/20 hover:bg-purple-900/30"
+  ]
+  const colorIndex = notebook.id.charCodeAt(0) % colors.length
+  const bgColor = colors[colorIndex]
+
+  // Choose icon based on category or variant
+  const Icon = notebook.category.includes("AI") ? Bot : Book
+
   return (
-    <div className="group relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/50 transition-all cursor-pointer">
-      <div className="aspect-[16/10] relative overflow-hidden">
-        <img
-          src={  "/placeholder.svg"}
-          alt={notebook.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-        {/* Category badge */}
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-          <SynapseLogo className="w-6 h-6" />
-          <span className="text-xs font-medium text-primary bg-primary/20 px-2 py-1 rounded-full">
-            {notebook.category}
-          </span>
+    <div className={`group relative flex flex-col justify-between p-5 rounded-xl border border-border transition-all cursor-pointer h-full min-h-[180px] ${bgColor}`}>
+      
+      {/* Top Section: Icon & Menu */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-10 h-10 rounded-lg bg-background/20 flex items-center justify-center">
+          <Icon className="w-6 h-6 text-foreground/80" />
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-background/20">
+              <MoreVertical className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={(e) => { e.preventDefault(); /* handle edit */ }}>
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit title
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.preventDefault(); /* handle delete */ }}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        {/* Content */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2">{notebook.title}</h3>
-          <div className="flex items-center justify-between text-sm text-gray-300">
-            <span>
-              {notebook.date} • {notebook.sources} sources
-            </span>
-            {notebook.isPublic && <Globe className="w-4 h-4" />}
-          </div>
+      {/* Content */}
+      <div className="flex flex-col gap-2">
+        <h3 className="text-lg font-semibold text-foreground line-clamp-2 leading-tight">
+          {notebook.title}
+        </h3>
+        
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+          <span>{notebook.date}</span>
+          <span>•</span>
+          <span>{notebook.sources} sources</span>
+          {notebook.isPublic && (
+             <Globe className="w-3 h-3 ml-2" />
+          )}
         </div>
       </div>
     </div>

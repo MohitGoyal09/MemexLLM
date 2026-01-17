@@ -1,6 +1,7 @@
 "use client"
 
-import { Settings, Grid3X3, User } from "lucide-react"
+import Link from "next/link"
+import { Settings, Grid3X3, User, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SynapseLogo } from "@/components/synapse-logo"
 
@@ -13,13 +14,6 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button variant="outline" className="gap-2 rounded-full bg-transparent">
-          <Settings className="w-4 h-4" />
-          Settings
-        </Button>
-        <button className="p-2 hover:bg-secondary rounded-lg transition-colors">
-          <Grid3X3 className="w-5 h-5 text-muted-foreground" />
-        </button>
         <button className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
           <User className="w-5 h-5 text-primary" />
         </button>

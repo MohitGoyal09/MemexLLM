@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Maximize2, ThumbsUp, ThumbsDown, Check, X } from "lucide-react"
+import { Minimize2, Maximize2, ThumbsUp, ThumbsDown, Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface QuizQuestion {
@@ -71,8 +71,8 @@ export function QuizView({ title, sourceCount, questions, onBack }: QuizViewProp
           <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground">
             Studio {">"} App
           </button>
-          <button className="p-1 hover:bg-secondary rounded">
-            <Maximize2 className="w-4 h-4 text-muted-foreground" />
+          <button onClick={onBack} className="p-1 hover:bg-secondary rounded">
+            <Minimize2 className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
         <h2 className="text-xl font-semibold">{title}</h2>

@@ -9,9 +9,10 @@ import Link from "next/link"
 interface NotebookHeaderProps {
   title: string
   isNew?: boolean
+  onOpenSettings?: () => void
 }
 
-export function NotebookHeader({ title, isNew }: NotebookHeaderProps) {
+export function NotebookHeader({ title, isNew, onOpenSettings }: NotebookHeaderProps) {
   const [notebookTitle, setNotebookTitle] = useState(title)
   const [isEditing, setIsEditing] = useState(false)
 
@@ -39,12 +40,12 @@ export function NotebookHeader({ title, isNew }: NotebookHeaderProps) {
             {notebookTitle}
           </h1>
         )}
-        {!isNew && (
+        {/* {!isNew && (
           <Button variant="ghost" size="sm" className="gap-1 text-xs rounded-full bg-secondary">
             <Globe className="w-3 h-3" />
             Public
           </Button>
-        )}
+        )} */}
       </div>
 
       <div className="flex items-center gap-2">
@@ -52,7 +53,7 @@ export function NotebookHeader({ title, isNew }: NotebookHeaderProps) {
           <Plus className="w-4 h-4" />
           Create notebook
         </Button>
-        {!isNew && (
+        {/* {!isNew && (
           <Button variant="outline" className="gap-2 rounded-full bg-transparent">
             <TrendingUp className="w-4 h-4" />
             Analytics
@@ -61,15 +62,12 @@ export function NotebookHeader({ title, isNew }: NotebookHeaderProps) {
         <Button variant="outline" className="gap-2 rounded-full bg-transparent">
           <Share2 className="w-4 h-4" />
           Share
-        </Button>
-        <Button variant="outline" className="gap-2 rounded-full bg-transparent">
+        </Button> */}
+        <Button variant="outline" onClick={onOpenSettings} className="gap-2 rounded-full bg-transparent">
           <Settings className="w-4 h-4" />
           Settings
         </Button>
-        <span className="text-xs font-medium text-primary bg-primary/20 px-2 py-1 rounded-full ml-2">PRO</span>
-        <button className="p-2 hover:bg-secondary rounded-lg transition-colors">
-          <Grid3X3 className="w-5 h-5 text-muted-foreground" />
-        </button>
+       
         <button className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
           <User className="w-5 h-5 text-primary" />
         </button>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   PanelRightClose,
   Plus,
@@ -28,20 +28,28 @@ import {
   Layers,
   BookOpen,
   Network,
+  MonitorPlay,
+  Workflow,
+  NotebookText,
+  GalleryVerticalEnd,
+  BrainCircuit,
+  ChartPie,
+  AudioWaveform,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { AudioPlayerView } from "@/components/audio-player-view"
 import { FlashcardView } from "@/components/flashcard-view"
 import { QuizView } from "@/components/quiz-view"
-import { MindMapView } from "@/components/mind-map-view"
-import { AudioPlayerView } from "@/components/audio-player-view"
 
 interface StudioPanelProps {
   onCollapse: () => void
+  onOpenView: (type: "flashcards" | "quiz" | "mindmap", data: any) => void
+  triggerTool?: string | null
 }
 
-const studioTools = [
+export const studioTools = [
   {
-    icon: Headphones,
+    icon: AudioWaveform,
     label: "Audio Overview",
     beta: false,
     bgColor: "bg-[#2a1f3d]",
@@ -49,15 +57,7 @@ const studioTools = [
     iconColor: "text-purple-400",
   },
   {
-    icon: Video,
-    label: "Video Overview",
-    beta: false,
-    bgColor: "bg-[#1a2f3d]",
-    borderColor: "border-cyan-500/30",
-    iconColor: "text-cyan-400",
-  },
-  {
-    icon: Network,
+    icon: Workflow,
     label: "Mind Map",
     beta: false,
     bgColor: "bg-[#1f2a3d]",
@@ -65,15 +65,7 @@ const studioTools = [
     iconColor: "text-violet-400",
   },
   {
-    icon: FileText,
-    label: "Reports",
-    beta: false,
-    bgColor: "bg-[#1f3d2a]",
-    borderColor: "border-emerald-500/30",
-    iconColor: "text-emerald-400",
-  },
-  {
-    icon: Layers,
+    icon: GalleryVerticalEnd,
     label: "Flashcards",
     beta: false,
     bgColor: "bg-[#1f2d3d]",
@@ -81,36 +73,12 @@ const studioTools = [
     iconColor: "text-blue-400",
   },
   {
-    icon: CircleHelp,
+    icon: BrainCircuit,
     label: "Quiz",
     beta: false,
     bgColor: "bg-[#2a3d1f]",
     borderColor: "border-lime-500/30",
     iconColor: "text-lime-400",
-  },
-  {
-    icon: BarChart2,
-    label: "Infographic",
-    beta: true,
-    bgColor: "bg-[#3d2a1f]",
-    borderColor: "border-orange-500/30",
-    iconColor: "text-orange-400",
-  },
-  {
-    icon: Presentation,
-    label: "Slide Deck",
-    beta: true,
-    bgColor: "bg-[#1f3d3d]",
-    borderColor: "border-teal-500/30",
-    iconColor: "text-teal-400",
-  },
-  {
-    icon: Table2,
-    label: "Data Table",
-    beta: false,
-    bgColor: "bg-[#1f3d2f]",
-    borderColor: "border-green-500/30",
-    iconColor: "text-green-400",
   },
 ]
 
@@ -173,7 +141,7 @@ const sampleMindMapData = {
   ],
 }
 
-interface GeneratedItem {
+export interface GeneratedItem {
   id: string
   title: string
   sourceCount: number
@@ -183,56 +151,65 @@ interface GeneratedItem {
   hasInteractive?: boolean
 }
 
-export function StudioPanel({ onCollapse }: StudioPanelProps) {
-  const [activeView, setActiveView] = useState<"studio" | "note" | "flashcard" | "quiz" | "mindmap">("studio")
+export const sampleGeneratedItems: GeneratedItem[] = [
+  {
+    id: "1",
+    title: "Recommender Quiz",
+    sourceCount: 5,
+    timeAgo: "13m ago",
+    type: "quiz",
+    isNew: false,
+  },
+  {
+    id: "2",
+    title: "How Algorithms Read See And Predict Disappointment",
+    sourceCount: 5,
+    timeAgo: "14m ago",
+    type: "audio",
+    isNew: false,
+    hasInteractive: true,
+  },
+  {
+    id: "3",
+    title: "AI's Recommendation Quest",
+    sourceCount: 5,
+    timeAgo: "15m ago",
+    type: "flashcards",
+    isNew: false,
+  },
+  {
+    id: "4",
+    title: "System Architecture Overview",
+    sourceCount: 3,
+    timeAgo: "1d ago",
+    type: "mindmap",
+    isNew: false,
+  },
+  {
+    id: "5",
+    title: "Data Pipeline Report",
+    sourceCount: 8,
+    timeAgo: "2d ago",
+    type: "report",
+    isNew: false,
+  },
+]
+
+export function StudioPanel({ onCollapse, onOpenView, triggerTool }: StudioPanelProps) {
+  const [activeView, setActiveView] = useState<"studio" | "note" | "flashcard" | "quiz">("studio")
   const [noteContent, setNoteContent] = useState("")
   const [generatingTool, setGeneratingTool] = useState<string | null>(null)
   const [animatingTool, setAnimatingTool] = useState<string | null>(null)
   const [showAudioPlayer, setShowAudioPlayer] = useState(false)
   const [currentAudio, setCurrentAudio] = useState<{ title: string; duration: string } | null>(null)
-  const [generatedItems, setGeneratedItems] = useState<GeneratedItem[]>([
-    {
-      id: "1",
-      title: "Recommender Quiz",
-      sourceCount: 5,
-      timeAgo: "13m ago",
-      type: "quiz",
-      isNew: false,
-    },
-    {
-      id: "2",
-      title: "How Algorithms Read See And Predict Disappointment",
-      sourceCount: 5,
-      timeAgo: "14m ago",
-      type: "audio",
-      isNew: false,
-      hasInteractive: true,
-    },
-    {
-      id: "3",
-      title: "AI's Recommendation Quest",
-      sourceCount: 5,
-      timeAgo: "15m ago",
-      type: "flashcards",
-      isNew: false,
-    },
-    {
-      id: "4",
-      title: "System Architecture Overview",
-      sourceCount: 3,
-      timeAgo: "1d ago",
-      type: "mindmap",
-      isNew: false,
-    },
-    {
-      id: "5",
-      title: "Data Pipeline Report",
-      sourceCount: 8,
-      timeAgo: "2d ago",
-      type: "report",
-      isNew: false,
-    },
-  ])
+  const [generatedItems, setGeneratedItems] = useState<GeneratedItem[]>(sampleGeneratedItems)
+
+  useEffect(() => {
+    if (triggerTool) {
+      if (activeView !== "studio") setActiveView("studio")
+      handleToolClick(triggerTool)
+    }
+  }, [triggerTool])
 
   const handleToolClick = (toolLabel: string) => {
     setAnimatingTool(toolLabel)
@@ -286,7 +263,7 @@ export function StudioPanel({ onCollapse }: StudioPanelProps) {
     } else if (item.type === "quiz") {
       setActiveView("quiz")
     } else if (item.type === "mindmap") {
-      setActiveView("mindmap")
+      onOpenView("mindmap", { title: item.title, sourceCount: item.sourceCount, rootNode: sampleMindMapData })
     } else if (item.type === "audio") {
       setCurrentAudio({ title: item.title, duration: "16:18" })
       setShowAudioPlayer(true)
@@ -295,17 +272,17 @@ export function StudioPanel({ onCollapse }: StudioPanelProps) {
 
   const getItemIcon = (type: GeneratedItem["type"]) => {
     const iconMap = {
-      quiz: CircleHelp,
-      audio: Headphones,
-      flashcards: Layers,
-      mindmap: Network,
-      report: FileText,
-      video: Video,
-      infographic: BarChart2,
+      quiz: BrainCircuit,
+      audio: AudioWaveform,
+      flashcards: GalleryVerticalEnd,
+      mindmap: Workflow,
+      report: NotebookText,
+      video: MonitorPlay,
+      infographic: ChartPie,
       slides: Presentation,
       table: Table2,
     }
-    return iconMap[type] || FileText
+    return iconMap[type] || NotebookText
   }
 
   const getItemIconStyle = (type: GeneratedItem["type"]) => {
@@ -323,7 +300,6 @@ export function StudioPanel({ onCollapse }: StudioPanelProps) {
     return styleMap[type] || { bg: "bg-muted", icon: "text-muted-foreground" }
   }
 
-  // Render content views
   if (activeView === "flashcard") {
     return (
       <div className="w-full h-full border-l border-border bg-card flex flex-col">
@@ -350,18 +326,7 @@ export function StudioPanel({ onCollapse }: StudioPanelProps) {
     )
   }
 
-  if (activeView === "mindmap") {
-    return (
-      <div className="w-full h-full border-l border-border bg-card flex flex-col">
-        <MindMapView
-          title="Taxonomy of Advanced Recommender Systems Research"
-          sourceCount={5}
-          rootNode={sampleMindMapData}
-          onBack={() => setActiveView("studio")}
-        />
-      </div>
-    )
-  }
+
 
   return (
     <div className="w-full h-full border-l border-border bg-card flex flex-col">
@@ -388,71 +353,71 @@ export function StudioPanel({ onCollapse }: StudioPanelProps) {
 
       {activeView === "studio" ? (
         <>
-          {/* Language Banner */}
-          <div className="mx-4 mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
-            <p className="text-xs leading-relaxed">
-              Create an Audio Overview in:{" "}
-              <span className="text-primary">हिन्दी, বাংলা, ગુજરાતી, ಕನ್ನಡ, മലയാളം, मराठी, ਪੰਜਾਬੀ, தமிழ், తెలుగు</span>
-            </p>
-          </div>
+          <div className="flex-1 overflow-y-auto">
+            {/* Language Banner */}
+            {/* <div className="mx-4 mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-xs leading-relaxed">
+                Create an Audio Overview in:{" "}
+                <span className="text-primary">हिन्दी, বাংলা, ગુજરાતી, ಕನ್ನಡ, മലയാളം, मराठी, ਪੰਜਾਬੀ, தமிழ், తెలుగు</span>
+              </p>
+            </div> */}
 
-          <div className="p-4">
-            <div className="grid grid-cols-3 gap-2">
-              {studioTools.map((tool) => (
-                <button
-                  key={tool.label}
-                  onClick={() => handleToolClick(tool.label)}
-                  disabled={generatingTool === tool.label}
-                  className={`
-                    relative flex flex-col p-3 rounded-lg 
-                    ${tool.bgColor} border ${tool.borderColor}
-                    hover:brightness-110 active:scale-[0.98]
-                    transition-all duration-200 ease-out
-                    text-left group overflow-hidden
-                    ${animatingTool === tool.label ? "animate-bounce scale-105 ring-2 ring-primary" : ""}
-                    ${generatingTool === tool.label ? "opacity-70" : ""}
-                  `}
-                >
-                  {animatingTool === tool.label && (
-                    <div className="absolute inset-0 pointer-events-none">
-                      <Sparkles className="absolute top-1 right-1 w-3 h-3 text-yellow-400 animate-ping" />
-                      <Sparkles className="absolute bottom-1 left-1 w-3 h-3 text-yellow-400 animate-ping delay-100" />
+            <div className="p-4">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2">
+                {studioTools.map((tool) => (
+                  <button
+                    key={tool.label}
+                    onClick={() => handleToolClick(tool.label)}
+                    disabled={generatingTool === tool.label}
+                    className={`
+                      relative flex flex-col p-3 rounded-lg 
+                      ${tool.bgColor} border ${tool.borderColor}
+                      hover:brightness-110 active:scale-[0.98]
+                      transition-all duration-200 ease-out
+                      text-left group overflow-hidden
+                      ${animatingTool === tool.label ? "animate-bounce scale-105 ring-2 ring-primary" : ""}
+                      ${generatingTool === tool.label ? "opacity-70" : ""}
+                    `}
+                  >
+                    {animatingTool === tool.label && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        <Sparkles className="absolute top-1 right-1 w-3 h-3 text-yellow-400 animate-ping" />
+                        <Sparkles className="absolute bottom-1 left-1 w-3 h-3 text-yellow-400 animate-ping delay-100" />
+                      </div>
+                    )}
+
+                    <div className="flex items-start justify-between w-full mb-1">
+                      <tool.icon className={`w-4 h-4 ${tool.iconColor}`} />
+                      <Pencil className="w-3 h-3 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
                     </div>
-                  )}
-
-                  <div className="flex items-start justify-between w-full mb-1">
-                    <tool.icon className={`w-4 h-4 ${tool.iconColor}`} />
-                    <Pencil className="w-3 h-3 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <span className="text-xs font-medium mt-auto">{tool.label}</span>
-                  {tool.beta && (
-                    <span className="absolute top-1.5 right-6 text-[9px] bg-primary/40 text-primary px-1 py-0.5 rounded font-medium">
-                      BETA
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Generating Status */}
-          {generatingTool && (
-            <div className="mx-4 mb-4 flex items-center gap-3 p-3 bg-secondary/50 rounded-lg border border-border animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Loader2 className="w-4 h-4 text-primary animate-spin" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Generating {generatingTool}...</p>
-                <p className="text-xs text-muted-foreground">based on 5 sources</p>
+                    <span className="text-xs font-medium mt-auto">{tool.label}</span>
+                    {tool.beta && (
+                      <span className="absolute top-1.5 right-6 text-[9px] bg-primary/40 text-primary px-1 py-0.5 rounded font-medium">
+                        BETA
+                      </span>
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
 
-          {/* Divider */}
-          <div className="mx-4 border-t border-border" />
+            {/* Generating Status */}
+            {generatingTool && (
+              <div className="mx-4 mb-4 flex items-center gap-3 p-3 bg-secondary/50 rounded-lg border border-border animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Generating {generatingTool}...</p>
+                  <p className="text-xs text-muted-foreground">based on 5 sources</p>
+                </div>
+              </div>
+            )}
 
-          <div className="flex-1 overflow-y-auto px-4 py-4">
-            <div className="space-y-1">
+            {/* Divider */}
+            <div className="mx-4 border-t border-border" />
+
+            <div className="px-4 py-4 space-y-1">
               {generatedItems.map((item) => {
                 const ItemIcon = getItemIcon(item.type)
                 const iconStyle = getItemIconStyle(item.type)
@@ -499,7 +464,7 @@ export function StudioPanel({ onCollapse }: StudioPanelProps) {
           </div>
 
           {/* Add Note Button */}
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-border mt-auto">
             <Button
               onClick={() => setActiveView("note")}
               variant="outline"
