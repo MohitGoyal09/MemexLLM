@@ -43,7 +43,7 @@ import { QuizView } from "@/components/quiz-view"
 
 interface StudioPanelProps {
   onCollapse: () => void
-  onOpenView: (type: "flashcards" | "quiz" | "mindmap", data: any) => void
+  onOpenView?: (type: "flashcards" | "quiz" | "mindmap", data: any) => void
   triggerTool?: string | null
 }
 
@@ -263,7 +263,7 @@ export function StudioPanel({ onCollapse, onOpenView, triggerTool }: StudioPanel
     } else if (item.type === "quiz") {
       setActiveView("quiz")
     } else if (item.type === "mindmap") {
-      onOpenView("mindmap", { title: item.title, sourceCount: item.sourceCount, rootNode: sampleMindMapData })
+      onOpenView?.("mindmap", { title: item.title, sourceCount: item.sourceCount, rootNode: sampleMindMapData })
     } else if (item.type === "audio") {
       setCurrentAudio({ title: item.title, duration: "16:18" })
       setShowAudioPlayer(true)
