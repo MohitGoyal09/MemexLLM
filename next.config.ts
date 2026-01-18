@@ -15,9 +15,6 @@ const nextConfig: NextConfig = {
     ],
     unoptimized: false, // Enable image optimization
   },
-  
-  // Enable component caching
-  cacheComponents: true,
 };
 
 export default nextConfig;

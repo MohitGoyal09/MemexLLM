@@ -1,16 +1,19 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { NotebookHeader } from "@/components/notebook-header"
 import { SourcesPanel } from "@/components/sources-panel"
 import { ChatPanel } from "@/components/chat-panel"
 import { StudioPanel } from "@/components/studio-panel"
 import { AddSourcesModal } from "@/components/add-sources-modal"
-import { PanelLeft, Plus, FileText, Upload, ArrowRight } from "lucide-react"
+import { PanelLeft, Plus, FileText, Upload, ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Source } from "@/lib/types"
+import { notebooksApi } from "@/lib/api"
 
 export default function NewNotebookPage() {
+  const router = useRouter()
   const [showSourcesModal, setShowSourcesModal] = useState(false)
   const [sources, setSources] = useState<Source[]>([])
   const [selectedSources, setSelectedSources] = useState<string[]>([])
@@ -26,12 +29,55 @@ export default function NewNotebookPage() {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false)
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
   const [showInitialPrompt, setShowInitialPrompt] = useState(true)
+  const [isCreating, setIsCreating] = useState(false)
+  const [notebookId, setNotebookId] = useState<string | null>(null)
+  const [notebookTitle] = useState("Untitled notebook")
 
-  const handleAddSource = (newSources: Source[]) => {
-    setSources([...sources, ...newSources])
-    setSelectedSources([...selectedSources, ...newSources.map((s) => s.id)])
-    setShowSourcesModal(false)
-    setShowInitialPrompt(false)
+  // Create notebook when first source is added
+  const handleAddSource = useCallback(
+    async (newSources: Source[]) => {
+      // If notebook doesn't exist yet, create it first
+      if (!notebookId) {
+        setIsCreating(true)
+        try {
+          // Create the notebook
+          const notebook = await notebooksApi.create({ title: notebookTitle })
+          setNotebookId(notebook.id)
+
+          // Add sources to state
+          setSources(newSources)
+          setSelectedSources(newSources.map((s) => s.id))
+          setShowSourcesModal(false)
+          setShowInitialPrompt(false)
+
+          // Redirect to the notebook page
+          router.push(`/notebook/${notebook.id}`)
+        } catch (err) {
+          console.error("Failed to create notebook:", err)
+        } finally {
+          setIsCreating(false)
+        }
+      } else {
+        // Notebook already exists, just add sources
+        setSources([...sources, ...newSources])
+        setSelectedSources([...selectedSources, ...newSources.map((s) => s.id)])
+        setShowSourcesModal(false)
+        setShowInitialPrompt(false)
+      }
+    },
+    [notebookId, notebookTitle, router, sources, selectedSources]
+  )
+
+  // Quick create without sources - just create and redirect
+  const handleQuickCreate = async () => {
+    setIsCreating(true)
+    try {
+      const notebook = await notebooksApi.create({ title: "Untitled notebook" })
+      router.push(`/notebook/${notebook.id}`)
+    } catch (err) {
+      console.error("Failed to create notebook:", err)
+      setIsCreating(false)
+    }
   }
 
   const toggleSourceSelection = (id: string) => {
@@ -52,7 +98,7 @@ export default function NewNotebookPage() {
 
   return (
     <div className="h-screen bg-background flex flex-col">
-      <NotebookHeader title="Untitled notebook" isNew />
+      <NotebookHeader title={notebookTitle} isNew />
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel Toggle */}
@@ -92,22 +138,37 @@ export default function NewNotebookPage() {
           <div className="flex-1 flex flex-col items-center justify-center bg-background">
             {/* Upload Icon */}
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 animate-in zoom-in duration-300">
-              <Upload className="w-8 h-8 text-primary" />
+              {isCreating ? (
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              ) : (
+                <Upload className="w-8 h-8 text-primary" />
+              )}
             </div>
 
             {/* Title */}
             <h2 className="text-2xl font-semibold mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-100">
-              Add a source to get started
+              {isCreating ? "Creating notebook..." : "Add a source to get started"}
             </h2>
 
-            {/* Upload Button */}
-            <Button
-              onClick={() => setShowSourcesModal(true)}
-              variant="secondary"
-              className="rounded-full px-6 py-5 text-base gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-200"
-            >
-              Upload a source
-            </Button>
+            {/* Buttons */}
+            <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-200">
+              <Button
+                onClick={() => setShowSourcesModal(true)}
+                variant="secondary"
+                className="rounded-full px-6 py-5 text-base gap-2"
+                disabled={isCreating}
+              >
+                Upload a source
+              </Button>
+              <Button
+                onClick={handleQuickCreate}
+                variant="outline"
+                className="rounded-full px-6 py-5 text-base gap-2"
+                disabled={isCreating}
+              >
+                Create empty notebook
+              </Button>
+            </div>
 
             {/* Input Bar at Bottom */}
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4">
@@ -122,6 +183,7 @@ export default function NewNotebookPage() {
                 <button
                   className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"
                   onClick={() => setShowSourcesModal(true)}
+                  disabled={isCreating}
                 >
                   <ArrowRight className="w-4 h-4 text-primary" />
                 </button>
@@ -160,7 +222,12 @@ export default function NewNotebookPage() {
         )}
       </div>
 
-      <AddSourcesModal open={showSourcesModal} onOpenChange={setShowSourcesModal} onAddSources={handleAddSource} />
+      <AddSourcesModal
+        open={showSourcesModal}
+        onOpenChange={setShowSourcesModal}
+        onAddSources={handleAddSource}
+        notebookId={notebookId || undefined}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { apiClient } from "./client";
+import { apiClient, getApiBaseUrl } from "./client";
 import type { User, HealthResponse } from "./types";
 
 export const authApi = {
@@ -13,8 +13,7 @@ export const healthApi = {
    * Check API health status (no auth required)
    */
   check: async (): Promise<HealthResponse> => {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const response = await fetch(`${API_BASE_URL}/api/v1/health`);
+    const response = await fetch(`${getApiBaseUrl()}/api/v1/health`);
     if (!response.ok) {
       throw new Error("Health check failed");
     }
@@ -25,10 +24,20 @@ export const healthApi = {
    * Simple liveness check
    */
   liveness: async (): Promise<{ status: string; timestamp: string }> => {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const response = await fetch(`${API_BASE_URL}/api/v1/health/liveness`);
+    const response = await fetch(`${getApiBaseUrl()}/api/v1/health/liveness`);
     if (!response.ok) {
       throw new Error("Liveness check failed");
+    }
+    return response.json();
+  },
+
+  /**
+   * Readiness check - verifies the service is ready to accept traffic
+   */
+  readiness: async (): Promise<{ status: string; timestamp: string }> => {
+    const response = await fetch(`${getApiBaseUrl()}/api/v1/health/readiness`);
+    if (!response.ok) {
+      throw new Error("Readiness check failed");
     }
     return response.json();
   },

@@ -5,8 +5,10 @@ export const chatApi = {
   /**
    * Get chat history for a notebook
    */
-  getHistory: (notebookId: string, limit = 50) =>
-    apiClient<ChatMessage[]>(`/chat/${notebookId}/history?limit=${limit}`),
+  getHistory: (notebookId: string, limit = 50) => {
+    const params = new URLSearchParams({ limit: String(limit) });
+    return apiClient<ChatMessage[]>(`/chat/${notebookId}/history?${params}`);
+  },
 
   /**
    * Delete all chat messages for a notebook
@@ -30,6 +32,8 @@ export const chatApi = {
    * @param onToken - Callback for each token received
    * @param onCitations - Callback when citations are received
    * @param onComplete - Callback when stream completes
+   * @param onError - Callback when an error occurs
+   * @param signal - Optional AbortSignal to cancel the stream
    */
   sendMessageStream: async (
     notebookId: string,
@@ -37,7 +41,8 @@ export const chatApi = {
     onToken: (token: string) => void,
     onCitations?: (citations: Citation[]) => void,
     onComplete?: () => void,
-    onError?: (error: Error) => void
+    onError?: (error: Error) => void,
+    signal?: AbortSignal
   ) => {
     try {
       const headers = await getStreamingHeaders();
@@ -48,6 +53,7 @@ export const chatApi = {
           method: "POST",
           headers,
           body: JSON.stringify({ message, stream: true }),
+          signal,
         }
       );
 
@@ -97,6 +103,10 @@ export const chatApi = {
 
       onComplete?.();
     } catch (error) {
+      // Don't treat abort as an error - it's expected behavior when cancelled
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
       if (onError) {
         onError(error instanceof Error ? error : new Error("Unknown streaming error"));
       } else {

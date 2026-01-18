@@ -9,11 +9,12 @@ import {
   FileText,
   Check,
   PanelLeftClose,
-  FileType,
   FileImage,
   FileVideo,
   FileAudio,
-  Link2,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -43,6 +44,20 @@ const getSourceIcon = (type: Source["type"]) => {
   return (iconMap as any)[type] || iconMap.text
 }
 
+const getStatusIndicator = (status: Source["status"]) => {
+  switch (status) {
+    case "pending":
+    case "processing":
+      return <Loader2 className="w-3 h-3 animate-spin text-yellow-500" />
+    case "completed":
+      return <CheckCircle className="w-3 h-3 text-green-500" />
+    case "failed":
+      return <AlertCircle className="w-3 h-3 text-red-500" />
+    default:
+      return null
+  }
+}
+
 export function SourcesPanel({
   sources,
   selectedSources,
@@ -51,6 +66,9 @@ export function SourcesPanel({
   onSelectAll,
   onCollapse,
 }: SourcesPanelProps) {
+  const completedSources = sources.filter((s) => s.status === "completed" || !s.status)
+  const processingSources = sources.filter((s) => s.status === "pending" || s.status === "processing")
+
   return (
     <div className="w-full h-full border-r border-border bg-card flex flex-col">
       {/* Header */}
@@ -112,6 +130,18 @@ export function SourcesPanel({
           </div>
         </div>
 
+        {/* Processing Banner */}
+        {processingSources.length > 0 && (
+          <div className="mx-4 mb-2 p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+            <div className="flex items-center gap-2 text-sm">
+              <Loader2 className="w-4 h-4 animate-spin text-yellow-500" />
+              <span className="text-yellow-600 dark:text-yellow-400">
+                Processing {processingSources.length} source{processingSources.length > 1 ? "s" : ""}...
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Select All */}
         <div className="px-4 py-2 border-t border-border">
           <button
@@ -129,7 +159,7 @@ export function SourcesPanel({
                 <Check className="w-3 h-3 text-primary-foreground" />
               )}
             </div>
-            Select all sources
+            Select all sources ({completedSources.length} ready)
           </button>
         </div>
 
@@ -139,11 +169,17 @@ export function SourcesPanel({
             <div className="space-y-1">
               {sources.map((source) => {
                 const { icon: SourceIcon, bg, color } = getSourceIcon(source.type)
+                const isProcessing = source.status === "pending" || source.status === "processing"
+                const isFailed = source.status === "failed"
+
                 return (
                   <button
                     key={source.id}
                     onClick={() => onToggleSource(source.id)}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-secondary transition-colors text-left group"
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-secondary transition-colors text-left group ${
+                      isProcessing ? "opacity-70" : ""
+                    } ${isFailed ? "opacity-50" : ""}`}
+                    disabled={isProcessing}
                   >
                     <div
                       className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
@@ -153,11 +189,24 @@ export function SourcesPanel({
                       {selectedSources.includes(source.id) && <Check className="w-3 h-3 text-primary-foreground" />}
                     </div>
                     <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                      <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0`}>
+                      <div
+                        className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 ${
+                          isProcessing ? "animate-pulse" : ""
+                        }`}
+                      >
                         <SourceIcon className={`w-4 h-4 ${color}`} />
                       </div>
-                      <span className="text-sm truncate">{source.name}</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm truncate block">{source.name}</span>
+                        {source.chunkCount !== undefined && source.chunkCount > 0 && (
+                          <span className="text-xs text-muted-foreground">{source.chunkCount} chunks</span>
+                        )}
+                        {source.errorMessage && (
+                          <span className="text-xs text-red-500 truncate block">{source.errorMessage}</span>
+                        )}
+                      </div>
                     </div>
+                    <div className="flex-shrink-0">{getStatusIndicator(source.status)}</div>
                   </button>
                 )
               })}
