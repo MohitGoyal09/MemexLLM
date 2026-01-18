@@ -35,18 +35,38 @@ export function SignUpForm({
     setIsLoading(true);
     setError(null);
 
+    // Validate email before attempting signup
+    const { validateEmail } = await import("@/lib/email-validation");
+    const emailValidation = validateEmail(email, {
+      blockDisposable: true,
+      blockFreeProviders: false, // Set to true if you want to block free providers
+    });
+
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error || "Invalid email");
+      setIsLoading(false);
+      return;
+    }
+
     if (password !== repeatPassword) {
       setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
+    // Check password strength
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signUp({
-        email,
+        email: email.toLowerCase().trim(), // Normalize email
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
         },
       });
       if (error) throw error;

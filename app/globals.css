@@ -1,85 +1,20 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "../styles/brand.css";
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.15 250);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.55 0.15 250);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.55 0.15 250);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.12 0.005 250);
-  --foreground: oklch(0.93 0 0);
-  --card: oklch(0.16 0.005 250);
-  --card-foreground: oklch(0.93 0 0);
-  --popover: oklch(0.18 0.005 250);
-  --popover-foreground: oklch(0.93 0 0);
-  --primary: oklch(0.65 0.18 250);
-  --primary-foreground: oklch(0.12 0 0);
-  --secondary: oklch(0.22 0.01 250);
-  --secondary-foreground: oklch(0.93 0 0);
-  --muted: oklch(0.22 0.01 250);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.65 0.18 250);
-  --accent-foreground: oklch(0.12 0 0);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.93 0 0);
-  --border: oklch(0.28 0.01 250);
-  --input: oklch(0.22 0.01 250);
-  --ring: oklch(0.65 0.18 250);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
-  --surface: oklch(0.18 0.005 250);
-  --surface-elevated: oklch(0.22 0.01 250);
-}
+/* ============================================================================
+   SYNAPSEAI - Global Styles with Brand Integration
+   ============================================================================ */
 
 @theme inline {
-  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
-  --font-sans: "Inter", "Inter Fallback", system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", monospace;
+  /* Typography - Using distinctive fonts */
+  --font-display: var(--font-display, "DM Serif Display", "Georgia", serif);
+  --font-sans: var(--font-sans, "Plus Jakarta Sans", "Inter", system-ui, sans-serif);
+  --font-mono: var(--font-mono, "JetBrains Mono", "Fira Code", monospace);
+
+  /* Colors - Integrated from brand system */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -99,17 +34,29 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* Chart colors from brand system */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
+
+  /* Radius system */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+
+  /* Surface hierarchy */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+
+  /* Sidebar */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -118,6 +65,43 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Brand colors as Tailwind utilities */
+  --color-synapse-50: var(--synapse-50);
+  --color-synapse-100: var(--synapse-100);
+  --color-synapse-200: var(--synapse-200);
+  --color-synapse-300: var(--synapse-300);
+  --color-synapse-400: var(--synapse-400);
+  --color-synapse-500: var(--synapse-500);
+  --color-synapse-600: var(--synapse-600);
+  --color-synapse-700: var(--synapse-700);
+  --color-synapse-800: var(--synapse-800);
+  --color-synapse-900: var(--synapse-900);
+  --color-synapse-950: var(--synapse-950);
+
+  --color-cognition-50: var(--cognition-50);
+  --color-cognition-100: var(--cognition-100);
+  --color-cognition-200: var(--cognition-200);
+  --color-cognition-300: var(--cognition-300);
+  --color-cognition-400: var(--cognition-400);
+  --color-cognition-500: var(--cognition-500);
+  --color-cognition-600: var(--cognition-600);
+  --color-cognition-700: var(--cognition-700);
+  --color-cognition-800: var(--cognition-800);
+  --color-cognition-900: var(--cognition-900);
+  --color-cognition-950: var(--cognition-950);
+
+  --color-neural-50: var(--neural-50);
+  --color-neural-100: var(--neural-100);
+  --color-neural-200: var(--neural-200);
+  --color-neural-300: var(--neural-300);
+  --color-neural-400: var(--neural-400);
+  --color-neural-500: var(--neural-500);
+  --color-neural-600: var(--neural-600);
+  --color-neural-700: var(--neural-700);
+  --color-neural-800: var(--neural-800);
+  --color-neural-900: var(--neural-900);
+  --color-neural-950: var(--neural-950);
 }
 
 @layer base {

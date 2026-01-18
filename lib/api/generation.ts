@@ -7,7 +7,43 @@ import type {
   TaskProgressResponse,
 } from "./types";
 
+// Response types for content listing
+export interface ContentItemResponse {
+  id: string;
+  notebook_id: string;
+  document_id: string | null;
+  content_type: ContentType;
+  status: "pending" | "processing" | "completed" | "failed";
+  content: Record<string, unknown>;
+  audio_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContentListResponse {
+  items: ContentItemResponse[];
+  total: number;
+}
+
 export const generationApi = {
+  /**
+   * List all generated content for a notebook
+   */
+  listContent: (notebookId: string, contentType?: ContentType) => {
+    const params = contentType ? `?content_type=${contentType}` : "";
+    return apiClient<ContentListResponse>(
+      `/generation/${notebookId}/content${params}`
+    );
+  },
+
+  /**
+   * Get a specific generated content item
+   */
+  getContent: (notebookId: string, contentId: string) =>
+    apiClient<ContentItemResponse>(
+      `/generation/${notebookId}/content/${contentId}`
+    ),
+
   /**
    * Generate content synchronously (waits for completion)
    */

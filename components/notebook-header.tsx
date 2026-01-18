@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Plus, Share2, Settings, Grid3X3, User, TrendingUp, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SynapseLogo } from "@/components/synapse-logo"
+import { LogoutButton } from "@/components/logout-button"
 import Link from "next/link"
 
 interface NotebookHeaderProps {
@@ -40,34 +41,25 @@ export function NotebookHeader({ title, isNew, onOpenSettings }: NotebookHeaderP
             {notebookTitle}
           </h1>
         )}
-        {/* {!isNew && (
-          <Button variant="ghost" size="sm" className="gap-1 text-xs rounded-full bg-secondary">
-            <Globe className="w-3 h-3" />
-            Public
-          </Button>
-        )} */}
       </div>
 
       <div className="flex items-center gap-2">
-        <Button className="gap-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-          <Plus className="w-4 h-4" />
-          Create notebook
-        </Button>
-        {/* {!isNew && (
-          <Button variant="outline" className="gap-2 rounded-full bg-transparent">
-            <TrendingUp className="w-4 h-4" />
-            Analytics
+        <Link href="/notebook/new">
+          <Button className="gap-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+            <Plus className="w-4 h-4" />
+            Create notebook
           </Button>
-        )}
-        <Button variant="outline" className="gap-2 rounded-full bg-transparent">
-          <Share2 className="w-4 h-4" />
-          Share
-        </Button> */}
-        <Button variant="outline" onClick={onOpenSettings} className="gap-2 rounded-full bg-transparent">
+        </Link>
+        <Button 
+          variant="outline" 
+          onClick={() => onOpenSettings?.()} 
+          className="gap-2 rounded-full bg-transparent"
+        >
           <Settings className="w-4 h-4" />
           Settings
         </Button>
        
+        <LogoutButton variant="ghost" size="icon" className="rounded-full" />
         <button className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
           <User className="w-5 h-5 text-primary" />
         </button>
@@ -75,3 +67,4 @@ export function NotebookHeader({ title, isNew, onOpenSettings }: NotebookHeaderP
     </header>
   )
 }
+

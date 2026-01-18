@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { authLogger } from "@/lib/auth-logger";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,15 +35,23 @@ export function LoginForm({
     setIsLoading(true);
     setError(null);
 
+    authLogger.logLoginAttempt(email);
+
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
         password,
       });
       if (error) throw error;
+      authLogger.logLoginSuccess(data.user?.id ?? "unknown", normalizedEmail);
       router.push("/home");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+      authLogger.logLoginFailure(email, errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -53,16 +62,22 @@ export function LoginForm({
     setIsGoogleLoading(true);
     setError(null);
 
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    authLogger.logOAuthStarted("google", redirectUrl);
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
         },
       });
       if (error) throw error;
+      // OAuth redirect will happen, so success logging is in callback
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+      authLogger.logOAuthFailed("google", errorMessage);
+      setError(errorMessage);
       setIsGoogleLoading(false);
     }
   };

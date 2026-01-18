@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { NotebookHeader } from "@/components/notebook-header"
 import { SourcesPanel } from "@/components/sources-panel"
 import { ChatPanel } from "@/components/chat-panel"
-import { StudioPanel, studioTools, sampleGeneratedItems } from "@/components/studio-panel"
+import { StudioPanel, studioTools } from "@/components/studio-panel"
+import { useStudio } from "@/hooks/use-studio"
 import { AddSourcesModal } from "@/components/add-sources-modal"
 import { ResizablePanel } from "@/components/resizable-panel"
 import { PanelLeft, Plus, FileText, FileImage, FileVideo, FileAudio, Globe, Loader2 } from "lucide-react"
@@ -102,13 +103,17 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
 
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false)
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
-  const [leftPanelWidth, setLeftPanelWidth] = useState(320)
-  const [rightPanelWidth, setRightPanelWidth] = useState(380)
+  // Narrower default widths to match NotebookLM proportions
+  const [leftPanelWidth, setLeftPanelWidth] = useState(260)
+  const [rightPanelWidth, setRightPanelWidth] = useState(300)
 
   const [fullScreenView, setFullScreenView] = useState<FullScreenView | null>(null)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [notebookSettings, setNotebookSettings] = useState<NotebookSettings>(defaultSettings)
   const [triggerTool, setTriggerTool] = useState<string | null>(null)
+
+  // Use studio hook for collapsed sidebar items
+  const { items: studioItems } = useStudio({ notebookId, pollInterval: 5000 })
 
   // Fetch notebook data
   useEffect(() => {
@@ -391,6 +396,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
         {!rightPanelCollapsed && (
           <ResizablePanel defaultWidth={rightPanelWidth} minWidth={300} maxWidth={600} side="right" onResize={setRightPanelWidth}>
             <StudioPanel
+              notebookId={notebookId}
               onCollapse={() => setRightPanelCollapsed(true)}
               onOpenView={(type, data) => setFullScreenView({ type, data })}
               triggerTool={triggerTool}
@@ -414,7 +420,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
                     setTimeout(() => setTriggerTool(null), 500)
                   }}
                   className={`w-9 h-9 rounded-lg ${tool.bgColor} flex items-center justify-center flex-shrink-0 relative group hover:scale-105 transition-transform`}
-                  title={tool.label}
+                  title={tool.fullLabel || tool.label}
                 >
                   <tool.icon className={`w-4 h-4 ${tool.iconColor}`} />
                   <div className="absolute -right-1 -bottom-1 w-3 h-3 bg-secondary rounded-full flex items-center justify-center border border-border">
@@ -425,7 +431,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
 
               <div className="h-px w-8 bg-border my-2" />
 
-              {sampleGeneratedItems.map((item) => {
+              {studioItems.slice(0, 5).map((item) => {
                 let iconColor = "text-muted-foreground"
                 let bgColor = "bg-secondary"
 

@@ -1,0 +1,1272 @@
+/**
+ * ============================================================================
+ * SYNAPSEAI BRAND IDENTITY SYSTEM
+ * Version: 1.0.0
+ * ============================================================================
+ *
+ * A comprehensive design system for SynapseAI - an AI-powered research
+ * assistant that transforms documents into intelligent insights.
+ *
+ * BRAND PHILOSOPHY:
+ * SynapseAI bridges the gap between raw information and meaningful knowledge.
+ * Like neural synapses that connect and transmit signals, our brand represents
+ * the spark of understanding that emerges when AI meets human curiosity.
+ *
+ * ============================================================================
+ * TABLE OF CONTENTS
+ * ============================================================================
+ * 1. BRAND FOUNDATION
+ * 2. COLOR SYSTEM
+ * 3. TYPOGRAPHY SYSTEM
+ * 4. SPACING & LAYOUT
+ * 5. ELEVATION & SHADOWS
+ * 6. BORDERS & RADIUS
+ * 7. GRADIENTS
+ * 8. TEXTURES & PATTERNS
+ * 9. MOTION & ANIMATION
+ * 10. COMPONENT TOKENS
+ * 11. UTILITY CLASSES
+ * ============================================================================
+ */
+
+
+/* ============================================================================
+   1. BRAND FOUNDATION
+   ============================================================================
+
+   PURPOSE:
+   To democratize research by making AI-powered document analysis accessible
+   to everyone, transforming how humans interact with knowledge.
+
+   VISION:
+   A world where no insight remains buried in documents, where every question
+   leads to understanding, and where research flows as naturally as thought.
+
+   MISSION:
+   We build intelligent tools that read, understand, and synthesize information
+   so researchers, students, and curious minds can focus on what matters most:
+   asking better questions and discovering new connections.
+
+   BRAND PERSONALITY TRAITS:
+   1. Perceptive - Notices patterns others miss, anticipates needs
+   2. Catalytic - Sparks connections, accelerates understanding
+   3. Warm - Approachable intelligence, never intimidating
+   4. Precise - Accurate, reliable, trustworthy
+   5. Spirited - Energetic curiosity, enthusiasm for discovery
+
+   BRAND VOICE:
+   - Confident but not arrogant
+   - Clear but not simplistic
+   - Helpful but not servile
+   - Technical but not jargon-heavy
+   - Warm but not casual
+
+   TONE VARIATIONS:
+   - Educational content: Encouraging mentor
+   - Error messages: Calm problem-solver
+   - Success states: Warm celebrator
+   - Onboarding: Friendly guide
+   - Technical docs: Precise expert
+
+   WHAT MAKES SYNAPSEAI MEMORABLE:
+   - The "spark" moment when insights connect
+   - Neural-inspired visual language
+   - Distinctive amber/copper warmth in a sea of cold blues
+   - Fluid, organic animations that feel alive
+   - Typography that balances authority with approachability
+
+   ============================================================================ */
+
+
+/* ============================================================================
+   2. COLOR SYSTEM
+   ============================================================================
+
+   PRIMARY: Synapse Amber (Warm Copper-Gold)
+   - A distinctive warm amber that evokes neural energy and insight
+   - Stands out against the cold blues of typical tech products
+   - Conveys warmth, energy, and the "spark" of understanding
+
+   COLOR PHILOSOPHY:
+   - Warm primary creates approachability in dark UI
+   - Teal accents provide complementary balance
+   - Neutral bases maintain professionalism
+   - Strategic color use draws attention to insights
+
+   OKLCh FORMAT (already in use):
+   - L: Lightness (0-1)
+   - C: Chroma (saturation intensity)
+   - H: Hue angle (0-360)
+
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     SYNAPSE AMBER - Primary Brand Color
+     A warm copper-gold that represents neural energy and insight sparks
+     Hue: ~70 (amber/gold range)
+     ------------------------------------------------------------------------- */
+  --synapse-50: oklch(0.98 0.02 75);
+  --synapse-100: oklch(0.95 0.05 75);
+  --synapse-200: oklch(0.88 0.10 73);
+  --synapse-300: oklch(0.80 0.14 72);
+  --synapse-400: oklch(0.72 0.16 70);
+  --synapse-500: oklch(0.65 0.17 68);  /* Primary */
+  --synapse-600: oklch(0.55 0.15 65);
+  --synapse-700: oklch(0.48 0.13 63);
+  --synapse-800: oklch(0.40 0.10 60);
+  --synapse-900: oklch(0.32 0.08 58);
+  --synapse-950: oklch(0.22 0.05 55);
+
+  /* -------------------------------------------------------------------------
+     COGNITION TEAL - Secondary/Accent Color
+     Cool complement to warm amber, represents clarity and depth
+     Hue: ~185 (teal range)
+     ------------------------------------------------------------------------- */
+  --cognition-50: oklch(0.97 0.02 185);
+  --cognition-100: oklch(0.93 0.04 185);
+  --cognition-200: oklch(0.86 0.07 185);
+  --cognition-300: oklch(0.76 0.10 185);
+  --cognition-400: oklch(0.65 0.12 185);
+  --cognition-500: oklch(0.55 0.11 185);  /* Secondary */
+  --cognition-600: oklch(0.46 0.09 185);
+  --cognition-700: oklch(0.38 0.07 185);
+  --cognition-800: oklch(0.30 0.05 185);
+  --cognition-900: oklch(0.24 0.04 185);
+  --cognition-950: oklch(0.16 0.02 185);
+
+  /* -------------------------------------------------------------------------
+     INSIGHT CORAL - Tertiary Accent
+     Warm complement for highlights and emphasis
+     Hue: ~25 (coral/salmon range)
+     ------------------------------------------------------------------------- */
+  --insight-50: oklch(0.98 0.02 25);
+  --insight-100: oklch(0.95 0.04 25);
+  --insight-200: oklch(0.90 0.08 25);
+  --insight-300: oklch(0.82 0.12 25);
+  --insight-400: oklch(0.72 0.15 25);
+  --insight-500: oklch(0.62 0.16 25);
+  --insight-600: oklch(0.52 0.14 25);
+  --insight-700: oklch(0.44 0.11 25);
+  --insight-800: oklch(0.36 0.08 25);
+  --insight-900: oklch(0.28 0.06 25);
+  --insight-950: oklch(0.18 0.03 25);
+
+  /* -------------------------------------------------------------------------
+     NEURAL SLATE - Neutral Base (Warm-tinted)
+     Slightly warm neutrals to complement the amber primary
+     Hue: ~50 (warm gray tint)
+     ------------------------------------------------------------------------- */
+  --neural-50: oklch(0.98 0.005 50);
+  --neural-100: oklch(0.95 0.005 50);
+  --neural-200: oklch(0.90 0.008 50);
+  --neural-300: oklch(0.82 0.008 50);
+  --neural-400: oklch(0.70 0.008 50);
+  --neural-500: oklch(0.55 0.008 50);
+  --neural-600: oklch(0.45 0.008 50);
+  --neural-700: oklch(0.35 0.008 50);
+  --neural-800: oklch(0.25 0.008 50);
+  --neural-900: oklch(0.18 0.008 50);
+  --neural-950: oklch(0.12 0.008 50);
+  --neural-1000: oklch(0.08 0.005 50);
+
+  /* -------------------------------------------------------------------------
+     SEMANTIC COLORS
+     ------------------------------------------------------------------------- */
+
+  /* Success - Growth Green */
+  --success-50: oklch(0.97 0.03 145);
+  --success-100: oklch(0.93 0.06 145);
+  --success-200: oklch(0.85 0.10 145);
+  --success-300: oklch(0.75 0.14 145);
+  --success-400: oklch(0.65 0.16 145);
+  --success-500: oklch(0.55 0.14 145);
+  --success-600: oklch(0.48 0.12 145);
+  --success-700: oklch(0.40 0.10 145);
+  --success-800: oklch(0.32 0.07 145);
+  --success-900: oklch(0.25 0.05 145);
+
+  /* Warning - Alert Amber */
+  --warning-50: oklch(0.98 0.03 85);
+  --warning-100: oklch(0.95 0.07 85);
+  --warning-200: oklch(0.90 0.12 85);
+  --warning-300: oklch(0.82 0.16 85);
+  --warning-400: oklch(0.75 0.18 85);
+  --warning-500: oklch(0.68 0.17 85);
+  --warning-600: oklch(0.58 0.15 85);
+  --warning-700: oklch(0.48 0.12 85);
+  --warning-800: oklch(0.38 0.09 85);
+  --warning-900: oklch(0.28 0.06 85);
+
+  /* Error - Signal Red */
+  --error-50: oklch(0.97 0.02 25);
+  --error-100: oklch(0.93 0.05 20);
+  --error-200: oklch(0.85 0.10 18);
+  --error-300: oklch(0.75 0.15 15);
+  --error-400: oklch(0.65 0.20 15);
+  --error-500: oklch(0.55 0.22 15);
+  --error-600: oklch(0.48 0.20 15);
+  --error-700: oklch(0.40 0.16 15);
+  --error-800: oklch(0.32 0.12 15);
+  --error-900: oklch(0.25 0.08 15);
+
+  /* Info - Clarity Blue */
+  --info-50: oklch(0.97 0.02 230);
+  --info-100: oklch(0.93 0.04 230);
+  --info-200: oklch(0.86 0.08 230);
+  --info-300: oklch(0.76 0.12 230);
+  --info-400: oklch(0.66 0.14 230);
+  --info-500: oklch(0.56 0.13 230);
+  --info-600: oklch(0.48 0.11 230);
+  --info-700: oklch(0.40 0.09 230);
+  --info-800: oklch(0.32 0.06 230);
+  --info-900: oklch(0.25 0.04 230);
+}
+
+/* ============================================================================
+   DARK MODE COLOR TOKENS (Optimized for dark interfaces)
+   ============================================================================ */
+
+.dark {
+  /* -------------------------------------------------------------------------
+     Core UI Colors
+     ------------------------------------------------------------------------- */
+  --background: var(--neural-1000);
+  --foreground: var(--neural-100);
+
+  --card: var(--neural-950);
+  --card-foreground: var(--neural-100);
+
+  --popover: var(--neural-900);
+  --popover-foreground: var(--neural-100);
+
+  /* Primary: Synapse Amber */
+  --primary: var(--synapse-500);
+  --primary-hover: var(--synapse-400);
+  --primary-active: var(--synapse-600);
+  --primary-foreground: var(--neural-950);
+
+  /* Secondary: Cognition Teal */
+  --secondary: var(--neural-800);
+  --secondary-hover: var(--neural-700);
+  --secondary-foreground: var(--neural-100);
+
+  /* Accent: Used for highlights and interactive elements */
+  --accent: var(--synapse-600);
+  --accent-hover: var(--synapse-500);
+  --accent-foreground: var(--neural-100);
+
+  /* Muted: For less prominent elements */
+  --muted: var(--neural-900);
+  --muted-foreground: var(--neural-400);
+
+  /* Destructive actions */
+  --destructive: var(--error-500);
+  --destructive-hover: var(--error-400);
+  --destructive-foreground: var(--neural-50);
+
+  /* Borders and inputs */
+  --border: var(--neural-800);
+  --border-subtle: var(--neural-900);
+  --border-emphasis: var(--neural-700);
+  --input: var(--neural-900);
+  --input-focus: var(--synapse-700);
+
+  /* Focus ring */
+  --ring: var(--synapse-500);
+  --ring-offset: var(--neural-950);
+
+  /* Surface hierarchy */
+  --surface-0: var(--neural-1000);      /* Base background */
+  --surface-1: var(--neural-950);        /* Cards, panels */
+  --surface-2: var(--neural-900);        /* Elevated elements */
+  --surface-3: var(--neural-800);        /* Hover states, modals */
+  --surface-4: var(--neural-700);        /* Active states */
+
+  /* Interactive states */
+  --interactive: var(--synapse-500);
+  --interactive-hover: var(--synapse-400);
+  --interactive-active: var(--synapse-600);
+  --interactive-muted: var(--synapse-800);
+
+  /* Text hierarchy */
+  --text-primary: var(--neural-50);
+  --text-secondary: var(--neural-300);
+  --text-tertiary: var(--neural-400);
+  --text-muted: var(--neural-500);
+  --text-inverse: var(--neural-950);
+
+  /* Semantic feedback */
+  --success: var(--success-500);
+  --success-bg: var(--success-900);
+  --warning: var(--warning-500);
+  --warning-bg: var(--warning-900);
+  --error: var(--error-500);
+  --error-bg: var(--error-900);
+  --info: var(--info-500);
+  --info-bg: var(--info-900);
+
+  /* -------------------------------------------------------------------------
+     Chart Colors (Distinctive, accessible palette)
+     ------------------------------------------------------------------------- */
+  --chart-1: var(--synapse-500);
+  --chart-2: var(--cognition-500);
+  --chart-3: var(--insight-500);
+  --chart-4: var(--success-500);
+  --chart-5: var(--info-500);
+  --chart-6: var(--warning-500);
+
+  /* -------------------------------------------------------------------------
+     Sidebar
+     ------------------------------------------------------------------------- */
+  --sidebar: var(--neural-950);
+  --sidebar-foreground: var(--neural-200);
+  --sidebar-primary: var(--synapse-500);
+  --sidebar-primary-foreground: var(--neural-950);
+  --sidebar-accent: var(--neural-900);
+  --sidebar-accent-foreground: var(--neural-100);
+  --sidebar-border: var(--neural-800);
+  --sidebar-ring: var(--synapse-500);
+}
+
+/* Light mode overrides */
+:root:not(.dark) {
+  --background: var(--neural-50);
+  --foreground: var(--neural-900);
+  --card: white;
+  --card-foreground: var(--neural-900);
+  --primary: var(--synapse-600);
+  --primary-hover: var(--synapse-700);
+  --primary-foreground: white;
+  --secondary: var(--neural-100);
+  --secondary-foreground: var(--neural-800);
+  --muted: var(--neural-100);
+  --muted-foreground: var(--neural-600);
+  --accent: var(--synapse-100);
+  --accent-foreground: var(--synapse-800);
+  --border: var(--neural-200);
+  --input: var(--neural-100);
+  --ring: var(--synapse-500);
+}
+
+
+/* ============================================================================
+   3. TYPOGRAPHY SYSTEM
+   ============================================================================
+
+   FONT PHILOSOPHY:
+   SynapseAI uses a carefully curated typography system that balances
+   intellectual authority with warmth and approachability.
+
+   RECOMMENDED FONTS:
+
+   DISPLAY: "Instrument Serif" or "Fraunces"
+   - Warm, characterful serif for headlines
+   - Conveys intelligence without coldness
+   - Distinctive optical sizes
+
+   BODY: "Plus Jakarta Sans" or "Satoshi"
+   - Modern geometric sans-serif
+   - Excellent readability at all sizes
+   - Distinctive character without being quirky
+
+   CODE: "JetBrains Mono" or "Fira Code"
+   - Excellent programming ligatures
+   - Clear distinction between similar characters
+
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     Font Families
+     Import these in your layout.tsx:
+
+     import { Plus_Jakarta_Sans, DM_Serif_Display, JetBrains_Mono } from 'next/font/google'
+
+     const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans' })
+     const dmSerif = DM_Serif_Display({ weight: '400', subsets: ['latin'], variable: '--font-display' })
+     const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' })
+     ------------------------------------------------------------------------- */
+
+  --font-display: "DM Serif Display", "Georgia", serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* -------------------------------------------------------------------------
+     Type Scale (based on 1.25 - Major Third ratio)
+     Using clamp() for fluid responsive sizing
+     ------------------------------------------------------------------------- */
+  --text-xs: clamp(0.64rem, 0.6rem + 0.2vw, 0.75rem);      /* 10-12px */
+  --text-sm: clamp(0.8rem, 0.75rem + 0.25vw, 0.875rem);    /* 12-14px */
+  --text-base: clamp(0.9rem, 0.85rem + 0.3vw, 1rem);       /* 14-16px */
+  --text-lg: clamp(1rem, 0.95rem + 0.35vw, 1.125rem);      /* 16-18px */
+  --text-xl: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);       /* 18-20px */
+  --text-2xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);     /* 20-24px */
+  --text-3xl: clamp(1.5rem, 1.25rem + 1vw, 1.875rem);      /* 24-30px */
+  --text-4xl: clamp(1.875rem, 1.5rem + 1.5vw, 2.25rem);    /* 30-36px */
+  --text-5xl: clamp(2.25rem, 1.75rem + 2vw, 3rem);         /* 36-48px */
+  --text-6xl: clamp(2.75rem, 2rem + 3vw, 3.75rem);         /* 44-60px */
+  --text-7xl: clamp(3.25rem, 2.5rem + 4vw, 4.5rem);        /* 52-72px */
+
+  /* -------------------------------------------------------------------------
+     Font Weights
+     ------------------------------------------------------------------------- */
+  --font-light: 300;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  /* -------------------------------------------------------------------------
+     Line Heights
+     ------------------------------------------------------------------------- */
+  --leading-none: 1;
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 1.8;
+
+  /* -------------------------------------------------------------------------
+     Letter Spacing
+     ------------------------------------------------------------------------- */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+}
+
+
+/* ============================================================================
+   4. SPACING & LAYOUT
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     Spacing Scale (4px base)
+     ------------------------------------------------------------------------- */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem;   /* 2px */
+  --space-1: 0.25rem;      /* 4px */
+  --space-1-5: 0.375rem;   /* 6px */
+  --space-2: 0.5rem;       /* 8px */
+  --space-2-5: 0.625rem;   /* 10px */
+  --space-3: 0.75rem;      /* 12px */
+  --space-3-5: 0.875rem;   /* 14px */
+  --space-4: 1rem;         /* 16px */
+  --space-5: 1.25rem;      /* 20px */
+  --space-6: 1.5rem;       /* 24px */
+  --space-7: 1.75rem;      /* 28px */
+  --space-8: 2rem;         /* 32px */
+  --space-9: 2.25rem;      /* 36px */
+  --space-10: 2.5rem;      /* 40px */
+  --space-11: 2.75rem;     /* 44px */
+  --space-12: 3rem;        /* 48px */
+  --space-14: 3.5rem;      /* 56px */
+  --space-16: 4rem;        /* 64px */
+  --space-20: 5rem;        /* 80px */
+  --space-24: 6rem;        /* 96px */
+  --space-28: 7rem;        /* 112px */
+  --space-32: 8rem;        /* 128px */
+  --space-36: 9rem;        /* 144px */
+  --space-40: 10rem;       /* 160px */
+  --space-44: 11rem;       /* 176px */
+  --space-48: 12rem;       /* 192px */
+  --space-52: 13rem;       /* 208px */
+  --space-56: 14rem;       /* 224px */
+  --space-60: 15rem;       /* 240px */
+  --space-64: 16rem;       /* 256px */
+
+  /* -------------------------------------------------------------------------
+     Container widths
+     ------------------------------------------------------------------------- */
+  --container-xs: 20rem;   /* 320px */
+  --container-sm: 24rem;   /* 384px */
+  --container-md: 28rem;   /* 448px */
+  --container-lg: 32rem;   /* 512px */
+  --container-xl: 36rem;   /* 576px */
+  --container-2xl: 42rem;  /* 672px */
+  --container-3xl: 48rem;  /* 768px */
+  --container-4xl: 56rem;  /* 896px */
+  --container-5xl: 64rem;  /* 1024px */
+  --container-6xl: 72rem;  /* 1152px */
+  --container-7xl: 80rem;  /* 1280px */
+  --container-full: 100%;
+}
+
+
+/* ============================================================================
+   5. ELEVATION & SHADOWS
+   ============================================================================
+
+   SHADOW PHILOSOPHY:
+   Shadows use warm amber tints to reinforce brand identity.
+   Each elevation level serves a specific UI purpose.
+
+   ============================================================================ */
+
+:root {
+  /* Glow effect using brand color */
+  --glow-synapse: 0 0 20px oklch(0.65 0.17 68 / 0.3),
+                  0 0 40px oklch(0.65 0.17 68 / 0.15),
+                  0 0 60px oklch(0.65 0.17 68 / 0.05);
+
+  --glow-subtle: 0 0 10px oklch(0.65 0.17 68 / 0.15);
+
+  --glow-cognition: 0 0 20px oklch(0.55 0.11 185 / 0.3),
+                    0 0 40px oklch(0.55 0.11 185 / 0.15);
+}
+
+.dark {
+  /* -------------------------------------------------------------------------
+     Elevation System (Dark mode optimized)
+     Using subtle warm tints in shadows
+     ------------------------------------------------------------------------- */
+
+  /* Level 0: Inset/pressed state */
+  --shadow-inset: inset 0 2px 4px oklch(0 0 0 / 0.3);
+
+  /* Level 1: Default resting state - cards, buttons */
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.3);
+
+  /* Level 2: Hover state, dropdown triggers */
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.3),
+               0 1px 2px oklch(0 0 0 / 0.2);
+
+  /* Level 3: Cards, popovers */
+  --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.3),
+               0 2px 4px -2px oklch(0 0 0 / 0.2);
+
+  /* Level 4: Dropdowns, tooltips */
+  --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.3),
+               0 4px 6px -4px oklch(0 0 0 / 0.2);
+
+  /* Level 5: Modals, dialogs */
+  --shadow-xl: 0 20px 25px -5px oklch(0 0 0 / 0.4),
+               0 8px 10px -6px oklch(0 0 0 / 0.3);
+
+  /* Level 6: Full-screen overlays */
+  --shadow-2xl: 0 25px 50px -12px oklch(0 0 0 / 0.5);
+
+  /* Inner shadows for depth */
+  --shadow-inner: inset 0 2px 4px 0 oklch(0 0 0 / 0.2);
+  --shadow-inner-lg: inset 0 4px 8px 0 oklch(0 0 0 / 0.3);
+
+  /* Colored shadows for interactive elements */
+  --shadow-primary: 0 4px 14px -3px oklch(0.65 0.17 68 / 0.4);
+  --shadow-primary-lg: 0 8px 20px -4px oklch(0.65 0.17 68 / 0.5);
+}
+
+
+/* ============================================================================
+   6. BORDERS & RADIUS
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     Border Radius
+     Organic, slightly larger radii for a softer feel
+     ------------------------------------------------------------------------- */
+  --radius-none: 0;
+  --radius-sm: 0.375rem;    /* 6px - Small elements */
+  --radius-md: 0.5rem;      /* 8px - Default */
+  --radius-lg: 0.75rem;     /* 12px - Cards */
+  --radius-xl: 1rem;        /* 16px - Large cards */
+  --radius-2xl: 1.25rem;    /* 20px - Panels */
+  --radius-3xl: 1.5rem;     /* 24px - Modals */
+  --radius-full: 9999px;    /* Pills, avatars */
+
+  /* For consistent component radii */
+  --radius: var(--radius-lg);
+
+  /* -------------------------------------------------------------------------
+     Border Widths
+     ------------------------------------------------------------------------- */
+  --border-0: 0;
+  --border-1: 1px;
+  --border-2: 2px;
+  --border-4: 4px;
+  --border-8: 8px;
+}
+
+
+/* ============================================================================
+   7. GRADIENTS
+   ============================================================================
+
+   GRADIENT PHILOSOPHY:
+   Gradients should feel like natural light, not artificial effects.
+   Use subtle gradients to add depth and warmth.
+
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     Brand Gradients
+     ------------------------------------------------------------------------- */
+
+  /* Primary: Warm amber progression */
+  --gradient-synapse: linear-gradient(
+    135deg,
+    oklch(0.72 0.16 70) 0%,
+    oklch(0.65 0.17 68) 50%,
+    oklch(0.55 0.15 65) 100%
+  );
+
+  /* Secondary: Teal depth */
+  --gradient-cognition: linear-gradient(
+    135deg,
+    oklch(0.65 0.12 185) 0%,
+    oklch(0.55 0.11 185) 50%,
+    oklch(0.46 0.09 185) 100%
+  );
+
+  /* Warm sunset: For hero sections */
+  --gradient-insight: linear-gradient(
+    135deg,
+    oklch(0.72 0.16 70) 0%,
+    oklch(0.62 0.16 25) 100%
+  );
+
+  /* Mesh gradient: Complex, organic feel */
+  --gradient-neural: radial-gradient(
+    ellipse at 20% 0%,
+    oklch(0.65 0.17 68 / 0.15) 0%,
+    transparent 50%
+  ),
+  radial-gradient(
+    ellipse at 80% 100%,
+    oklch(0.55 0.11 185 / 0.1) 0%,
+    transparent 50%
+  );
+
+  /* -------------------------------------------------------------------------
+     Surface Gradients (Subtle depth)
+     ------------------------------------------------------------------------- */
+
+  --gradient-surface-subtle: linear-gradient(
+    180deg,
+    oklch(0.12 0.008 50) 0%,
+    oklch(0.10 0.005 50) 100%
+  );
+
+  --gradient-card: linear-gradient(
+    180deg,
+    oklch(0.14 0.008 50) 0%,
+    oklch(0.12 0.008 50) 100%
+  );
+
+  /* -------------------------------------------------------------------------
+     Text Gradients
+     ------------------------------------------------------------------------- */
+
+  --gradient-text-synapse: linear-gradient(
+    90deg,
+    oklch(0.80 0.14 72) 0%,
+    oklch(0.65 0.17 68) 50%,
+    oklch(0.72 0.16 70) 100%
+  );
+
+  --gradient-text-glow: linear-gradient(
+    90deg,
+    oklch(0.80 0.14 72) 0%,
+    oklch(0.55 0.11 185) 100%
+  );
+
+  /* -------------------------------------------------------------------------
+     Border Gradients
+     ------------------------------------------------------------------------- */
+
+  --gradient-border: linear-gradient(
+    135deg,
+    oklch(0.65 0.17 68 / 0.5) 0%,
+    oklch(0.35 0.008 50) 50%,
+    oklch(0.55 0.11 185 / 0.3) 100%
+  );
+
+  --gradient-border-subtle: linear-gradient(
+    135deg,
+    oklch(0.35 0.01 50) 0%,
+    oklch(0.25 0.008 50) 100%
+  );
+}
+
+
+/* ============================================================================
+   8. TEXTURES & PATTERNS
+   ============================================================================
+
+   TEXTURE PHILOSOPHY:
+   Subtle textures add depth and tactility to the interface.
+   Use sparingly to avoid visual noise.
+
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     Noise Texture (for grain overlay)
+     Apply as background-image with low opacity
+     ------------------------------------------------------------------------- */
+  --texture-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+
+  /* -------------------------------------------------------------------------
+     Dot Pattern (for backgrounds)
+     ------------------------------------------------------------------------- */
+  --texture-dots: radial-gradient(
+    oklch(0.35 0.008 50) 1px,
+    transparent 1px
+  );
+  --texture-dots-size: 20px 20px;
+
+  /* -------------------------------------------------------------------------
+     Grid Pattern (for technical sections)
+     ------------------------------------------------------------------------- */
+  --texture-grid: linear-gradient(
+    oklch(0.25 0.008 50) 1px,
+    transparent 1px
+  ),
+  linear-gradient(
+    90deg,
+    oklch(0.25 0.008 50) 1px,
+    transparent 1px
+  );
+  --texture-grid-size: 40px 40px;
+
+  /* -------------------------------------------------------------------------
+     Neural Pattern (brand-specific)
+     Represents connection and flow
+     ------------------------------------------------------------------------- */
+  --texture-neural: radial-gradient(
+    circle at center,
+    oklch(0.65 0.17 68 / 0.05) 0%,
+    transparent 70%
+  );
+}
+
+
+/* ============================================================================
+   9. MOTION & ANIMATION
+   ============================================================================
+
+   MOTION PHILOSOPHY:
+   - Motion should feel organic and purposeful
+   - Use spring-based easing for natural feel
+   - Respect user preferences for reduced motion
+   - Micro-interactions should delight, not distract
+
+   KEY ANIMATION MOMENTS:
+   1. Insight Spark - When AI generates an insight (pulse + glow)
+   2. Neural Connection - When documents are linked (line draw)
+   3. Focus Flow - When entering focused state (subtle zoom)
+   4. Discovery Ripple - When new content appears (radial reveal)
+
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     Duration Scale
+     ------------------------------------------------------------------------- */
+  --duration-instant: 50ms;
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 400ms;
+  --duration-slowest: 500ms;
+  --duration-deliberate: 700ms;
+
+  /* -------------------------------------------------------------------------
+     Easing Functions
+     Custom cubic-beziers for organic motion
+     ------------------------------------------------------------------------- */
+
+  /* Standard easings */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spring-like easings (organic feel) */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-soft: cubic-bezier(0.22, 1.2, 0.36, 1);
+  --ease-spring-bouncy: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Expressive easings */
+  --ease-snappy: cubic-bezier(0.2, 0, 0, 1);
+  --ease-smooth: cubic-bezier(0.45, 0, 0.15, 1);
+  --ease-emphasize: cubic-bezier(0.7, 0, 0.3, 1);
+
+  /* -------------------------------------------------------------------------
+     Animation Definitions
+     ------------------------------------------------------------------------- */
+}
+
+/* Keyframe Animations */
+@keyframes synapse-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.65 0.17 68 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px oklch(0.65 0.17 68 / 0);
+  }
+}
+
+@keyframes synapse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px oklch(0.65 0.17 68 / 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px oklch(0.65 0.17 68 / 0.6));
+  }
+}
+
+@keyframes insight-spark {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes neural-connect {
+  0% {
+    stroke-dashoffset: 100%;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes discovery-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+@keyframes focus-flow {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* ============================================================================
+   10. COMPONENT TOKENS
+   ============================================================================
+
+   Pre-defined tokens for common UI components.
+   These provide consistent styling across the application.
+
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     Button Tokens
+     ------------------------------------------------------------------------- */
+  --btn-height-sm: 2rem;       /* 32px */
+  --btn-height-md: 2.5rem;     /* 40px */
+  --btn-height-lg: 3rem;       /* 48px */
+  --btn-height-xl: 3.5rem;     /* 56px */
+
+  --btn-padding-x-sm: var(--space-3);
+  --btn-padding-x-md: var(--space-4);
+  --btn-padding-x-lg: var(--space-6);
+
+  --btn-font-size-sm: var(--text-sm);
+  --btn-font-size-md: var(--text-base);
+  --btn-font-size-lg: var(--text-lg);
+
+  /* -------------------------------------------------------------------------
+     Input Tokens
+     ------------------------------------------------------------------------- */
+  --input-height-sm: 2rem;
+  --input-height-md: 2.5rem;
+  --input-height-lg: 3rem;
+
+  --input-padding-x: var(--space-3);
+  --input-font-size: var(--text-base);
+
+  /* -------------------------------------------------------------------------
+     Card Tokens
+     ------------------------------------------------------------------------- */
+  --card-padding-sm: var(--space-4);
+  --card-padding-md: var(--space-6);
+  --card-padding-lg: var(--space-8);
+
+  --card-radius: var(--radius-xl);
+  --card-border-width: 1px;
+
+  /* -------------------------------------------------------------------------
+     Modal/Dialog Tokens
+     ------------------------------------------------------------------------- */
+  --modal-padding: var(--space-6);
+  --modal-radius: var(--radius-2xl);
+  --modal-backdrop: oklch(0 0 0 / 0.7);
+
+  /* -------------------------------------------------------------------------
+     Avatar Tokens
+     ------------------------------------------------------------------------- */
+  --avatar-size-xs: 1.5rem;    /* 24px */
+  --avatar-size-sm: 2rem;      /* 32px */
+  --avatar-size-md: 2.5rem;    /* 40px */
+  --avatar-size-lg: 3rem;      /* 48px */
+  --avatar-size-xl: 4rem;      /* 64px */
+  --avatar-size-2xl: 5rem;     /* 80px */
+
+  /* -------------------------------------------------------------------------
+     Badge Tokens
+     ------------------------------------------------------------------------- */
+  --badge-height-sm: 1.25rem;  /* 20px */
+  --badge-height-md: 1.5rem;   /* 24px */
+  --badge-font-size: var(--text-xs);
+  --badge-radius: var(--radius-full);
+
+  /* -------------------------------------------------------------------------
+     Tooltip Tokens
+     ------------------------------------------------------------------------- */
+  --tooltip-padding: var(--space-2) var(--space-3);
+  --tooltip-radius: var(--radius-md);
+  --tooltip-font-size: var(--text-sm);
+
+  /* -------------------------------------------------------------------------
+     Toast/Notification Tokens
+     ------------------------------------------------------------------------- */
+  --toast-padding: var(--space-4);
+  --toast-radius: var(--radius-lg);
+  --toast-max-width: 24rem;
+}
+
+
+/* ============================================================================
+   11. UTILITY CLASSES
+   ============================================================================ */
+
+/* -------------------------------------------------------------------------
+   Text Utilities
+   ------------------------------------------------------------------------- */
+.text-gradient-synapse {
+  background: var(--gradient-text-synapse);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-glow {
+  background: var(--gradient-text-glow);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* -------------------------------------------------------------------------
+   Glow Utilities
+   ------------------------------------------------------------------------- */
+.glow-synapse {
+  box-shadow: var(--glow-synapse);
+}
+
+.glow-subtle {
+  box-shadow: var(--glow-subtle);
+}
+
+.glow-cognition {
+  box-shadow: var(--glow-cognition);
+}
+
+/* -------------------------------------------------------------------------
+   Border Gradient Utilities
+   ------------------------------------------------------------------------- */
+.border-gradient {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+}
+
+.border-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: var(--gradient-border);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------------
+   Texture Utilities
+   ------------------------------------------------------------------------- */
+.texture-noise {
+  position: relative;
+}
+
+.texture-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--texture-noise);
+  opacity: 0.03;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.texture-dots {
+  background-image: var(--texture-dots);
+  background-size: var(--texture-dots-size);
+}
+
+.texture-grid {
+  background-image: var(--texture-grid);
+  background-size: var(--texture-grid-size);
+}
+
+/* -------------------------------------------------------------------------
+   Animation Utilities
+   ------------------------------------------------------------------------- */
+.animate-synapse-pulse {
+  animation: synapse-pulse 2s ease-in-out infinite;
+}
+
+.animate-synapse-glow {
+  animation: synapse-glow 2s ease-in-out infinite;
+}
+
+.animate-insight-spark {
+  animation: insight-spark 0.4s var(--ease-spring) forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(1 0 0 / 0.05) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in var(--duration-normal) var(--ease-out) forwards;
+}
+
+.animate-fade-up {
+  animation: fade-up var(--duration-slow) var(--ease-out) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right var(--duration-slow) var(--ease-out) forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in var(--duration-normal) var(--ease-spring) forwards;
+}
+
+/* -------------------------------------------------------------------------
+   Focus Utilities
+   ------------------------------------------------------------------------- */
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------
+   Interactive Utilities
+   ------------------------------------------------------------------------- */
+.interactive {
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.interactive:hover {
+  transform: translateY(-1px);
+}
+
+.interactive:active {
+  transform: translateY(0);
+}
+
+/* -------------------------------------------------------------------------
+   Surface Utilities
+   ------------------------------------------------------------------------- */
+.surface-0 { background-color: var(--surface-0); }
+.surface-1 { background-color: var(--surface-1); }
+.surface-2 { background-color: var(--surface-2); }
+.surface-3 { background-color: var(--surface-3); }
+.surface-4 { background-color: var(--surface-4); }
+
+/* -------------------------------------------------------------------------
+   Glass Effect (Glassmorphism)
+   ------------------------------------------------------------------------- */
+.glass {
+  background: oklch(0.12 0.008 50 / 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(1 0 0 / 0.05);
+}
+
+.glass-strong {
+  background: oklch(0.12 0.008 50 / 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid oklch(1 0 0 / 0.08);
+}
+
+
+/* ============================================================================
+   CUSTOM SCROLLBAR (Brand-styled)
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-0);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neural-700);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--surface-0);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--synapse-700);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--synapse-600);
+}
+
+
+/* ============================================================================
+   SELECTION STYLING
+   ============================================================================ */
+
+::selection {
+  background-color: oklch(0.65 0.17 68 / 0.3);
+  color: var(--foreground);
+}
+
+::-moz-selection {
+  background-color: oklch(0.65 0.17 68 / 0.3);
+  color: var(--foreground);
+}
+
+
+/* ============================================================================
+   END OF BRAND SYSTEM
+   ============================================================================ */

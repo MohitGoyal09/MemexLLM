@@ -7,14 +7,22 @@ import { SourcesPanel } from "@/components/sources-panel"
 import { ChatPanel } from "@/components/chat-panel"
 import { StudioPanel } from "@/components/studio-panel"
 import { AddSourcesModal } from "@/components/add-sources-modal"
-import { PanelLeft, Plus, FileText, Upload, ArrowRight, Loader2 } from "lucide-react"
+import { NotebookSettingsModal, defaultSettings, type NotebookSettings } from "@/components/notebook-settings-modal"
+import { PanelLeft, Plus, FileText, Upload, ArrowRight, Loader2, MoreVertical, SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Source } from "@/lib/types"
 import { notebooksApi } from "@/lib/api"
 
 export default function NewNotebookPage() {
   const router = useRouter()
-  const [showSourcesModal, setShowSourcesModal] = useState(false)
+  // Auto-open sources modal on new notebook (like NotebookLM)
+  const [showSourcesModal, setShowSourcesModal] = useState(true)
   const [sources, setSources] = useState<Source[]>([])
   const [selectedSources, setSelectedSources] = useState<string[]>([])
   const [messages, setMessages] = useState<
@@ -32,6 +40,8 @@ export default function NewNotebookPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [notebookId, setNotebookId] = useState<string | null>(null)
   const [notebookTitle] = useState("Untitled notebook")
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [notebookSettings, setNotebookSettings] = useState<NotebookSettings>(defaultSettings)
 
   // Create notebook when first source is added
   const handleAddSource = useCallback(
@@ -98,7 +108,7 @@ export default function NewNotebookPage() {
 
   return (
     <div className="h-screen bg-background flex flex-col">
-      <NotebookHeader title={notebookTitle} isNew />
+      <NotebookHeader title={notebookTitle} isNew onOpenSettings={() => setShowSettingsModal(true)} />
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel Toggle */}
@@ -124,55 +134,82 @@ export default function NewNotebookPage() {
 
         {/* Sources Panel */}
         {!leftPanelCollapsed && (
-          <SourcesPanel
-            sources={sources}
-            selectedSources={selectedSources}
-            onAddSource={() => setShowSourcesModal(true)}
-            onToggleSource={toggleSourceSelection}
-            onSelectAll={selectAllSources}
-            onCollapse={() => setLeftPanelCollapsed(true)}
-          />
+          <div className="w-[260px] flex-shrink-0">
+            <SourcesPanel
+              sources={sources}
+              selectedSources={selectedSources}
+              onAddSource={() => setShowSourcesModal(true)}
+              onToggleSource={toggleSourceSelection}
+              onSelectAll={selectAllSources}
+              onCollapse={() => setLeftPanelCollapsed(true)}
+            />
+          </div>
         )}
 
         {showInitialPrompt && sources.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center bg-background">
-            {/* Upload Icon */}
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 animate-in zoom-in duration-300">
-              {isCreating ? (
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
-              ) : (
-                <Upload className="w-8 h-8 text-primary" />
-              )}
+          <div className="flex-1 flex flex-col bg-background">
+            {/* Chat Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="font-semibold">Chat</h2>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon" onClick={() => setShowSettingsModal(true)} className="rounded-lg">
+                  <SlidersHorizontal className="w-5 h-5" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-lg">
+                      <MoreVertical className="w-5 h-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem className="text-destructive focus:text-destructive cursor-pointer">
+                      Delete chat history
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
+            
+            {/* Center Content */}
+            <div className="flex-1 flex flex-col items-center justify-center relative">
+              {/* Upload Icon */}
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 animate-in zoom-in duration-300">
+                {isCreating ? (
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                ) : (
+                  <Upload className="w-8 h-8 text-primary" />
+                )}
+              </div>
 
-            {/* Title */}
-            <h2 className="text-2xl font-semibold mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-100">
-              {isCreating ? "Creating notebook..." : "Add a source to get started"}
-            </h2>
+              {/* Title */}
+              <h2 className="text-2xl font-semibold mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-100">
+                {isCreating ? "Creating notebook..." : "Add a source to get started"}
+              </h2>
 
-            {/* Buttons */}
-            <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-200">
-              <Button
-                onClick={() => setShowSourcesModal(true)}
-                variant="secondary"
-                className="rounded-full px-6 py-5 text-base gap-2"
-                disabled={isCreating}
-              >
-                Upload a source
-              </Button>
-              <Button
-                onClick={handleQuickCreate}
-                variant="outline"
-                className="rounded-full px-6 py-5 text-base gap-2"
-                disabled={isCreating}
-              >
-                Create empty notebook
-              </Button>
+              {/* Buttons */}
+              <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-200">
+                <Button
+                  onClick={() => setShowSourcesModal(true)}
+                  variant="secondary"
+                  className="rounded-full px-6 py-5 text-base gap-2"
+                  disabled={isCreating}
+                >
+                  Upload a source
+                </Button>
+                <Button
+                  onClick={handleQuickCreate}
+                  variant="outline"
+                  className="rounded-full px-6 py-5 text-base gap-2"
+                  disabled={isCreating}
+                >
+                  Create empty notebook
+                </Button>
+              </div>
             </div>
 
             {/* Input Bar at Bottom */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4">
-              <div className="flex items-center gap-3 bg-card border border-border rounded-full px-4 py-3">
+            <div className="p-4 border-t border-border">
+              <div className="flex items-center gap-3 bg-secondary rounded-full px-4 py-3 max-w-2xl mx-auto">
                 <input
                   type="text"
                   placeholder="Upload a source to get started"
@@ -188,6 +225,9 @@ export default function NewNotebookPage() {
                   <ArrowRight className="w-4 h-4 text-primary" />
                 </button>
               </div>
+              <p className="text-center text-xs text-muted-foreground mt-3">
+                SynapseAI can be inaccurate; please double-check its responses.
+              </p>
             </div>
           </div>
         ) : (
@@ -207,7 +247,11 @@ export default function NewNotebookPage() {
         )}
 
         {/* Studio Panel */}
-        {!rightPanelCollapsed && <StudioPanel onCollapse={() => setRightPanelCollapsed(true)} />}
+        {!rightPanelCollapsed && (
+          <div className="w-[300px] flex-shrink-0">
+            <StudioPanel notebookId={notebookId || ""} onCollapse={() => setRightPanelCollapsed(true)} />
+          </div>
+        )}
 
         {/* Right Panel Toggle */}
         {rightPanelCollapsed && (
@@ -227,6 +271,13 @@ export default function NewNotebookPage() {
         onOpenChange={setShowSourcesModal}
         onAddSources={handleAddSource}
         notebookId={notebookId || undefined}
+      />
+
+      <NotebookSettingsModal
+        open={showSettingsModal}
+        onOpenChange={setShowSettingsModal}
+        settings={notebookSettings}
+        onSave={setNotebookSettings}
       />
     </div>
   )

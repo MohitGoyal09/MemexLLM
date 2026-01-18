@@ -1,6 +1,7 @@
 // Re-export all API modules
 export * from "./client";
 export * from "./types";
+export * from "./rate-limit";
 export { notebooksApi } from "./notebooks";
 export { documentsApi } from "./documents";
 export { chatApi } from "./chat";

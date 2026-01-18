@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C:*)"
+      "Bash(git -C:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Skill(frontend-design)",
+      "Bash(pnpm add -D jest jest-environment-jsdom @testing-library/react @testing-library/jest-dom @types/jest)",
+      "Bash(pnpm add:*)"
     ]
   }
 }
