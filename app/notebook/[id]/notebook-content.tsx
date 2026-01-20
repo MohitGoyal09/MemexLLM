@@ -159,54 +159,34 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
     fetchData()
   }, [notebookId, router])
 
-  // Poll for document processing status
-  useEffect(() => {
-    let pollInterval: NodeJS.Timeout | null = null
-    let isMounted = true
-
-    const startPolling = () => {
-      pollInterval = setInterval(async () => {
-        if (!isMounted) return
-
-        try {
-          const documents = await documentsApi.list(notebookId)
-          if (!isMounted) return
-
-          const updatedSources = documents.map(documentToSource)
-          setSources(updatedSources)
-
-          // Stop polling if all are done
-          const stillProcessing = updatedSources.filter((s) => s.status === "pending" || s.status === "processing")
-          if (stillProcessing.length === 0 && pollInterval) {
-            clearInterval(pollInterval)
-            pollInterval = null
-          }
-        } catch (err) {
-          console.error("Failed to poll document status:", err)
-        }
-      }, 3000)
-    }
-
-    // Check if we need to start polling based on current sources
-    const checkAndStartPolling = () => {
-      setSources((currentSources) => {
-        const processingDocs = currentSources.filter((s) => s.status === "pending" || s.status === "processing")
-        if (processingDocs.length > 0 && !pollInterval) {
-          startPolling()
-        }
-        return currentSources
-      })
-    }
-
-    checkAndStartPolling()
-
-    return () => {
-      isMounted = false
-      if (pollInterval) {
-        clearInterval(pollInterval)
-      }
+  const refreshSources = useCallback(async () => {
+    try {
+      const documents = await documentsApi.list(notebookId)
+      const sourcesFromDocs = documents.map(documentToSource)
+      setSources(sourcesFromDocs)
+    } catch (err) {
+      console.error("Failed to refresh sources:", err)
     }
   }, [notebookId])
+
+  // Poll for document processing status
+  useEffect(() => {
+    const hasProcessing = sources.some((s) => s.status === "pending" || s.status === "processing")
+    
+    if (!hasProcessing) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const documents = await documentsApi.list(notebookId)
+        const updatedSources = documents.map(documentToSource)
+        setSources(updatedSources)
+      } catch (err) {
+        console.error("Failed to poll document status:", err)
+      }
+    }, 3000)
+
+    return () => clearInterval(pollInterval)
+  }, [sources, notebookId])
 
   const handleAddSource = useCallback((newSources: Source[]) => {
     setSources((prev) => [...prev, ...newSources])
@@ -336,7 +316,12 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
 
   return (
     <div className="h-screen bg-background flex flex-col relative">
-      <NotebookHeader title={notebook.title} onOpenSettings={() => setShowSettingsModal(true)} />
+      <NotebookHeader 
+        title={notebook.title} 
+        notebookId={notebookId}
+        onOpenSettings={() => setShowSettingsModal(true)} 
+        onTitleChange={(newTitle) => setNotebook(prev => prev ? { ...prev, title: newTitle } : null)}
+      />
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel Toggle */}
@@ -378,6 +363,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
               onToggleSource={toggleSourceSelection}
               onSelectAll={selectAllSources}
               onCollapse={() => setLeftPanelCollapsed(true)}
+              onRefresh={refreshSources}
             />
           </ResizablePanel>
         )}

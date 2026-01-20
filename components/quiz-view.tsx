@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Minimize2, Maximize2, ThumbsUp, ThumbsDown, Check, X } from "lucide-react"
+import { Minimize2, Maximize2, ThumbsUp, ThumbsDown, Check, X, Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface QuizQuestion {
@@ -21,35 +21,47 @@ interface QuizViewProps {
 export function QuizView({ title, sourceCount, questions, onBack }: QuizViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
-  const [showResult, setShowResult] = useState(false)
+  const [hasAnswered, setHasAnswered] = useState(false) // Track if current question is answered
   const [score, setScore] = useState(0)
+  const [isComplete, setIsComplete] = useState(false) // Track if quiz is finished
 
   const currentQuestion = questions[currentIndex]
 
   const handleSelectAnswer = (index: number) => {
-    if (!showResult) {
-      setSelectedAnswer(index)
+    // Only allow selection if not already answered
+    if (hasAnswered) return
+    
+    setSelectedAnswer(index)
+    setHasAnswered(true)
+    
+    // Update score immediately
+    if (index === currentQuestion.correctAnswer) {
+      setScore(prev => prev + 1)
     }
   }
 
   const handleNext = () => {
-    if (selectedAnswer === null) return
-
-    if (selectedAnswer === currentQuestion.correctAnswer) {
-      setScore(score + 1)
-    }
+    if (!hasAnswered) return
 
     if (currentIndex < questions.length - 1) {
+      // Go to next question
       setCurrentIndex(currentIndex + 1)
       setSelectedAnswer(null)
-      setShowResult(false)
+      setHasAnswered(false)
     } else {
-      setShowResult(true)
+      // Quiz complete - show results
+      setIsComplete(true)
     }
   }
 
+  const handleFinish = () => {
+    // Return to studio panel
+    onBack()
+  }
+
   const getOptionStyle = (index: number) => {
-    if (showResult) {
+    // Show result immediately after answering
+    if (hasAnswered) {
       if (index === currentQuestion.correctAnswer) {
         return "border-green-500 bg-green-500/10"
       }
@@ -57,10 +69,62 @@ export function QuizView({ title, sourceCount, questions, onBack }: QuizViewProp
         return "border-red-500 bg-red-500/10"
       }
     }
-    if (selectedAnswer === index) {
+    if (selectedAnswer === index && !hasAnswered) {
       return "border-primary bg-primary/10"
     }
     return "border-border hover:border-muted-foreground"
+  }
+
+  // Show completion screen
+  if (isComplete) {
+    const percentage = Math.round((score / questions.length) * 100)
+    return (
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between mb-1">
+            <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground">
+              Studio {">"} App
+            </button>
+            <button onClick={onBack} className="p-1 hover:bg-secondary rounded">
+              <Minimize2 className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-sm text-primary">Based on {sourceCount} sources</p>
+        </div>
+
+        {/* Completion Content */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mb-4">
+            <Trophy className="w-10 h-10 text-primary" />
+          </div>
+          <h3 className="text-2xl font-bold mb-2">Quiz Complete!</h3>
+          <p className="text-4xl font-bold text-primary mb-2">{score}/{questions.length}</p>
+          <p className="text-muted-foreground mb-6">{percentage}% correct</p>
+          
+          <div className="w-full max-w-xs h-3 bg-muted rounded-full overflow-hidden mb-6">
+            <div 
+              className={`h-full transition-all duration-500 ${percentage >= 70 ? 'bg-green-500' : percentage >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+
+          <p className="text-sm text-muted-foreground text-center">
+            {percentage >= 70 ? "Great job! You've mastered this material." :
+             percentage >= 40 ? "Good effort! Review the material to improve." :
+             "Keep studying! Practice makes perfect."}
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="p-4 border-t border-border">
+          <Button onClick={handleFinish} className="w-full rounded-full">
+            Back to Studio
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -81,9 +145,12 @@ export function QuizView({ title, sourceCount, questions, onBack }: QuizViewProp
 
       {/* Quiz Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="mb-6">
+        <div className="flex items-center justify-between mb-6">
           <span className="text-sm text-muted-foreground">
             {currentIndex + 1} / {questions.length}
+          </span>
+          <span className="text-sm font-medium text-primary">
+            Score: {score}
           </span>
         </div>
 
@@ -94,22 +161,34 @@ export function QuizView({ title, sourceCount, questions, onBack }: QuizViewProp
             <button
               key={index}
               onClick={() => handleSelectAnswer(index)}
+              disabled={hasAnswered}
               className={`
                 w-full text-left p-4 rounded-xl border-2 transition-all duration-200
                 ${getOptionStyle(index)}
+                ${hasAnswered ? 'cursor-default' : 'cursor-pointer'}
               `}
             >
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground font-medium">{String.fromCharCode(65 + index)}.</span>
                 <span className="flex-1">{option}</span>
-                {showResult && index === currentQuestion.correctAnswer && <Check className="w-5 h-5 text-green-500" />}
-                {showResult && index === selectedAnswer && index !== currentQuestion.correctAnswer && (
+                {hasAnswered && index === currentQuestion.correctAnswer && <Check className="w-5 h-5 text-green-500" />}
+                {hasAnswered && index === selectedAnswer && index !== currentQuestion.correctAnswer && (
                   <X className="w-5 h-5 text-red-500" />
                 )}
               </div>
             </button>
           ))}
         </div>
+
+        {/* Feedback message after answering */}
+        {hasAnswered && (
+          <div className={`mt-4 p-3 rounded-lg ${selectedAnswer === currentQuestion.correctAnswer ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+            {selectedAnswer === currentQuestion.correctAnswer 
+              ? "✓ Correct!" 
+              : `✗ Incorrect. The correct answer is ${String.fromCharCode(65 + currentQuestion.correctAnswer)}.`
+            }
+          </div>
+        )}
 
         {/* Progress indicator */}
         <div className="mt-6 flex justify-center">
@@ -124,8 +203,8 @@ export function QuizView({ title, sourceCount, questions, onBack }: QuizViewProp
 
       {/* Actions */}
       <div className="p-4 border-t border-border space-y-3">
-        <Button onClick={handleNext} disabled={selectedAnswer === null} className="w-full rounded-full">
-          {currentIndex < questions.length - 1 ? "Next" : "Finish"}
+        <Button onClick={handleNext} disabled={!hasAnswered} className="w-full rounded-full">
+          {currentIndex < questions.length - 1 ? "Next Question" : "See Results"}
         </Button>
 
         <div className="flex items-center gap-3">

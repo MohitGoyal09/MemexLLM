@@ -147,15 +147,49 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
     } else if (item.type === "quiz" && item.content) {
       setActiveView("quiz")
     } else if (item.type === "mindmap" && item.content) {
-      onOpenView?.("mindmap", { 
-        title: item.title, 
-        sourceCount: item.sourceCount, 
-        rootNode: item.content 
+      // Backend sends: { root: { label: string, children: [...] }, mermaid_syntax: string }
+      // Component needs: { id: string, label: string, children?: MindMapNode[] }
+      
+      const mindmapContent = item.content as {
+        root?: { label: string; children?: any[] }
+        mermaid_syntax?: string
+      }
+      
+      // Helper to add IDs recursively
+      const addIds = (node: any, prefix: string = "node"): any => {
+        return {
+          id: `${prefix}-${node.label.replace(/\s+/g, "-").toLowerCase()}`,
+          label: node.label,
+          children: node.children?.map((child: any, idx: number) =>
+            addIds(child, `${prefix}-${idx}`)
+          ) || [],
+        }
+      }
+      
+      // Extract and transform the root node
+      const rootNode = mindmapContent.root
+        ? addIds(mindmapContent.root, "root")
+        : { id: "root", label: "Mind Map", children: [] }
+      
+      onOpenView?.("mindmap", {
+        title: item.title,
+        sourceCount: item.sourceCount,
+        rootNode,
       })
     } else if (item.type === "audio") {
+      const content = item.content as any
+      const durationSeconds = content?.audio_duration
+      
+      const formatDuration = (sec?: number) => {
+        if (!sec) return "--:--"
+        const m = Math.floor(sec / 60)
+        const s = Math.floor(sec % 60)
+        return `${m}:${s.toString().padStart(2, "0")}`
+      }
+
       setCurrentAudio({ 
         title: item.title, 
-        duration: "16:18",
+        duration: formatDuration(durationSeconds),
         url: item.audioUrl || undefined
       })
       setShowAudioPlayer(true)
@@ -185,9 +219,9 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
   const getItemIconStyle = (type: GeneratedItem["type"]) => {
     const styleMap = {
       quiz: { bg: "bg-lime-500/20", icon: "text-lime-400" },
-      audio: { bg: "bg-purple-500/20", icon: "text-purple-400" },
+      audio: { bg: "bg-rose-500/20", icon: "text-rose-400" },
       flashcards: { bg: "bg-blue-500/20", icon: "text-blue-400" },
-      mindmap: { bg: "bg-violet-500/20", icon: "text-violet-400" },
+      mindmap: { bg: "bg-sky-500/20", icon: "text-sky-400" },
       report: { bg: "bg-emerald-500/20", icon: "text-emerald-400" },
       video: { bg: "bg-cyan-500/20", icon: "text-cyan-400" },
       infographic: { bg: "bg-orange-500/20", icon: "text-orange-400" },
@@ -218,24 +252,51 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
   // Get flashcards from selected item content
   const getFlashcardsFromContent = () => {
     if (!selectedItem?.content) return []
-    const content = selectedItem.content as { flashcards?: Array<{ question: string; answer: string }> }
-    return (content.flashcards || []).map((fc, idx) => ({
+    // Backend schema uses 'cards' field with 'front'/'back' properties
+    const content = selectedItem.content as { 
+      cards?: Array<{ front: string; back: string }>
+      flashcards?: Array<{ front: string; back: string; question?: string; answer?: string }> 
+    }
+    // Support both 'cards' (backend schema) and 'flashcards' (legacy)
+    const cardArray = content.cards || content.flashcards || []
+    return cardArray.map((fc, idx) => ({
       id: String(idx + 1),
-      question: fc.question,
-      answer: fc.answer,
+      question: fc.front || (fc as any).question || "",
+      answer: fc.back || (fc as any).answer || "",
     }))
   }
 
   // Get quiz questions from selected item content
   const getQuizFromContent = () => {
     if (!selectedItem?.content) return []
-    const content = selectedItem.content as { questions?: Array<{ question: string; options: string[]; correct_answer: number; explanation?: string }> }
-    return (content.questions || []).map((q, idx) => ({
-      id: String(idx + 1),
-      question: q.question,
-      options: q.options,
-      correctAnswer: q.correct_answer,
-    }))
+    const content = selectedItem.content as { questions?: Array<{ question: string; options: string[] | Array<{label: string, text: string}>; correct_answer: number | string; explanation?: string }> }
+    
+    return (content.questions || []).map((q, idx) => {
+      // Map options: Backend sends objects {label, text}, Frontend expects strings
+      const options = (q.options || []).map((opt: any) => {
+        if (typeof opt === 'string') return opt
+        if (typeof opt === 'object' && opt.text) return opt.text
+        return String(opt)
+      })
+
+      // Map correct_answer: Backend sends string "A", "B", Frontend expects index 0, 1
+      let correctAnswer = 0
+      if (typeof q.correct_answer === 'number') {
+        correctAnswer = q.correct_answer
+      } else if (typeof q.correct_answer === 'string') {
+         const clean = q.correct_answer.trim().toUpperCase()
+         if (clean.length === 1) {
+           correctAnswer = clean.charCodeAt(0) - 65 // 'A' (65) -> 0
+         }
+      }
+
+      return {
+        id: String(idx + 1),
+        question: q.question,
+        options: options,
+        correctAnswer: correctAnswer,
+      }
+    })
   }
 
   if (activeView === "flashcard" && selectedItem) {
@@ -452,6 +513,7 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
             <AudioPlayerView
               title={currentAudio.title}
               duration={currentAudio.duration}
+              url={currentAudio.url}
               onClose={() => setShowAudioPlayer(false)}
             />
           )}

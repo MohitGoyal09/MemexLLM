@@ -42,6 +42,7 @@ const securityHeaders = [
       // Allow connections to self, backend API (localhost in dev), and Supabase domains
       "connect-src 'self' http://localhost:8000 https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in",
       "font-src 'self' data:",
+      "media-src 'self' blob: https://*.supabase.co https://*.supabase.in",  // Critical for audio playback
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

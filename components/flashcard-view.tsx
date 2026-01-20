@@ -71,12 +71,16 @@ export function FlashcardView({ title, sourceCount, flashcards, onBack }: Flashc
             {/* Front */}
             <div
               className={`
-                absolute inset-0 backface-hidden
+                absolute inset-0
                 bg-gradient-to-br from-slate-700 to-slate-800 
                 rounded-2xl p-6 flex flex-col justify-between
                 border border-slate-600/50 shadow-xl
               `}
-              style={{ backfaceVisibility: "hidden" }}
+              style={{ 
+                backfaceVisibility: "hidden",
+                transform: "rotateY(0deg)",
+                WebkitBackfaceVisibility: "hidden"
+              }}
             >
               <p className="text-lg font-medium leading-relaxed">{currentCard?.question}</p>
               <button
@@ -100,13 +104,14 @@ export function FlashcardView({ title, sourceCount, flashcards, onBack }: Flashc
             {/* Back */}
             <div
               className={`
-                absolute inset-0 backface-hidden
+                absolute inset-0
                 bg-gradient-to-br from-slate-700 to-slate-800 
                 rounded-2xl p-6 flex flex-col justify-between
                 border border-slate-600/50 shadow-xl
               `}
               style={{
                 backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
                 transform: "rotateY(180deg)",
               }}
             >

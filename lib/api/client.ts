@@ -37,12 +37,20 @@ export class RateLimitError extends ApiError {
 
 /**
  * Handles 401/403 responses by logging the event and redirecting to login page (browser-side only)
+ * Note: 403 for /tasks/ endpoints is NOT redirected as it often indicates a race condition
+ * (task_progress record not yet created), not an actual auth failure.
  */
 function handleAuthError(status: number, endpoint: string): void {
   if (status === 401 && typeof window !== "undefined") {
     authLogger.logUnauthorizedAccess(endpoint, status);
     window.location.href = "/auth/login";
   } else if (status === 403 && typeof window !== "undefined") {
+    // Don't redirect for task endpoints - 403 often means race condition, not auth failure
+    if (endpoint.includes("/tasks/")) {
+      authLogger.logForbiddenAccess(endpoint);
+      // Don't redirect, just let the error propagate and be handled by caller
+      return;
+    }
     authLogger.logForbiddenAccess(endpoint);
     window.location.href = "/auth/login";
   }

@@ -115,7 +115,14 @@ export function useStudio({ notebookId, pollInterval = 3000 }: UseStudioOptions)
   const fetchContent = useCallback(async () => {
     try {
       const response = await generationApi.listContent(notebookId);
-      const studioItems = response.items.map((item) =>
+      
+      // Deduplicate by content ID (in case backend returns duplicates)
+      const seenIds = new Map<string, ContentItemResponse>();
+      response.items.forEach((item) => {
+        seenIds.set(item.id, item);
+      });
+      
+      const studioItems = Array.from(seenIds.values()).map((item) =>
         toStudioItem(item, newItemIds.current.has(item.id))
       );
       setItems(studioItems);
@@ -172,7 +179,14 @@ export function useStudio({ notebookId, pollInterval = 3000 }: UseStudioOptions)
               
               // Refresh content list
               await fetchContent();
-              setGeneratingTool(null);
+              
+              // Only clear generatingTool if NO tasks remaining
+              setGeneratingTasks((prev) => {
+                if (prev.length === 0) {
+                  setGeneratingTool(null);
+                }
+                return prev;
+              });
             }
           } else {
             // No task ID - poll content directly
@@ -191,11 +205,23 @@ export function useStudio({ notebookId, pollInterval = 3000 }: UseStudioOptions)
               }
               
               await fetchContent();
-              setGeneratingTool(null);
+              
+              // Only clear generatingTool if NO tasks remaining
+              setGeneratingTasks((prev) => {
+                if (prev.length === 0) {
+                  setGeneratingTool(null);
+                }
+                return prev;
+              });
             }
           }
         } catch (err) {
-          console.error("Failed to poll task:", err);
+          // 403 often means task_progress record not created yet - just retry next interval
+          if (err instanceof Error && err.message.includes("403")) {
+            console.log("Task polling: 403 (likely race condition), will retry...");
+          } else {
+            console.error("Failed to poll task:", err);
+          }
         }
       }
     };
@@ -224,15 +250,23 @@ export function useStudio({ notebookId, pollInterval = 3000 }: UseStudioOptions)
         // Try async generation first
         const response = await generationApi.generateAsync(notebookId, contentType);
         
-        // Add to generating tasks for polling
-        setGeneratingTasks((prev) => [
-          ...prev,
-          {
-            toolLabel,
-            taskId: response.task_id,
-            contentId: response.content_id,
-          },
-        ]);
+        // Add to generating tasks for polling (check for duplicates first)
+        setGeneratingTasks((prev) => {
+          // Don't add if already tracking this content
+          if (prev.some((t) => t.contentId === response.content_id)) {
+            console.log("Already tracking content generation:", response.content_id);
+            return prev;
+          }
+          
+          return [
+            ...prev,
+            {
+              toolLabel,
+              taskId: response.task_id,
+              contentId: response.content_id,
+            },
+          ];
+        });
       } catch (err) {
         console.error("Async generation failed, trying sync:", err);
         

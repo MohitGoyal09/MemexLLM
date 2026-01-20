@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+
 import {
   Plus,
   Search,
@@ -28,6 +30,7 @@ interface SourcesPanelProps {
   onToggleSource: (id: string) => void
   onSelectAll: () => void
   onCollapse: () => void
+  onRefresh?: () => Promise<void> | void
 }
 
 const getSourceIcon = (type: Source["type"]) => {
@@ -65,18 +68,42 @@ export function SourcesPanel({
   onToggleSource,
   onSelectAll,
   onCollapse,
+  onRefresh,
 }: SourcesPanelProps) {
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const completedSources = sources.filter((s) => s.status === "completed" || !s.status)
   const processingSources = sources.filter((s) => s.status === "pending" || s.status === "processing")
+
+  const handleRefresh = async () => {
+    if (!onRefresh) return
+    setIsRefreshing(true)
+    try {
+      await onRefresh()
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500)
+    }
+  }
 
   return (
     <div className="w-full h-full border-r border-border bg-card flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="font-semibold">Sources</h2>
-        <button onClick={onCollapse} className="p-1 hover:bg-secondary rounded transition-colors">
-          <PanelLeftClose className="w-5 h-5 text-muted-foreground" />
-        </button>
+        <div className="flex items-center gap-1">
+          {onRefresh && (
+            <button 
+              onClick={handleRefresh} 
+              disabled={isRefreshing}
+              className="p-1 hover:bg-secondary rounded transition-colors group disabled:opacity-50"
+              title="Refresh sources"
+            >
+              <Loader2 className={`w-4 h-4 text-muted-foreground group-hover:text-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          )}
+          <button onClick={onCollapse} className="p-1 hover:bg-secondary rounded transition-colors">
+            <PanelLeftClose className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">

@@ -1,17 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import {
-  Maximize2,
   Minimize2,
   ThumbsUp,
   ThumbsDown,
   ChevronRight,
-  ChevronUp,
-  ChevronDown,
   Plus,
   Minus,
   Download,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -28,175 +27,335 @@ interface MindMapViewProps {
   onBack: () => void
 }
 
+// Branch Node Component
 function MindMapNodeComponent({
   node,
   isRoot = false,
+  isFirst = false,
+  isLast = false,
+  isOnly = false,
+  level = 0,
   expanded,
   onToggle,
 }: {
   node: MindMapNode
   isRoot?: boolean
+  isFirst?: boolean
+  isLast?: boolean
+  isOnly?: boolean
+  level?: number
   expanded: Record<string, boolean>
   onToggle: (id: string) => void
 }) {
   const hasChildren = node.children && node.children.length > 0
   const isExpanded = expanded[node.id]
 
+  // NotebookLLM Style Colors
+  const nodeStyles = isRoot
+    ? "bg-[#1e293b] border-[#334155] text-white shadow-lg shadow-black/20"
+    : "bg-[#0f172a] border-[#1e293b] text-slate-200 hover:border-slate-700 hover:bg-[#1e293b] transition-colors"
+
   return (
-    <div className={`flex items-center ${isRoot ? "" : "ml-4"}`}>
-      <div
-        className={`
-          px-4 py-3 rounded-lg border transition-all duration-200 shadow-sm
-          ${
-            isRoot
-              ? "bg-slate-700 border-slate-600 text-foreground font-medium text-lg"
-              : "bg-slate-800/80 border-slate-700 hover:border-slate-500 text-slate-200"
-          }
-        `}
-      >
-        <span className="text-sm">{node.label}</span>
+    <div className="flex">
+      {/* 
+        Strict Flex Row:
+        [Connector] [Content] [Children Column]
+        
+        CRITICAL: 
+        - The `Connector` must determine the vertical connectivity.
+        - We use a CSS-based approach for 'Curly Brackets'.
+        - To avoid gaps, the outer wrapper has NO vertical padding/margin.
+        - Visual spacing is handled inside the Content Wrapper.
+      */}
+      
+      {/* Connector (The branch entering this node) */}
+      {!isRoot && (
+        <div className="w-16 relative shrink-0">
+          {/* 
+             Curly Bracket Logic:
+             We use absolute divs to draw the lines.
+             The vertical spine must align perfectly with siblings.
+          */}
+          
+          {/* Horizontal Entry Line (Connecting to node) */}
+          {/* Starts from the curve end and touches the node */}
+          <div className="absolute right-0 top-1/2 w-8 h-px bg-slate-700 -translate-y-[0.5px]" />
+
+          {/* Vertical Spine & Curves */}
+          {isOnly ? (
+             // Single child: Straight horizontal line from parent to here
+             <div className="absolute left-0 top-1/2 w-16 h-px bg-slate-700 -translate-y-[0.5px]" />
+          ) : (
+            <>
+              {/* Upper Vertical Line (From top to center) */}
+              {/* For first node: starts at 50% (center) going down? No, first node is top. 
+                  It needs to connect to the parent (which is vertically 'centered' relative to the group).
+                  Actually in this recursive layout:
+                  The 'Parent' output is at the vertical center of the Children Column.
+                  So the vertical spine runs along the LEFT edge of this block (left=0).
+              */}
+              
+              {/* Line Segments */}
+              
+              {/* 1. Upper Spine Segment */}
+              {!isFirst && (
+                <div className="absolute left-0 top-0 h-[50%] w-px bg-slate-700" />
+              )}
+              
+              {/* 2. Lower Spine Segment */}
+              {!isLast && (
+                 <div className="absolute left-0 top-1/2 h-[50%] w-px bg-slate-700" />
+              )}
+              
+              {/* 3. The Curve */}
+              {/* If First: Curve from Bottom-Left (Spine) to Right */}
+              {isFirst && (
+                <div className="absolute left-0 bottom-0 w-8 h-[50%] border-l border-t border-slate-700 rounded-tl-[32px] -translate-y-[0.5px]" />
+              )}
+              
+              {/* If Last: Curve from Top-Left (Spine) to Right */}
+              {isLast && (
+                <div className="absolute left-0 top-0 w-8 h-[50%] border-l border-b border-slate-700 rounded-bl-[32px] translate-y-[0.5px]" />
+              )}
+              
+              {/* If Middle: T-Junction - Straight Horizontal line from Spine */}
+              {!isFirst && !isLast && (
+                <div className="absolute left-0 top-1/2 w-8 h-px bg-slate-700 -translate-y-[0.5px]" />
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Node Content Wrapper */}
+      {/* Visual Spacing added here (py-2) to separate nodes vertically without breaking connection lines */ }
+      <div className={`flex items-center group py-2 ${!isRoot ? 'pl-0' : ''}`}>
+        
+        {/* Node Card - Pill Shaped */}
+        <div
+          className={`
+            relative z-10 flex items-center gap-3 px-6 py-3.5 rounded-full border 
+            transition-all duration-300 select-none cursor-pointer
+            ${nodeStyles}
+            ${hasChildren ? 'pr-4' : 'pr-6'}
+          `}
+          style={{
+             minWidth: isRoot ? '220px' : '180px',
+             maxWidth: '360px'
+          }}
+          onClick={(e) => {
+             // Allow clicking the whole card to toggle if desired, or just select
+             e.stopPropagation()
+             // Optional: selectNode(node.id)
+          }}
+        >
+          <span className={`truncate text-sm ${isRoot ? 'font-medium text-lg tracking-tight' : 'font-normal tracking-normal'}`}>
+            {node.label}
+          </span>
+          
+          {/* Use the whole right side for the toggle if implies expansion */}
+          {hasChildren && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggle(node.id)
+              }}
+              className={`
+                flex items-center justify-center w-6 h-6 rounded-full
+                hover:bg-white/10 transition-colors
+                ${isExpanded ? 'bg-transparent' : ''}
+              `}
+            >
+              <ChevronRight
+                className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${
+                  isExpanded ? "rotate-0" : "" 
+                }`} 
+              />
+            </button>
+          )}
+        </div>
+
+        {/* Output Line (Parent to Children) */}
+        {hasChildren && isExpanded && (
+           <div className="w-16 h-px bg-slate-700" />
+        )}
       </div>
 
-      {hasChildren && (
-        <>
-          {/* Connector line */}
-          <div className="w-8 h-px bg-slate-600" />
-
-          {/* Expand/collapse button */}
-          <button
-            onClick={() => onToggle(node.id)}
-            className="w-6 h-6 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center hover:bg-slate-600 transition-colors z-10"
-          >
-            <ChevronRight className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-          </button>
-        </>
+      {/* Children Column */}
+      {/* No vertical gap here; specific padding inside children handles spacing */}
+      {hasChildren && isExpanded && (
+        <div className="flex flex-col">
+          {node.children!.map((child, idx, arr) => (
+            <MindMapNodeComponent
+              key={child.id}
+              node={child}
+              level={level + 1}
+              isFirst={idx === 0}
+              isLast={idx === arr.length - 1}
+              isOnly={arr.length === 1}
+              expanded={expanded}
+              onToggle={onToggle}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
 }
 
+
 export function MindMapView({ title, sourceCount, rootNode, onBack }: MindMapViewProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     [rootNode.id]: true,
   })
+  
+  // Pan and Zoom State
   const [zoom, setZoom] = useState(100)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 })
+
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const toggleNode = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
+  const expandAll = () => {
+    const allIds: Record<string, boolean> = {}
+    const collectIds = (node: MindMapNode) => {
+      allIds[node.id] = true
+      node.children?.forEach(collectIds)
+    }
+    collectIds(rootNode)
+    setExpanded(allIds)
+  }
+
+  const collapseAll = () => {
+    setExpanded({ [rootNode.id]: true })
+  }
+
+  // Mouse Event Handlers for Panning
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).tagName === "BUTTON") return
+    setIsDragging(true)
+    setLastMousePos({ x: e.clientX, y: e.clientY })
+    if (containerRef.current) containerRef.current.style.cursor = "grabbing"
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return
+    const dx = e.clientX - lastMousePos.x
+    const dy = e.clientY - lastMousePos.y
+    setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }))
+    setLastMousePos({ x: e.clientX, y: e.clientY })
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+    if (containerRef.current) containerRef.current.style.cursor = "grab"
+  }
+
+  useEffect(() => {
+     // Center nicely
+     setPan({ x: 150, y: window.innerHeight / 2 - 50 }) 
+  }, [])
+
   return (
-    <div className="relative w-full h-full bg-[#1e1e1e] flex flex-col overflow-hidden group">
-      {/* Floating Header */}
-      <div className="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-start pointer-events-none">
+    <div className="relative w-full h-full bg-[#030712] flex flex-col overflow-hidden text-slate-200 selection:bg-indigo-500/30">
+      {/* Header overlay */}
+      <div className="absolute top-0 left-0 right-0 p-8 z-20 flex justify-between items-start pointer-events-none">
         <div className="pointer-events-auto space-y-1">
-          <h2 className="text-2xl font-normal text-foreground">{title}</h2>
-          <p className="text-sm text-muted-foreground">Based on {sourceCount} sources</p>
-        </div>
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full text-muted-foreground hover:text-foreground hover:bg-white/10"
-          >
-            <Download className="w-5 h-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            className="rounded-full text-muted-foreground hover:text-foreground hover:bg-white/10"
-          >
-            <Minimize2 className="w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Mind Map Canvas */}
-      <div className="flex-1 w-full h-full overflow-auto p-4 cursor-move active:cursor-grabbing">
-        <div
-          className="flex items-center justify-center min-h-full min-w-full"
-          style={{
-            transform: `scale(${zoom / 100})`,
-            transformOrigin: "center",
-          }}
-        >
-          <div className="flex items-center">
-            {/* Root Node */}
-            <MindMapNodeComponent node={rootNode} isRoot expanded={expanded} onToggle={toggleNode} />
-
-            {/* Children */}
-            {expanded[rootNode.id] && rootNode.children && (
-              <div className="flex flex-col gap-4 ml-4">
-                {rootNode.children.map((child) => (
-                  <div key={child.id} className="flex items-center">
-                    {/* Connector line */}
-                    <div className="w-4 h-px bg-slate-600" />
-
-                    <div
-                      className="px-4 py-3 rounded-lg bg-slate-800/90 border border-slate-700 
-                        hover:border-slate-500 transition-all duration-200 flex items-center gap-3 shadow-sm"
-                    >
-                      <span className="text-sm text-slate-200">{child.label}</span>
-                      {child.children && child.children.length > 0 && (
-                        <button
-                          onClick={() => toggleNode(child.id)}
-                          className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 border border-slate-600"
-                        >
-                          <ChevronRight
-                            className={`w-3 h-3 transition-transform ${expanded[child.id] ? "rotate-90" : ""}`}
-                          />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          <h2 className="text-3xl font-light text-slate-100 tracking-tight">{title}</h2>
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+            <p className="text-sm text-slate-400 font-medium">Based on {sourceCount} sources</p>
           </div>
         </div>
+        <div className="flex items-center gap-1 pointer-events-auto bg-[#0f172a]/50 p-1 rounded-full border border-white/5 backdrop-blur-sm">
+          <Button variant="ghost" size="icon" onClick={expandAll} className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8">
+            <ZoomIn className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={collapseAll} className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8">
+            <ZoomOut className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8">
+            <Download className="w-4 h-4" />
+          </Button>
+          <div className="w-px h-4 bg-white/10 mx-1" />
+          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8">
+            <Minimize2 className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Floating Bottom Feedback */}
-      <div className="absolute bottom-6 left-6 z-20 flex items-center gap-3">
-        <Button variant="secondary" size="sm" className="gap-2 rounded-full bg-[#2d2d2d] border border-white/5 hover:bg-[#3d3d3d] text-white">
-          <ThumbsUp className="w-4 h-4" />
-          Good content
+      {/* Interactive Canvas */}
+      <div
+        ref={containerRef}
+        className="flex-1 w-full h-full overflow-hidden cursor-grab active:cursor-grabbing relative"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onWheel={(e) => {
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault()
+            const delta = e.deltaY > 0 ? -10 : 10
+            setZoom((z) => Math.max(10, Math.min(200, z + delta)))
+          } else {
+             setPan((p) => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }))
+          }
+        }}
+      >
+        <div
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
+            transformOrigin: "0 0",
+            transition: isDragging ? "none" : "transform 0.1s cubic-bezier(0.4, 0, 0.2, 1)", 
+            willChange: "transform",
+          }}
+          className="absolute top-0 left-0 w-max h-max p-40"
+        >
+          <MindMapNodeComponent
+            node={rootNode}
+            isRoot
+            expanded={expanded}
+            onToggle={toggleNode}
+          />
+        </div>
+        
+        {/* Subtle Node-Link Dot Grid */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.07]"
+          style={{
+            backgroundImage: "radial-gradient(#94a3b8 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+            transform: `translate(${pan.x % 32}px, ${pan.y % 32}px)`
+          }}
+        />
+      </div>
+
+      {/* Bottom Controls */}
+      <div className="absolute bottom-8 left-8 z-20 flex gap-2">
+        <Button variant="outline" className="h-9 px-4 rounded-full bg-[#0f172a]/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-md">
+          <ThumbsUp className="w-3.5 h-3.5 mr-2" /> Good
         </Button>
-        <Button variant="secondary" size="sm" className="gap-2 rounded-full bg-[#2d2d2d] border border-white/5 hover:bg-[#3d3d3d] text-white">
-          <ThumbsDown className="w-4 h-4" />
-          Bad content
+        <Button variant="outline" className="h-9 px-4 rounded-full bg-[#0f172a]/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-md">
+          <ThumbsDown className="w-3.5 h-3.5 mr-2" /> Bad
         </Button>
       </div>
 
-      {/* Floating Zoom Controls */}
-      <div className="absolute bottom-6 right-6 z-20 flex flex-col gap-1 bg-[#2d2d2d] rounded-lg p-1 border border-white/5 shadow-lg">
-        <button
-          onClick={() => setZoom(Math.min(150, zoom + 10))}
-          className="p-1.5 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
-        >
-          <ChevronUp className="w-5 h-5" />
+      {/* Zoom Controls */}
+      <div className="absolute bottom-8 right-8 z-20 flex flex-col bg-[#0f172a]/90 backdrop-blur-md border border-slate-800 rounded-full shadow-2xl p-1 gap-1">
+        <button className="p-2.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors" onClick={() => setZoom(z => Math.min(200, z + 10))}>
+          <Plus className="w-4 h-4" />
         </button>
-        <button
-          onClick={() => setZoom(Math.max(50, zoom - 10))}
-          className="p-1.5 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
-        >
-          <ChevronDown className="w-5 h-5" />
-        </button>
-        <div className="h-px bg-white/10 mx-1 my-0.5" />
-        <button
-          onClick={() => setZoom(Math.min(150, zoom + 10))}
-          className="p-1.5 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => setZoom(Math.max(50, zoom - 10))}
-          className="p-1.5 rounded hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
-        >
-          <Minus className="w-5 h-5" />
+        <button className="p-2.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors" onClick={() => setZoom(z => Math.max(10, z - 10))}>
+          <Minus className="w-4 h-4" />
         </button>
       </div>
     </div>
   )
 }
+
+

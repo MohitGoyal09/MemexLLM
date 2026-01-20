@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { X, Upload, Sparkles } from "lucide-react"
+import { X, Upload, Sparkles, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SynapseLogo } from "@/components/synapse-logo"
 import { useRouter } from "next/navigation"
+import { notebooksApi } from "@/lib/api"
 
 interface CreateNotebookModalProps {
   open: boolean
@@ -13,14 +14,24 @@ interface CreateNotebookModalProps {
 
 export function CreateNotebookModal({ open, onOpenChange }: CreateNotebookModalProps) {
   const [title, setTitle] = useState("")
+  const [isCreating, setIsCreating] = useState(false)
   const router = useRouter()
 
   if (!open) return null
 
-  const handleCreate = () => {
-    // Navigate to new notebook
-    router.push("/notebook/new")
-    onOpenChange(false)
+  const handleCreate = async () => {
+    if (isCreating) return
+    setIsCreating(true)
+    try {
+      const notebook = await notebooksApi.create({ 
+        title: title.trim() || "Untitled notebook" 
+      })
+      onOpenChange(false)
+      router.push(`/notebook/${notebook.id}`)
+    } catch (err) {
+      console.error("Failed to create notebook:", err)
+      setIsCreating(false)
+    }
   }
 
   return (
@@ -64,12 +75,21 @@ export function CreateNotebookModal({ open, onOpenChange }: CreateNotebookModalP
               variant="outline"
               className="flex-1 gap-2 rounded-full bg-transparent"
               onClick={() => onOpenChange(false)}
+              disabled={isCreating}
             >
               Cancel
             </Button>
-            <Button className="flex-1 gap-2 rounded-full" onClick={handleCreate}>
-              <Upload className="w-4 h-4" />
-              Create & Add Sources
+            <Button 
+              className="flex-1 gap-2 rounded-full" 
+              onClick={handleCreate}
+              disabled={isCreating}
+            >
+              {isCreating ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+              {isCreating ? "Creating..." : "Create & Add Sources"}
             </Button>
           </div>
         </div>

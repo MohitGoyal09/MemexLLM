@@ -22,7 +22,7 @@ function transformNotebook(notebook: Notebook) {
       month: "short",
       year: "numeric",
     }),
-    sources: 0,
+    sources: notebook.source_count ?? 0,
     isPublic: false,
   }
 }
@@ -56,8 +56,18 @@ export default function HomePage() {
     fetchNotebooks()
   }, [router])
 
-  const handleCreateNew = () => {
-    router.push("/notebook/new")
+  const [isCreating, setIsCreating] = useState(false)
+
+  const handleCreateNew = async () => {
+    if (isCreating) return
+    setIsCreating(true)
+    try {
+      const notebook = await notebooksApi.create({ title: "Untitled notebook" })
+      router.push(`/notebook/${notebook.id}`)
+    } catch (err) {
+      console.error("Failed to create notebook:", err)
+      setIsCreating(false)
+    }
   }
 
   // Transform notebooks for display
@@ -65,6 +75,11 @@ export default function HomePage() {
 
   // Get 3 most recent notebooks
   const recentNotebooks = allNotebooks.slice(0, 3)
+
+  // Handle notebook update (e.g. title rename)
+  const handleNotebookUpdate = (id: string, newTitle: string) => {
+    setNotebooks(prev => prev.map(n => n.id === id ? { ...n, title: newTitle } : n))
+  }
 
   if (loading) {
     return (
@@ -112,10 +127,11 @@ export default function HomePage() {
             
            <Button
              onClick={handleCreateNew}
-             className="gap-2 rounded-full bg-foreground text-background hover:bg-foreground/90 font-medium h-9 text-xs px-4"
+             disabled={isCreating}
+             className="gap-2 rounded-full bg-foreground text-background hover:bg-foreground/90 font-medium h-9 text-xs px-4 cursor-pointer"
            >
-             <Plus className="w-3.5 h-3.5" />
-             Create new
+             {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+             {isCreating ? "Creating..." : "Create new"}
            </Button>
         </div>
 
@@ -132,9 +148,9 @@ export default function HomePage() {
             </div>
             <h2 className="text-xl font-semibold mb-2">No notebooks yet</h2>
             <p className="text-muted-foreground mb-6">Create your first notebook to get started</p>
-            <Button onClick={handleCreateNew} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Create notebook
+            <Button onClick={handleCreateNew} disabled={isCreating} className="gap-2">
+              {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              {isCreating ? "Creating..." : "Create notebook"}
             </Button>
           </div>
         ) : (
@@ -146,7 +162,7 @@ export default function HomePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                    {recentNotebooks.map((notebook) => (
                       <Link href={`/notebook/${notebook.id}`} key={notebook.id}>
-                        <NotebookCard notebook={notebook} variant="recent" />
+                        <NotebookCard notebook={notebook} variant="recent" onUpdate={handleNotebookUpdate} />
                       </Link>
                    ))}
                 </div>
@@ -162,18 +178,18 @@ export default function HomePage() {
                   {/* Create New Card */}
                    <div 
                       onClick={handleCreateNew}
-                      className="h-48 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 group"
+                      className={`h-48 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 group ${isCreating ? 'opacity-50 pointer-events-none' : ''}`}
                    >
                       <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                         <Plus className="w-6 h-6 text-primary" />
+                         {isCreating ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Plus className="w-6 h-6 text-primary" />}
                       </div>
-                      <span className="font-medium text-muted-foreground group-hover:text-foreground transition-colors">Create new notebook</span>
+                      <span className="font-medium text-muted-foreground group-hover:text-foreground transition-colors">{isCreating ? "Creating notebook..." : "Create new notebook"}</span>
                    </div>
 
                   {/* All Notebooks */}
                   {allNotebooks.map((notebook) => (
                     <Link href={`/notebook/${notebook.id}`} key={notebook.id}>
-                      <NotebookCard notebook={notebook} />
+                      <NotebookCard notebook={notebook} onUpdate={handleNotebookUpdate} />
                     </Link>
                   ))}
                 </div>

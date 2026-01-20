@@ -31,6 +31,7 @@ export interface Notebook {
   settings: NotebookRAGSettings;
   created_at: string;
   updated_at: string;
+  source_count?: number;
 }
 
 export interface CreateNotebookRequest {
