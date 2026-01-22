@@ -21,7 +21,7 @@ export interface NotebookSettings {
   sentence_window_size: number
   response_mode: "compact" | "tree_summarize" | "refine"
   streaming: boolean
-  prompt_style: "citation" | "conversational" | "neutral"
+  prompt_style: "notebooklm" | "citation" | "conversational" | "neutral"
 }
 
 export const defaultSettings: NotebookSettings = {
@@ -38,7 +38,7 @@ export const defaultSettings: NotebookSettings = {
   sentence_window_size: 3,
   response_mode: "compact",
   streaming: true,
-  prompt_style: "conversational",
+  prompt_style: "notebooklm",
 }
 
 interface NotebookSettingsModalProps {
@@ -144,6 +144,13 @@ export function NotebookSettingsModal({ open, onOpenChange, settings: initialSet
       </div>
     </div>
   )
+
+  const PROMPT_STYLES = [
+    { value: "notebooklm", label: "Deep Dive" },
+    { value: "conversational", label: "Conversational" },
+    { value: "citation", label: "Citation" },
+    { value: "neutral", label: "Neutral" },
+  ]
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
@@ -310,18 +317,18 @@ export function NotebookSettingsModal({ open, onOpenChange, settings: initialSet
                  <div className="bg-secondary/20 p-4 rounded-xl border border-border/50 space-y-6">
                     <div className="space-y-3">
                         <Label>Prompt Style</Label>
-                        <div className="grid grid-cols-3 gap-2">
-                            {["conversational", "citation", "neutral"].map((style) => (
+                        <div className="grid grid-cols-2 gap-2">
+                            {PROMPT_STYLES.map((style) => (
                                 <button
-                                    key={style}
-                                    onClick={() => setSettings({...settings, prompt_style: style as any})}
+                                    key={style.value}
+                                    onClick={() => setSettings({...settings, prompt_style: style.value as any})}
                                     className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all ${
-                                        settings.prompt_style === style 
+                                        settings.prompt_style === style.value
                                         ? "border-primary bg-primary/10 text-primary" 
                                         : "border-transparent bg-secondary hover:bg-secondary/80 text-muted-foreground"
                                     }`}
                                 >
-                                    {style.charAt(0).toUpperCase() + style.slice(1)}
+                                    {style.label}
                                 </button>
                             ))}
                         </div>

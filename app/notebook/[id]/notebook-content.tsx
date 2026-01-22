@@ -29,7 +29,7 @@ interface Message {
   role: "user" | "assistant"
   content: string
   timestamp: string
-  citations?: number[]
+  citations?: Citation[]
   isStreaming?: boolean
 }
 
@@ -79,7 +79,7 @@ function apiMessageToMessage(msg: ApiChatMessage): Message {
     role: msg.role,
     content: msg.content,
     timestamp: new Date(msg.created_at).toLocaleString(),
-    citations: msg.citations?.map((_, idx) => idx + 1),
+    citations: msg.citations || [],
   }
 }
 
@@ -225,42 +225,68 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
       setMessages((prev) => [...prev, assistantMessage])
       setIsStreaming(true)
 
+      const isStreamingEnabled = notebookSettings.streaming !== false // Default to true
+
       try {
-        await chatApi.sendMessageStream(
-          notebookId,
-          content,
-          // On token
-          (token) => {
-            setMessages((prev) =>
-              prev.map((msg) => (msg.id === assistantId ? { ...msg, content: msg.content + token } : msg))
-            )
-          },
-          // On citations
-          (citations: Citation[]) => {
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantId ? { ...msg, citations: citations.map((_, idx) => idx + 1) } : msg
+        if (isStreamingEnabled) {
+          await chatApi.sendMessageStream(
+            notebookId,
+            content,
+            // On token
+            (token) => {
+              setMessages((prev) =>
+                prev.map((msg) => (msg.id === assistantId ? { ...msg, content: msg.content + token } : msg))
               )
-            )
-          },
-          // On complete
-          () => {
-            setMessages((prev) => prev.map((msg) => (msg.id === assistantId ? { ...msg, isStreaming: false } : msg)))
-            setIsStreaming(false)
-          },
-          // On error
-          (error) => {
-            console.error("Chat stream error:", error)
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantId
-                  ? { ...msg, content: "Sorry, an error occurred. Please try again.", isStreaming: false }
-                  : msg
+            },
+            // On citations
+            (citations: Citation[]) => {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantId ? { ...msg, citations: citations } : msg
+                )
               )
+            },
+            // On complete
+            () => {
+              setMessages((prev) => prev.map((msg) => (msg.id === assistantId ? { ...msg, isStreaming: false } : msg)))
+              setIsStreaming(false)
+            },
+            // On error
+            (error) => {
+              console.error("Chat stream error:", error)
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantId
+                    ? { ...msg, content: "Sorry, an error occurred. Please try again.", isStreaming: false }
+                    : msg
+                )
+              )
+              setIsStreaming(false)
+            }
+          )
+        } else {
+          // Non-streaming request
+          const response = await chatApi.sendMessage(notebookId, content)
+          
+          // Use 'response.content' if the API returns { role, content, citations } structure
+          // Checking types.ts: ChatResponse has content and citations
+          const responseContent = (response as any).content || (response as any).message || "" 
+          const responseCitations = (response as any).citations || []
+
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantId
+                ? {
+                    ...msg,
+                    content: responseContent,
+                    citations: responseCitations,
+                    isStreaming: false,
+                  }
+                : msg
             )
-            setIsStreaming(false)
-          }
-        )
+          )
+          setIsStreaming(false)
+        }
       } catch (err) {
         console.error("Failed to send message:", err)
         setMessages((prev) =>
@@ -273,7 +299,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
         setIsStreaming(false)
       }
     },
-    [notebookId]
+    [notebookId, notebookSettings.streaming]
   )
 
   const handleDeleteHistory = useCallback(async () => {
