@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { SlidersHorizontal, MoreVertical, Pin, Copy, ThumbsUp, ThumbsDown, ArrowRight } from "lucide-react"
+import { SlidersHorizontal, MoreVertical, Pin, Copy, ThumbsUp, ThumbsDown, ArrowRight, RefreshCw, Sparkles, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -13,6 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Citation } from "@/lib/api/types"
+import { CitationPreview, CitationFooter } from "@/components/citation-preview"
+import { useSuggestedQuestions } from "@/hooks/use-suggested-questions"
+import { cn } from "@/lib/utils"
 
 interface Message {
   id: string
@@ -20,24 +23,60 @@ interface Message {
   content: string
   timestamp: string
   citations?: Citation[]
+  isStreaming?: boolean
+}
+
+interface LastChatTurn {
+  userMessage: string
+  assistantMessage: string
 }
 
 interface ChatPanelProps {
   messages: Message[]
   sourceCount: number
+  notebookId: string | null
   onSendMessage: (content: string) => void
   onOpenSettings?: () => void
   onDeleteHistory?: () => void
+  lastChatTurn?: LastChatTurn | null
 }
 
-const suggestedQuestions = [
-  "How does the Transformer-Squared framework enable large language models to adapt dynamically?",
-  "What role does Singular Value Decomposition play in modifying model weights efficiently?",
-  "Which challenges regarding resource intensity and ethics impact the deployment of these models?",
-]
-
-export function ChatPanel({ messages, sourceCount, onSendMessage, onOpenSettings, onDeleteHistory }: ChatPanelProps) {
+export function ChatPanel({ 
+  messages, 
+  sourceCount, 
+  notebookId, 
+  onSendMessage, 
+  onOpenSettings, 
+  onDeleteHistory,
+  lastChatTurn 
+}: ChatPanelProps) {
   const [input, setInput] = useState("")
+  const { 
+    questions, 
+    conversationQuestions, 
+    isLoading: suggestionsLoading, 
+    isLoadingConversation, 
+    error: suggestionsError, 
+    documentCount, 
+    refresh: refreshSuggestions,
+    refreshFromConversation 
+  } = useSuggestedQuestions(notebookId)
+
+  // Trigger conversation-based suggestions when last chat turn changes
+  useEffect(() => {
+    if (lastChatTurn?.userMessage && lastChatTurn?.assistantMessage) {
+      refreshFromConversation(lastChatTurn.userMessage, lastChatTurn.assistantMessage)
+    }
+  }, [lastChatTurn, refreshFromConversation])
+
+  // Determine which questions to show:
+  // - If we have conversation-based questions, use those (they're more relevant)
+  // - Otherwise fall back to document-based questions
+  const displayQuestions = conversationQuestions.length > 0 
+    ? conversationQuestions.map((text, i) => ({ id: `conv-${i}`, text, context: null }))
+    : questions
+  
+  const isLoadingSuggestions = suggestionsLoading || isLoadingConversation
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,18 +146,22 @@ export function ChatPanel({ messages, sourceCount, onSendMessage, onOpenSettings
                             const text = String(children);
                             const match = text.match(/^\[(\d+)\]$/);
                             if (match) {
-                                const id = parseInt(match[1]);
+                                let id = parseInt(match[1]);
+
+                                // Handle 0-indexed citations from LLM (map 0 -> 1)
+                                if (id === 0) id = 1;
+
                                 // Assuming citations are 1-indexed in text, so index is id-1
-                                const citation = message.citations && message.citations[id - 1];
+                                // Safety check for bounds
+                                const citation = message.citations && id <= message.citations.length ? message.citations[id - 1] : undefined;
+
                                 if (citation) {
                                     return (
-                                        <span className="relative group inline-block cursor-help text-teal-500 hover:bg-teal-500/10 rounded px-0.5 transition-colors align-baseline mx-0.5">
-                                            <span className="font-bold">[{id}]</span>
-                                            <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-secondary text-secondary-foreground text-xs rounded-md border shadow-md z-50 pointer-events-none">
-                                                <span className="block font-semibold mb-1 text-teal-600">Source {id}</span>
-                                                <span className="line-clamp-4 italic">"{citation.text_preview}"</span>
-                                            </div>
-                                        </span>
+                                        <CitationPreview
+                                            citation={citation}
+                                            index={id}
+                                            className="mx-0.5"
+                                        />
                                     );
                                 }
                             }
@@ -145,20 +188,9 @@ export function ChatPanel({ messages, sourceCount, onSendMessage, onOpenSettings
                     })()}
                   </ReactMarkdown>
                   
-                  {/* Append separate citation tags if they exist in metadata but not in text */}
+                  {/* Enhanced citation footer with expandable previews */}
                   {message.citations && message.citations.length > 0 && (
-                     <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border/50">
-                        <span className="text-xs text-muted-foreground mr-1">Sources:</span>
-                         {message.citations.map((cite, idx) => (
-                            <span
-                              key={idx}
-                              className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-teal-500/10 text-teal-500 text-[10px] font-bold border border-teal-500/20 cursor-help"
-                              title={cite.text_preview}
-                            >
-                              {idx + 1}
-                            </span>
-                          ))}
-                     </div>
+                    <CitationFooter citations={message.citations} />
                   )}
                 </div>
 
@@ -183,17 +215,95 @@ export function ChatPanel({ messages, sourceCount, onSendMessage, onOpenSettings
           </div>
         ))}
 
-        {/* Suggested Questions */}
-        <div className="space-y-2">
-          {suggestedQuestions.map((question, i) => (
-            <button
-              key={i}
-              onClick={() => onSendMessage(question)}
-              className="w-full text-left p-3 rounded-lg border border-border hover:bg-secondary transition-colors text-sm"
+        {/* Suggested Questions Section */}
+        <div className="space-y-3">
+          {/* Header with refresh button */}
+          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span>{conversationQuestions.length > 0 ? 'Follow-up questions' : 'Suggested questions'}</span>
+              {documentCount > 0 && conversationQuestions.length === 0 && (
+                <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
+                  {documentCount} {documentCount === 1 ? 'source' : 'sources'}
+                </span>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded-full"
+              onClick={refreshSuggestions}
+              disabled={isLoadingSuggestions}
             >
-              {question}
-            </button>
-          ))}
+              <RefreshCw className={cn("w-3.5 h-3.5", isLoadingSuggestions && "animate-spin")} />
+            </Button>
+          </div>
+
+          {/* Loading skeleton */}
+          {isLoadingSuggestions && (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="w-full h-14 rounded-lg border border-border bg-secondary/30 animate-pulse"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Empty state - no documents */}
+          {!isLoadingSuggestions && documentCount === 0 && conversationQuestions.length === 0 && (
+            <div className="flex flex-col items-center gap-2 py-6 text-center">
+              <FileText className="w-8 h-8 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">
+                Add documents to get AI-generated question suggestions
+              </p>
+            </div>
+          )}
+
+          {/* Error state */}
+          {!isLoadingSuggestions && suggestionsError && documentCount > 0 && (
+            <div className="flex flex-col items-center gap-2 py-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                Couldn't load suggestions
+              </p>
+              <Button variant="outline" size="sm" onClick={refreshSuggestions}>
+                Try again
+              </Button>
+            </div>
+          )}
+
+          {/* Questions list - shows conversation or document-based questions */}
+          {!isLoadingSuggestions && displayQuestions.length > 0 && (
+            <div className="grid grid-cols-1 gap-2">
+              {displayQuestions.map((question) => (
+                <button
+                  key={question.id}
+                  onClick={() => onSendMessage(question.text)}
+                  className="group relative flex flex-col items-start p-3 h-auto text-left rounded-xl border border-border/50 bg-card hover:bg-accent/50 hover:border-primary/30 transition-all duration-200 shadow-sm"
+                >
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors line-clamp-2">
+                      {question.text}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 mt-1 shrink-0" />
+                  </div>
+                  
+                  {/* Context tooltip on hover */}
+                  {question.context && (
+                    <div className="max-h-0 overflow-hidden group-hover:max-h-10 transition-all duration-300 ease-in-out w-full">
+                      <div className="pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <FileText className="w-3 h-3" />
+                        <span className="truncate opacity-0 group-hover:opacity-100 transition-opacity delay-75">
+                          {question.context.replace("Based on: ", "")}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

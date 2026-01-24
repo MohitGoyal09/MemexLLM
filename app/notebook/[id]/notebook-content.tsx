@@ -100,6 +100,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
   const [selectedSources, setSelectedSources] = useState<string[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
+  const [lastChatTurn, setLastChatTurn] = useState<{ userMessage: string; assistantMessage: string } | null>(null)
 
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false)
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
@@ -248,7 +249,18 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
             },
             // On complete
             () => {
-              setMessages((prev) => prev.map((msg) => (msg.id === assistantId ? { ...msg, isStreaming: false } : msg)))
+              setMessages((prev) => {
+                // Get the final assistant message content for suggestions
+                const finalAssistantMsg = prev.find(msg => msg.id === assistantId)
+                if (finalAssistantMsg) {
+                  // Set last chat turn to trigger conversation-based suggestions
+                  setLastChatTurn({
+                    userMessage: content,
+                    assistantMessage: finalAssistantMsg.content
+                  })
+                }
+                return prev.map((msg) => (msg.id === assistantId ? { ...msg, isStreaming: false } : msg))
+              })
               setIsStreaming(false)
             },
             // On error
@@ -285,6 +297,11 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
                 : msg
             )
           )
+          // Set last chat turn for non-streaming response
+          setLastChatTurn({
+            userMessage: content,
+            assistantMessage: responseContent
+          })
           setIsStreaming(false)
         }
       } catch (err) {
@@ -399,9 +416,11 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
           <ChatPanel
             messages={messages}
             sourceCount={selectedSources.length}
+            notebookId={notebookId}
             onSendMessage={handleSendMessage}
             onOpenSettings={() => setShowSettingsModal(true)}
             onDeleteHistory={handleDeleteHistory}
+            lastChatTurn={lastChatTurn}
           />
         </div>
 

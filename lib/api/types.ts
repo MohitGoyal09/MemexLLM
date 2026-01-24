@@ -107,6 +107,29 @@ export interface ChatResponse {
   citations: Citation[];
 }
 
+// === Suggested Questions ===
+export interface SuggestedQuestion {
+  id: string;
+  text: string;
+  context: string | null;
+}
+
+export interface SuggestionsResponse {
+  questions: SuggestedQuestion[];
+  generated_at: string;
+  document_count: number;
+}
+
+// === Conversation-Based Suggestions (Option B) ===
+export interface ConversationSuggestionsRequest {
+  last_user_message: string;
+  last_assistant_message: string;
+}
+
+export interface ConversationSuggestionsResponse {
+  questions: string[];
+}
+
 // === Content Generation ===
 export type ContentType = "podcast" | "quiz" | "flashcard" | "mindmap";
 

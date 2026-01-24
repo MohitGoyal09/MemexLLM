@@ -1,5 +1,5 @@
 import { apiClient, getApiBaseUrl, getStreamingHeaders } from "./client";
-import type { ChatMessage, ChatResponse, Citation } from "./types";
+import type { ChatMessage, ChatResponse, Citation, SuggestionsResponse, ConversationSuggestionsResponse } from "./types";
 
 export const chatApi = {
   /**
@@ -15,6 +15,40 @@ export const chatApi = {
    */
   deleteHistory: (notebookId: string) =>
     apiClient<void>(`/chat/${notebookId}/history`, { method: "DELETE" }),
+
+  /**
+   * Get AI-generated suggested questions based on notebook content
+   * (Used for initial suggestions when chat is empty)
+   */
+  getSuggestions: (notebookId: string) =>
+    apiClient<SuggestionsResponse>(`/chat/${notebookId}/suggestions`),
+
+  /**
+   * Get dynamic follow-up suggestions based on the last conversation turn
+   * (Option B: Post-Response API Call - used after each chat response)
+   */
+  getConversationSuggestions: async (
+    notebookId: string,
+    lastUserMessage: string,
+    lastAssistantMessage: string
+  ): Promise<string[]> => {
+    try {
+      const response = await apiClient<ConversationSuggestionsResponse>(
+        `/chat/${notebookId}/suggestions`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            last_user_message: lastUserMessage,
+            last_assistant_message: lastAssistantMessage ,
+          }),
+        }
+      );
+      return response.questions || [];
+    } catch (error) {
+      console.error("Failed to fetch conversation suggestions:", error);
+      return []; // Graceful degradation
+    }
+  },
 
   /**
    * Send a message and get a non-streaming response

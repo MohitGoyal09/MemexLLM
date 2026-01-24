@@ -31,7 +31,7 @@ export default function NewNotebookPage() {
       role: "user" | "assistant"
       content: string
       timestamp: string
-      citations?: number[]
+      citations?: import("@/lib/api/types").Citation[]
     }>
   >([])
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false)
@@ -234,6 +234,7 @@ export default function NewNotebookPage() {
           <ChatPanel
             messages={messages}
             sourceCount={selectedSources.length}
+            notebookId={notebookId}
             onSendMessage={(content) => {
               const newMessage = {
                 id: Date.now().toString(),
