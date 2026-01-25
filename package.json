@@ -1,7 +1,12 @@
 {
-  "name": "my-v0-project",
+  "name": "notebookllm",
   "version": "0.1.0",
   "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
