@@ -116,7 +116,7 @@
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar with brand warmth */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -127,12 +127,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.35 0.01 250);
+  background: var(--neural-700, oklch(0.35 0.008 50));
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.45 0.01 250);
+  background: var(--synapse-700, oklch(0.48 0.13 63));
 }
 
 /* TipTap Editor List Styles */

@@ -95,10 +95,21 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground relative">
+      {/* Subtle gradient mesh background */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-50"
+        style={{
+          background: `
+            radial-gradient(ellipse 60% 40% at 10% 20%, oklch(0.65 0.17 68 / 0.08) 0%, transparent 50%),
+            radial-gradient(ellipse 40% 30% at 90% 80%, oklch(0.55 0.11 185 / 0.06) 0%, transparent 50%)
+          `
+        }}
+      />
+      
       <Header />
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-8">
         
         {/* Header Controls */}
         <div className="flex items-center justify-end gap-4 mb-8 ">
@@ -140,23 +151,23 @@ export default function HomePage() {
         )}
 
         {allNotebooks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-              <Plus className="w-8 h-8 text-primary" />
+          <div className="flex flex-col items-center justify-center h-64 text-center animate-fade-up">
+            <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 glow-subtle">
+              <Plus className="w-10 h-10 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">No notebooks yet</h2>
-            <p className="text-muted-foreground mb-6">Create your first notebook to get started</p>
-            <Button onClick={handleCreateNew} disabled={isCreating} className="gap-2">
-              {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              {isCreating ? "Creating..." : "Create notebook"}
+            <h2 className="text-2xl font-display font-semibold mb-3">No notebooks yet</h2>
+            <p className="text-muted-foreground mb-8 max-w-sm">Create your first notebook to start transforming your documents into insights</p>
+            <Button onClick={handleCreateNew} disabled={isCreating} className="gap-2 rounded-full px-6 h-11 text-base hover:shadow-primary">
+              {isCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+              {isCreating ? "Creating..." : "Create your first notebook"}
             </Button>
           </div>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-12 animate-fade-up">
             {/* Recent Notebooks Section - Only in Grid View */}
             {viewMode === "grid" && recentNotebooks.length > 0 && (
               <section>
-                <h2 className="text-xl font-semibold mb-6">Recent notebooks</h2>
+                <h2 className="text-xl font-display font-semibold mb-6">Recent notebooks</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                    {recentNotebooks.map((notebook) => (
                       <Link href={`/notebook/${notebook.id}`} key={notebook.id}>

@@ -28,13 +28,12 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
   const [title, setTitle] = useState(notebook.title)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Enhanced gradient backgrounds - brighter and more visible
+  // Brand-aligned gradients using design system tokens
   const gradients = [
-    "bg-gradient-to-br from-amber-500/20 via-zinc-900/80 to-zinc-900/80 border-amber-500/30 hover:border-amber-500/50 hover:from-amber-500/30 hover:shadow-amber-500/10",
-    "bg-gradient-to-br from-blue-500/20 via-zinc-900/80 to-zinc-900/80 border-blue-500/30 hover:border-blue-500/50 hover:from-blue-500/30 hover:shadow-blue-500/10",
-    "bg-gradient-to-br from-emerald-500/20 via-zinc-900/80 to-zinc-900/80 border-emerald-500/30 hover:border-emerald-500/50 hover:from-emerald-500/30 hover:shadow-emerald-500/10", 
-    "bg-gradient-to-br from-violet-500/20 via-zinc-900/80 to-zinc-900/80 border-violet-500/30 hover:border-violet-500/50 hover:from-violet-500/30 hover:shadow-violet-500/10",
-    "bg-gradient-to-br from-rose-500/20 via-zinc-900/80 to-zinc-900/80 border-rose-500/30 hover:border-rose-500/50 hover:from-rose-500/30 hover:shadow-rose-500/10"
+    "bg-gradient-to-br from-[oklch(0.65_0.17_68/0.2)] via-[var(--neural-950)] to-[var(--neural-950)] border-[oklch(0.65_0.17_68/0.3)] hover:border-[oklch(0.65_0.17_68/0.5)] hover:shadow-primary",
+    "bg-gradient-to-br from-[oklch(0.55_0.11_185/0.2)] via-[var(--neural-950)] to-[var(--neural-950)] border-[oklch(0.55_0.11_185/0.3)] hover:border-[oklch(0.55_0.11_185/0.5)] hover:shadow-md",
+    "bg-gradient-to-br from-[oklch(0.55_0.14_145/0.2)] via-[var(--neural-950)] to-[var(--neural-950)] border-[oklch(0.55_0.14_145/0.3)] hover:border-[oklch(0.55_0.14_145/0.5)] hover:shadow-md", 
+    "bg-gradient-to-br from-[oklch(0.62_0.16_25/0.2)] via-[var(--neural-950)] to-[var(--neural-950)] border-[oklch(0.62_0.16_25/0.3)] hover:border-[oklch(0.62_0.16_25/0.5)] hover:shadow-md",
   ]
   const colorIndex = notebook.id.charCodeAt(0) % gradients.length
   const cardStyle = gradients[colorIndex]

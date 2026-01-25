@@ -13,8 +13,8 @@ export function SynapseLogo({ className = "w-8 h-8" }: { className?: string }) {
       <path d="M20 8V11M20 29V32M8 20H11M29 20H32" stroke="white" strokeWidth="2" strokeLinecap="round" />
       <defs>
         <linearGradient id="synapse-gradient" x1="0" y1="0" x2="40" y2="40">
-          <stop offset="0%" stopColor="#6366f1" />
-          <stop offset="100%" stopColor="#8b5cf6" />
+          <stop offset="0%" stopColor="oklch(0.72 0.16 70)" />
+          <stop offset="100%" stopColor="oklch(0.55 0.15 65)" />
         </linearGradient>
       </defs>
     </svg>

@@ -85,8 +85,8 @@ export function LoginForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-2xl font-display">Welcome back</CardTitle>
           <CardDescription>
             Enter your email below to login to your account
           </CardDescription>
@@ -123,8 +123,8 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
+              <Button type="submit" className="w-full h-11 hover:shadow-primary transition-all" disabled={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
 
