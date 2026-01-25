@@ -59,6 +59,25 @@ export const generationApi = {
         document_ids: documentIds || null,
       }),
     }),
+  
+  /**
+   * Create content manually (skips generation)
+   */
+  createContent: (
+    notebookId: string,
+    contentType: ContentType,
+    content: Record<string, unknown>,
+    title: string
+  ) =>
+    apiClient<GeneratedContent>(`/generation/${notebookId}/content`, {
+      method: "POST",
+      body: JSON.stringify({
+        content_type: contentType,
+        content,
+        title,
+        status: "completed"
+      }),
+    }),
 
   /**
    * Generate content asynchronously (returns task ID for polling)

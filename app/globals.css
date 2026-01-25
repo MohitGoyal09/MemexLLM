@@ -134,3 +134,27 @@
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.45 0.01 250);
 }
+
+/* TipTap Editor List Styles */
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+.ProseMirror ul li,
+.ProseMirror ol li {
+  padding-left: 0.25rem;
+}
+
+.ProseMirror ul li::marker {
+  color: currentColor;
+}
+
+.ProseMirror ol li::marker {
+  color: currentColor;
+}

@@ -3,6 +3,9 @@
 import { useState } from "react"
 import { Minimize2, Maximize2, ThumbsUp, ThumbsDown, Check, X, Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { submitFeedback } from "@/lib/api/feedback"
+import type { FeedbackRating } from "@/lib/api/types"
+import { cn } from "@/lib/utils"
 
 interface QuizQuestion {
   id: string
@@ -15,15 +18,37 @@ interface QuizViewProps {
   title: string
   sourceCount: number
   questions: QuizQuestion[]
+  contentId?: string
   onBack: () => void
 }
 
-export function QuizView({ title, sourceCount, questions, onBack }: QuizViewProps) {
+export function QuizView({ title, sourceCount, questions, contentId, onBack }: QuizViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [hasAnswered, setHasAnswered] = useState(false) // Track if current question is answered
   const [score, setScore] = useState(0)
   const [isComplete, setIsComplete] = useState(false) // Track if quiz is finished
+  const [feedbackStatus, setFeedbackStatus] = useState<FeedbackRating | null>(null)
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
+
+  // Handle feedback submission
+  const handleFeedback = async (rating: FeedbackRating) => {
+    if (!contentId || feedbackStatus === rating) return
+
+    setIsSubmittingFeedback(true)
+    try {
+      await submitFeedback({
+        content_type: "quiz",
+        content_id: contentId,
+        rating: rating
+      })
+      setFeedbackStatus(rating)
+    } catch (error) {
+      console.error("Failed to submit feedback:", error)
+    } finally {
+      setIsSubmittingFeedback(false)
+    }
+  }
 
   const currentQuestion = questions[currentIndex]
 
@@ -208,12 +233,36 @@ export function QuizView({ title, sourceCount, questions, onBack }: QuizViewProp
         </Button>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="gap-2 rounded-full bg-transparent">
-            <ThumbsUp className="w-4 h-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "gap-2 rounded-full bg-transparent transition-colors",
+              feedbackStatus === "thumbs_up" && "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700"
+            )}
+            disabled={isSubmittingFeedback || !contentId}
+            onClick={() => handleFeedback("thumbs_up")}
+          >
+            <ThumbsUp className={cn(
+              "w-4 h-4",
+              feedbackStatus === "thumbs_up" && "fill-current text-green-600 dark:text-green-400"
+            )} />
             Good content
           </Button>
-          <Button variant="outline" size="sm" className="gap-2 rounded-full bg-transparent">
-            <ThumbsDown className="w-4 h-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "gap-2 rounded-full bg-transparent transition-colors",
+              feedbackStatus === "thumbs_down" && "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700"
+            )}
+            disabled={isSubmittingFeedback || !contentId}
+            onClick={() => handleFeedback("thumbs_down")}
+          >
+            <ThumbsDown className={cn(
+              "w-4 h-4",
+              feedbackStatus === "thumbs_down" && "fill-current text-red-600 dark:text-red-400"
+            )} />
             Bad content
           </Button>
         </div>

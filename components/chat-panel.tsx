@@ -1,10 +1,23 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { SlidersHorizontal, MoreVertical, Pin, Copy, ThumbsUp, ThumbsDown, ArrowRight, RefreshCw, Sparkles, FileText } from "lucide-react"
+import {
+  SlidersHorizontal,
+  MoreVertical,
+  Pin,
+  Copy,
+  ThumbsUp,
+  ThumbsDown,
+  ArrowRight,
+  RefreshCw,
+  Sparkles,
+  FileText,
+  Check,
+  Loader2
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -12,10 +25,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Citation } from "@/lib/api/types"
-import { CitationPreview, CitationFooter } from "@/components/citation-preview"
+import { Citation, FeedbackRating } from "@/lib/api/types"
+import { submitFeedback } from "@/lib/api/feedback"
+import { CitationPreview, CitationFooter, CitationSheet } from "@/components/citation-preview"
 import { useSuggestedQuestions } from "@/hooks/use-suggested-questions"
 import { cn } from "@/lib/utils"
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface Message {
   id: string
@@ -38,29 +56,494 @@ interface ChatPanelProps {
   onSendMessage: (content: string) => void
   onOpenSettings?: () => void
   onDeleteHistory?: () => void
+  onViewSource?: (documentId: string, pageNumber?: number | null) => void
   lastChatTurn?: LastChatTurn | null
+  onNoteSaved?: () => void
 }
 
-export function ChatPanel({ 
-  messages, 
-  sourceCount, 
-  notebookId, 
-  onSendMessage, 
-  onOpenSettings, 
+// ============================================================================
+// UTILITIES
+// ============================================================================
+
+/**
+ * Detects if the user is on a mobile device
+ */
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.matchMedia("(max-width: 768px)").matches ||
+        ("ontouchstart" in window && navigator.maxTouchPoints > 0)
+      setIsMobile(mobile)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  return isMobile
+}
+
+/**
+ * Pre-processes markdown content to fix common LLM formatting issues
+ * and normalize citation formats for consistent rendering
+ */
+function preprocessMarkdownContent(content: string): string {
+  if (!content) return ""
+
+  let processed = content
+
+  // 1. Force headers to be on their own lines (fix "text.### Header")
+  processed = processed.replace(/([^\n])\s*(#{1,6})\s+/g, "$1\n\n$2 ")
+
+  // 2. Fix bullet points mashed into text (fix "text.* Item" or "text.- Item")
+  processed = processed.replace(/([.!?])\s*([*-])\s+/g, "$1\n\n$2 ")
+
+  // 3. Ensure proper spacing before numbered lists
+  processed = processed.replace(/([.!?])\s*(\d+\.)\s+/g, "$1\n\n$2 ")
+
+  // 4. Normalize citation formats to **[N]** for consistent rendering
+  // Handle various LLM citation formats:
+  // - [1] -> **[1]**
+  // - [[1]] -> **[1]**
+  // - [^1] -> **[1]** (footnote style)
+  // - (1) -> **[1]** (parenthetical style)
+  // But avoid double-bolding already formatted citations
+
+  // First, normalize bracketed citations that aren't already bold
+  processed = processed.replace(/(?<!\*)\[(\d+)\](?!\*)/g, "**[$1]**")
+
+  // Handle double brackets [[1]] -> **[1]**
+  processed = processed.replace(/\[\[(\d+)\]\]/g, "**[$1]**")
+
+  // Handle footnote style [^1] -> **[1]**
+  processed = processed.replace(/\[\^(\d+)\]/g, "**[$1]**")
+
+  // 5. Clean up any excessive newlines (more than 2 consecutive)
+  processed = processed.replace(/\n{3,}/g, "\n\n")
+
+  return processed
+}
+
+/**
+ * Extracts citation indices from text content
+ */
+function extractCitationIndices(content: string): number[] {
+  const matches = content.match(/\[(\d+)\]/g) || []
+  return [...new Set(matches.map(m => parseInt(m.replace(/[\[\]]/g, ""), 10)))]
+}
+
+// ============================================================================
+// ASSISTANT MESSAGE COMPONENT
+// ============================================================================
+
+interface AssistantMessageProps {
+  message: Message
+  isMobile: boolean
+  onViewSource?: (documentId: string, pageNumber?: number | null) => void
+  onCitationClick?: (citation: Citation, index: number) => void
+  feedbackStatus: FeedbackRating | null
+  isSubmittingFeedback: boolean
+  onFeedback: (rating: FeedbackRating) => void
+  onSaveToNote?: (content: string) => void
+}
+
+function AssistantMessage({
+  message,
+  isMobile,
+  onViewSource,
+  onCitationClick,
+  feedbackStatus,
+  isSubmittingFeedback,
+  onFeedback,
+  onSaveToNote
+}: AssistantMessageProps) {
+  const [copied, setCopied] = useState(false)
+  const [isSavingNote, setIsSavingNote] = useState(false)
+
+  // Preprocess content once
+  const processedContent = useMemo(
+    () => preprocessMarkdownContent(message.content || ""),
+    [message.content]
+  )
+
+  // Extract used citation indices for the footer
+  const usedCitationIndices = useMemo(
+    () => extractCitationIndices(message.content || ""),
+    [message.content]
+  )
+
+  // Copy message content
+  const handleCopy = useCallback(async () => {
+    try {
+      // Strip markdown for plain text copy
+      const plainText = message.content
+        .replace(/\*\*\[(\d+)\]\*\*/g, "[$1]") // Keep citations as [N]
+        .replace(/\*\*([^*]+)\*\*/g, "$1") // Remove bold
+        .replace(/\*([^*]+)\*/g, "$1") // Remove italic
+        .replace(/#{1,6}\s/g, "") // Remove headers
+        .trim()
+
+      await navigator.clipboard.writeText(plainText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      console.error("Failed to copy message")
+    }
+  }, [message.content])
+
+  // Custom component for rendering citations in markdown
+  const MarkdownComponents = useMemo(() => ({
+    // Paragraph styling
+    p: ({ children }: { children?: React.ReactNode }) => (
+      <p className="leading-relaxed mb-4 last:mb-0">{children}</p>
+    ),
+
+    // Header styling with proper hierarchy
+    h1: ({ children }: { children?: React.ReactNode }) => (
+      <h1 className="text-xl font-bold mb-3 mt-6 first:mt-0">{children}</h1>
+    ),
+    h2: ({ children }: { children?: React.ReactNode }) => (
+      <h2 className="text-lg font-bold mb-2 mt-5 first:mt-0">{children}</h2>
+    ),
+    h3: ({ children }: { children?: React.ReactNode }) => (
+      <h3 className="text-base font-bold mb-2 mt-4 first:mt-0">{children}</h3>
+    ),
+    h4: ({ children }: { children?: React.ReactNode }) => (
+      <h4 className="text-sm font-bold mb-2 mt-3 first:mt-0">{children}</h4>
+    ),
+
+    // List styling
+    ul: ({ children }: { children?: React.ReactNode }) => (
+      <ul className="list-disc pl-5 mb-4 space-y-1.5">{children}</ul>
+    ),
+    ol: ({ children }: { children?: React.ReactNode }) => (
+      <ol className="list-decimal pl-5 mb-4 space-y-1.5">{children}</ol>
+    ),
+    li: ({ children }: { children?: React.ReactNode }) => (
+      <li className="mb-1 leading-relaxed">{children}</li>
+    ),
+
+    // Code styling
+    code: ({ inline, className, children }: { inline?: boolean; className?: string; children?: React.ReactNode }) => {
+      if (inline) {
+        return (
+          <code className="px-1.5 py-0.5 rounded bg-muted text-sm font-mono">
+            {children}
+          </code>
+        )
+      }
+      return (
+        <code className={cn("block p-3 rounded-lg bg-muted text-sm font-mono overflow-x-auto", className)}>
+          {children}
+        </code>
+      )
+    },
+    pre: ({ children }: { children?: React.ReactNode }) => (
+      <pre className="mb-4 rounded-lg overflow-hidden">{children}</pre>
+    ),
+
+    // Blockquote styling
+    blockquote: ({ children }: { children?: React.ReactNode }) => (
+      <blockquote className="border-l-3 border-primary/40 pl-4 my-4 italic text-muted-foreground">
+        {children}
+      </blockquote>
+    ),
+
+    // Link styling
+    a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+      >
+        {children}
+      </a>
+    ),
+
+    // Strong/bold - handles citation rendering
+    strong: ({ children }: { children?: React.ReactNode }) => {
+      const text = String(children)
+      const match = text.match(/^\[(\d+)\]$/)
+
+      if (match) {
+        let citationId = parseInt(match[1], 10)
+
+        // Handle 0-indexed citations from LLM (map 0 -> 1)
+        if (citationId === 0) citationId = 1
+
+        const citation = message.citations && citationId <= message.citations.length
+          ? message.citations[citationId - 1]
+          : undefined
+
+        if (citation) {
+          // On mobile, trigger the sheet instead of popover
+          if (isMobile && onCitationClick) {
+            return (
+              <button
+                onClick={() => onCitationClick(citation, citationId)}
+                className={cn(
+                  "inline-flex items-center justify-center",
+                  "min-w-[1.25rem] h-[1.25rem] px-1 mx-0.5",
+                  "text-[10px] font-bold",
+                  "rounded-sm transition-all duration-150",
+                  "bg-primary/20 text-primary hover:bg-primary/30 hover:scale-105",
+                  "active:bg-primary active:text-primary-foreground active:scale-110"
+                )}
+                aria-label={`View source ${citationId}: ${citation.filename || "Unknown"}`}
+              >
+                {citationId}
+              </button>
+            )
+          }
+
+          // Desktop: use the popover component
+          return (
+            <CitationPreview
+              citation={citation}
+              index={citationId}
+              onViewSource={onViewSource}
+              className="mx-0.5"
+            />
+          )
+        }
+
+        // Citation not found - render as inactive badge
+        return (
+          <span
+            className="inline-flex items-center justify-center min-w-[1.25rem] h-[1.25rem] px-1 mx-0.5 text-[10px] font-bold rounded bg-muted/50 text-muted-foreground"
+            title="Source not found"
+          >
+            {citationId}
+          </span>
+        )
+      }
+
+      // Regular bold text
+      return <strong className="font-semibold">{children}</strong>
+    },
+
+    // Emphasis/italic
+    em: ({ children }: { children?: React.ReactNode }) => (
+      <em className="italic">{children}</em>
+    ),
+
+    // Horizontal rule
+    hr: () => <hr className="my-6 border-border" />,
+
+    // Table styling
+    table: ({ children }: { children?: React.ReactNode }) => (
+      <div className="overflow-x-auto my-4">
+        <table className="min-w-full border-collapse border border-border rounded-lg">
+          {children}
+        </table>
+      </div>
+    ),
+    th: ({ children }: { children?: React.ReactNode }) => (
+      <th className="px-3 py-2 bg-muted text-left text-sm font-semibold border-b border-border">
+        {children}
+      </th>
+    ),
+    td: ({ children }: { children?: React.ReactNode }) => (
+      <td className="px-3 py-2 text-sm border-b border-border">{children}</td>
+    ),
+  }), [message.citations, isMobile, onCitationClick, onViewSource])
+
+  return (
+    <div className="space-y-3">
+      {/* Markdown Content */}
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={MarkdownComponents as any}
+        >
+          {processedContent}
+        </ReactMarkdown>
+
+        {/* Streaming indicator */}
+        {message.isStreaming && (
+          <span className="inline-flex items-center gap-1 text-primary animate-pulse">
+            <Loader2 className="w-3 h-3 animate-spin" />
+          </span>
+        )}
+
+        {/* Citation Footer */}
+        {message.citations && message.citations.length > 0 && !message.isStreaming && (
+          <CitationFooter
+            citations={message.citations}
+            onViewSource={onViewSource}
+          />
+        )}
+      </div>
+
+      {/* Action Buttons */}
+      {!message.isStreaming && (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 rounded-full bg-transparent"
+            disabled={!onSaveToNote || isSavingNote}
+            onClick={async () => {
+              if (!onSaveToNote) return
+              setIsSavingNote(true)
+              try {
+                await onSaveToNote(message.content)
+              } finally {
+                setIsSavingNote(false)
+              }
+            }}
+          >
+            {isSavingNote ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Pin className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">{isSavingNote ? "Saving..." : "Save to note"}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={handleCopy}
+            title={copied ? "Copied!" : "Copy message"}
+          >
+            {copied ? (
+              <Check className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "rounded-full transition-colors",
+              feedbackStatus === "thumbs_up" && "bg-green-100 dark:bg-green-900/30"
+            )}
+            title="Helpful"
+            disabled={isSubmittingFeedback}
+            onClick={() => onFeedback("thumbs_up")}
+          >
+            <ThumbsUp className={cn(
+              "w-4 h-4",
+              feedbackStatus === "thumbs_up" && "fill-current text-green-600 dark:text-green-400"
+            )} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "rounded-full transition-colors",
+              feedbackStatus === "thumbs_down" && "bg-red-100 dark:bg-red-900/30"
+            )}
+            title="Not helpful"
+            disabled={isSubmittingFeedback}
+            onClick={() => onFeedback("thumbs_down")}
+          >
+            <ThumbsDown className={cn(
+              "w-4 h-4",
+              feedbackStatus === "thumbs_down" && "fill-current text-red-600 dark:text-red-400"
+            )} />
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================================
+// MAIN CHAT PANEL COMPONENT
+// ============================================================================
+
+export function ChatPanel({
+  messages,
+  sourceCount,
+  notebookId,
+  onSendMessage,
+  onOpenSettings,
   onDeleteHistory,
-  lastChatTurn 
+  onViewSource,
+  lastChatTurn,
+  onNoteSaved
 }: ChatPanelProps) {
   const [input, setInput] = useState("")
-  const { 
-    questions, 
-    conversationQuestions, 
-    isLoading: suggestionsLoading, 
-    isLoadingConversation, 
-    error: suggestionsError, 
-    documentCount, 
+  const [mobileCitation, setMobileCitation] = useState<{
+    citation: Citation
+    index: number
+  } | null>(null)
+  const [messageFeedback, setMessageFeedback] = useState<Record<string, FeedbackRating | null>>({})
+  const [submittingFeedback, setSubmittingFeedback] = useState<Record<string, boolean>>({})
+
+  // Handle feedback submission for a message
+  const handleFeedback = useCallback(async (messageId: string, rating: FeedbackRating) => {
+    // If already the same rating, skip
+    if (messageFeedback[messageId] === rating) return
+
+    setSubmittingFeedback(prev => ({ ...prev, [messageId]: true }))
+    try {
+      await submitFeedback({
+        content_type: "chat_response",
+        content_id: messageId,
+        rating: rating
+      })
+      setMessageFeedback(prev => ({ ...prev, [messageId]: rating }))
+    } catch (error) {
+      console.error("Failed to submit feedback:", error)
+    } finally {
+      setSubmittingFeedback(prev => ({ ...prev, [messageId]: false }))
+    }
+  }, [messageFeedback])
+
+  // Handle saving a message to Studio notes
+  const handleSaveToNote = useCallback(async (content: string) => {
+    if (!notebookId) return
+    
+    try {
+      const { generationApi } = await import("@/lib/api/generation")
+      const { toast } = await import("sonner")
+      
+      // Strip markdown for a cleaner note
+      // Keep some formatting but convert to HTML-like structure
+      const title = `Chat Response - ${new Date().toLocaleDateString()}`
+      
+      await generationApi.createContent(
+        notebookId,
+        "note",
+        { content: content },
+        title
+      )
+      
+      toast.success("Saved to Studio notes!")
+      onNoteSaved?.()
+    } catch (error) {
+      console.error("Failed to save to note:", error)
+      const { toast } = await import("sonner")
+      toast.error("Failed to save to note")
+    }
+  }, [notebookId])
+
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobile()
+
+  const {
+    questions,
+    conversationQuestions,
+    isLoading: suggestionsLoading,
+    isLoadingConversation,
+    error: suggestionsError,
+    documentCount,
     refresh: refreshSuggestions,
-    refreshFromConversation 
+    refreshFromConversation
   } = useSuggestedQuestions(notebookId)
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
   // Trigger conversation-based suggestions when last chat turn changes
   useEffect(() => {
@@ -69,22 +552,30 @@ export function ChatPanel({
     }
   }, [lastChatTurn, refreshFromConversation])
 
-  // Determine which questions to show:
-  // - If we have conversation-based questions, use those (they're more relevant)
-  // - Otherwise fall back to document-based questions
-  const displayQuestions = conversationQuestions.length > 0 
+  // Determine which questions to show
+  const displayQuestions = conversationQuestions.length > 0
     ? conversationQuestions.map((text, i) => ({ id: `conv-${i}`, text, context: null }))
     : questions
-  
+
   const isLoadingSuggestions = suggestionsLoading || isLoadingConversation
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim()) {
       onSendMessage(input)
       setInput("")
     }
-  }
+  }, [input, onSendMessage])
+
+  // Handle mobile citation click - opens the sheet
+  const handleMobileCitationClick = useCallback((citation: Citation, index: number) => {
+    setMobileCitation({ citation, index })
+  }, [])
+
+  // Handle closing mobile citation sheet
+  const handleCloseMobileCitation = useCallback(() => {
+    setMobileCitation(null)
+  }, [])
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
@@ -93,7 +584,12 @@ export function ChatPanel({
         <h2 className="font-semibold">Chat</h2>
         <div className="flex items-center gap-2">
           {onOpenSettings && (
-            <Button variant="ghost" size="icon" onClick={onOpenSettings} className="rounded-lg">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onOpenSettings}
+              className="rounded-lg"
+            >
               <SlidersHorizontal className="w-5 h-5" />
             </Button>
           )}
@@ -105,7 +601,10 @@ export function ChatPanel({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {onDeleteHistory && (
-                <DropdownMenuItem onClick={onDeleteHistory} className="text-destructive focus:text-destructive cursor-pointer">
+                <DropdownMenuItem
+                  onClick={onDeleteHistory}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
                   Delete chat history
                 </DropdownMenuItem>
               )}
@@ -119,98 +618,31 @@ export function ChatPanel({
         {messages.map((message) => (
           <div key={message.id}>
             {message.role === "user" ? (
+              // User Message
               <div className="flex justify-end">
-                <div className="flex flex-col items-end">
-                  <span className="text-xs text-muted-foreground mb-1">{message.timestamp}</span>
-                  <div className="bg-secondary px-4 py-2 rounded-2xl rounded-br-sm max-w-md">
-                    <p className="text-sm">{message.content}</p>
+                <div className="flex flex-col items-end max-w-[85%] sm:max-w-md">
+                  <span className="text-xs text-muted-foreground mb-1">
+                    {message.timestamp}
+                  </span>
+                  <div className="bg-secondary px-4 py-2 rounded-2xl rounded-br-sm">
+                    <p className="text-sm whitespace-pre-wrap break-words">
+                      {message.content}
+                    </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  {/* Renders properly formatted markdown with line breaks and citations */}
-                  <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                        // Custom styling for common elements
-                        p: ({children}) => <p className="leading-relaxed mb-4 last:mb-0">{children}</p>,
-                        h1: ({children}) => <h1 className="text-xl font-bold mb-3 mt-6">{children}</h1>,
-                        h2: ({children}) => <h2 className="text-lg font-bold mb-2 mt-5">{children}</h2>,
-                        h3: ({children}) => <h3 className="text-md font-bold mb-2 mt-4">{children}</h3>,
-                        ul: ({children}) => <ul className="list-disc pl-5 mb-4 space-y-1">{children}</ul>,
-                        ol: ({children}) => <ol className="list-decimal pl-5 mb-4 space-y-1">{children}</ol>,
-                        li: ({children}) => <li className="mb-1">{children}</li>,
-                        strong: ({children}) => {
-                            const text = String(children);
-                            const match = text.match(/^\[(\d+)\]$/);
-                            if (match) {
-                                let id = parseInt(match[1]);
-
-                                // Handle 0-indexed citations from LLM (map 0 -> 1)
-                                if (id === 0) id = 1;
-
-                                // Assuming citations are 1-indexed in text, so index is id-1
-                                // Safety check for bounds
-                                const citation = message.citations && id <= message.citations.length ? message.citations[id - 1] : undefined;
-
-                                if (citation) {
-                                    return (
-                                        <CitationPreview
-                                            citation={citation}
-                                            index={id}
-                                            className="mx-0.5"
-                                        />
-                                    );
-                                }
-                            }
-                            return <strong className="font-bold">{children}</strong>;
-                        },
-                    }}
-                  >
-                    {/* Pre-process content to fix common LLM formatting issues */}
-                    {(() => {
-                        let content = message.content || "";
-                        
-                        // 1. Force headers to be on their own lines (fix "text.### Header")
-                        content = content.replace(/([^\n])\s*(#{1,3})\s/g, '$1\n\n$2 ');
-                        
-                        // 2. Fix bullet points mashed into text (fix "text.* Item")
-                        content = content.replace(/([^\n])\s*(\*|\-)\s/g, '$1\n\n$2 ');
-
-                        // 3. AUTO-FIX CITATIONS: Convert plain [1] to **[1]** if not already bold
-                        // This uses a negative lookbehind/lookahead equivalent logic to avoid double-bolding
-                        // Regex explanation: Match [N] that is NOT preceded by ** and NOT followed by **
-                        content = content.replace(/(?<!\*\* )(\[\d+\])(?!\*\*)/g, '**$1**');
-                        
-                        return content;
-                    })()}
-                  </ReactMarkdown>
-                  
-                  {/* Enhanced citation footer with expandable previews */}
-                  {message.citations && message.citations.length > 0 && (
-                    <CitationFooter citations={message.citations} />
-                  )}
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="gap-2 rounded-full bg-transparent">
-                    <Pin className="w-4 h-4" />
-                    Save to note
-                  </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <ThumbsUp className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <ThumbsDown className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+              // Assistant Message
+              <AssistantMessage
+                message={message}
+                isMobile={isMobile}
+                onViewSource={onViewSource}
+                onCitationClick={handleMobileCitationClick}
+                feedbackStatus={messageFeedback[message.id] || null}
+                isSubmittingFeedback={submittingFeedback[message.id] || false}
+                onFeedback={(rating) => handleFeedback(message.id, rating)}
+                onSaveToNote={handleSaveToNote}
+              />
             )}
           </div>
         ))}
@@ -219,12 +651,16 @@ export function ChatPanel({
         <div className="space-y-3">
           {/* Header with refresh button */}
           <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span>{conversationQuestions.length > 0 ? 'Follow-up questions' : 'Suggested questions'}</span>
+              <span>
+                {conversationQuestions.length > 0
+                  ? "Follow-up questions"
+                  : "Suggested questions"}
+              </span>
               {documentCount > 0 && conversationQuestions.length === 0 && (
                 <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
-                  {documentCount} {documentCount === 1 ? 'source' : 'sources'}
+                  {documentCount} {documentCount === 1 ? "source" : "sources"}
                 </span>
               )}
             </div>
@@ -235,7 +671,9 @@ export function ChatPanel({
               onClick={refreshSuggestions}
               disabled={isLoadingSuggestions}
             >
-              <RefreshCw className={cn("w-3.5 h-3.5", isLoadingSuggestions && "animate-spin")} />
+              <RefreshCw
+                className={cn("w-3.5 h-3.5", isLoadingSuggestions && "animate-spin")}
+              />
             </Button>
           </div>
 
@@ -252,14 +690,16 @@ export function ChatPanel({
           )}
 
           {/* Empty state - no documents */}
-          {!isLoadingSuggestions && documentCount === 0 && conversationQuestions.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-6 text-center">
-              <FileText className="w-8 h-8 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">
-                Add documents to get AI-generated question suggestions
-              </p>
-            </div>
-          )}
+          {!isLoadingSuggestions &&
+            documentCount === 0 &&
+            conversationQuestions.length === 0 && (
+              <div className="flex flex-col items-center gap-2 py-6 text-center">
+                <FileText className="w-8 h-8 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">
+                  Add documents to get AI-generated question suggestions
+                </p>
+              </div>
+            )}
 
           {/* Error state */}
           {!isLoadingSuggestions && suggestionsError && documentCount > 0 && (
@@ -273,7 +713,7 @@ export function ChatPanel({
             </div>
           )}
 
-          {/* Questions list - shows conversation or document-based questions */}
+          {/* Questions list */}
           {!isLoadingSuggestions && displayQuestions.length > 0 && (
             <div className="grid grid-cols-1 gap-2">
               {displayQuestions.map((question) => (
@@ -288,7 +728,7 @@ export function ChatPanel({
                     </span>
                     <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 mt-1 shrink-0" />
                   </div>
-                  
+
                   {/* Context tooltip on hover */}
                   {question.context && (
                     <div className="max-h-0 overflow-hidden group-hover:max-h-10 transition-all duration-300 ease-in-out w-full">
@@ -305,6 +745,9 @@ export function ChatPanel({
             </div>
           )}
         </div>
+
+        {/* Scroll anchor */}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
@@ -315,19 +758,26 @@ export function ChatPanel({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Start typing..."
-            className="flex-1 bg-transparent outline-none text-sm"
+            className="flex-1 bg-transparent outline-none text-sm min-w-0"
           />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <div className="flex items-center gap-1">
               <div className="w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center">
-                <span className="text-xs text-white">✓</span>
+                <Check className="w-3 h-3 text-white" />
               </div>
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-                <span className="text-xs text-white">G</span>
+                <span className="text-xs text-white font-bold">G</span>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground">{sourceCount} sources</span>
-            <Button type="submit" size="icon" className="rounded-full bg-primary hover:bg-primary/90 w-8 h-8">
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              {sourceCount} sources
+            </span>
+            <Button
+              type="submit"
+              size="icon"
+              className="rounded-full bg-primary hover:bg-primary/90 w-8 h-8"
+              disabled={!input.trim()}
+            >
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
@@ -335,9 +785,17 @@ export function ChatPanel({
       </form>
 
       {/* Disclaimer */}
-      <p className="text-center text-xs text-muted-foreground pb-3">
+      <p className="text-center text-xs text-muted-foreground pb-3 px-4">
         SynapseAI can be inaccurate; please double-check its responses.
       </p>
+
+      {/* Mobile Citation Sheet */}
+      <CitationSheet
+        citation={mobileCitation?.citation || null}
+        isOpen={!!mobileCitation}
+        onClose={handleCloseMobileCitation}
+        onViewSource={onViewSource}
+      />
     </div>
   )
 }

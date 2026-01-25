@@ -7,3 +7,4 @@ export { documentsApi } from "./documents";
 export { chatApi } from "./chat";
 export { generationApi, tasksApi } from "./generation";
 export { authApi, healthApi } from "./auth";
+export * as feedbackApi from "./feedback";

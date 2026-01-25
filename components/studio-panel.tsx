@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   PanelRightClose,
   Plus,
@@ -10,14 +10,6 @@ import {
   Pencil,
   MoreVertical,
   Trash2,
-  Undo,
-  Redo,
-  Bold,
-  Italic,
-  Link,
-  List,
-  ListOrdered,
-  Wand2,
   Play,
   Loader2,
   Sparkles,
@@ -42,12 +34,19 @@ import { AudioPlayerView } from "@/components/audio-player-view"
 import { FlashcardView } from "@/components/flashcard-view"
 import { QuizView } from "@/components/quiz-view"
 import { useStudio, StudioItem } from "@/hooks/use-studio"
+import { NoteEditor } from "@/components/note-editor"
+import { notesApi } from "@/lib/api/notes"
+import { toast } from "sonner"
 
 interface StudioPanelProps {
   notebookId: string
   onCollapse: () => void
   onOpenView?: (type: "flashcards" | "quiz" | "mindmap", data: unknown) => void
   triggerTool?: string | null
+  refreshKey?: number
+  onSourceCreated?: () => void
+  onExpandStudio?: () => void
+  onResetStudioWidth?: () => void
 }
 
 export const studioTools = [
@@ -94,7 +93,7 @@ export interface GeneratedItem {
   title: string
   sourceCount: number
   timeAgo: string
-  type: "quiz" | "audio" | "flashcards" | "mindmap" | "report" | "video" | "infographic" | "slides" | "table"
+  type: "quiz" | "audio" | "flashcards" | "mindmap" | "report" | "video" | "infographic" | "slides" | "table" | "note"
   status?: "pending" | "processing" | "completed" | "failed"
   isNew: boolean
   hasInteractive?: boolean
@@ -102,13 +101,28 @@ export interface GeneratedItem {
   audioUrl?: string | null
 }
 
-export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }: StudioPanelProps) {
+export function StudioPanel({ 
+  notebookId, 
+  onCollapse, 
+  onOpenView, 
+  triggerTool,
+  refreshKey,
+  onSourceCreated,
+  onExpandStudio,
+  onResetStudioWidth
+}: StudioPanelProps) {
   const [activeView, setActiveView] = useState<"studio" | "note" | "flashcard" | "quiz">("studio")
+  const [noteTitle, setNoteTitle] = useState("")
   const [noteContent, setNoteContent] = useState("")
+  const [isConvertingNote, setIsConvertingNote] = useState(false)
   const [animatingTool, setAnimatingTool] = useState<string | null>(null)
   const [showAudioPlayer, setShowAudioPlayer] = useState(false)
-  const [currentAudio, setCurrentAudio] = useState<{ title: string; duration: string; url?: string } | null>(null)
+  const [currentAudio, setCurrentAudio] = useState<{ id: string; title: string; duration: string; url?: string } | null>(null)
   const [selectedItem, setSelectedItem] = useState<StudioItem | null>(null)
+  const noteEditorRef = useRef<{ getContent: () => string } | null>(null)
+  
+  const isSavedResponse = noteTitle.startsWith("Chat Response")
+
 
   // Use real API hook
   const { items, loading, error, generatingTool, generateContent, deleteContent, refresh } = useStudio({
@@ -122,6 +136,67 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
       handleToolClick(triggerTool)
     }
   }, [triggerTool])
+
+  useEffect(() => {
+    if (refreshKey) {
+      refresh()
+    }
+  }, [refreshKey, refresh])
+
+  // Convert note to source document
+  const handleConvertToSource = async () => {
+    // Get plain text content from HTML (strip tags) for validation
+    const plainTextContent = noteContent.replace(/<[^>]*>/g, '').trim()
+
+    if (!plainTextContent) {
+      toast.error("Cannot convert empty note")
+      return
+    }
+
+    setIsConvertingNote(true)
+    try {
+      // Generate a unique note ID for the conversion
+      const noteId = selectedItem?.id || `note_${Date.now()}`
+      const title = noteTitle.trim() || "Untitled Note"
+
+      // Call the backend API to convert the note to a source
+      // The backend will:
+      // 1. Create a Document record
+      // 2. Index the content in the vector store
+      // 3. Make it searchable in the Sources tab
+      const response = await notesApi.convertToSource(
+        noteId,
+        title,
+        noteContent, // Send the HTML content - backend will strip tags
+        notebookId
+      )
+
+      if (response.success) {
+        // If this was an existing studio item (saved note), delete it from studio
+        // since it's now a source
+        if (selectedItem?.id) {
+          await deleteContent(selectedItem.id)
+        }
+
+        // Clear the note and return to studio view
+        setNoteTitle("")
+        setNoteContent("")
+        setSelectedItem(null)
+        setActiveView("studio")
+        onResetStudioWidth?.()
+
+        toast.success("Note converted to source! It will appear in Sources once indexed.")
+        onSourceCreated?.()
+      } else {
+        toast.error(response.message || "Failed to convert note to source")
+      }
+    } catch (error) {
+      console.error("Failed to convert note to source:", error)
+      toast.error("Failed to convert note to source")
+    } finally {
+      setIsConvertingNote(false)
+    }
+  }
 
   const handleToolClick = async (toolLabel: string) => {
     setAnimatingTool(toolLabel)
@@ -175,6 +250,7 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
         title: item.title,
         sourceCount: item.sourceCount,
         rootNode,
+        contentId: item.id, // Pass contentId
       })
     } else if (item.type === "audio") {
       const content = item.content as any
@@ -188,11 +264,20 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
       }
 
       setCurrentAudio({ 
+        id: item.id,
         title: item.title, 
         duration: formatDuration(durationSeconds),
         url: item.audioUrl || undefined
       })
       setShowAudioPlayer(true)
+    } else if (item.type === "note") {
+      // Load note content into editor
+      const noteData = item.content as { content: string }
+      setNoteTitle(item.title)
+      setNoteTitle(item.title)
+      setNoteContent(noteData.content || "")
+      setActiveView("note")
+      onExpandStudio?.()
     }
   }
 
@@ -212,6 +297,7 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
       infographic: ChartPie,
       slides: Presentation,
       table: Table2,
+      note: FileText,
     }
     return iconMap[type] || NotebookText
   }
@@ -227,6 +313,7 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
       infographic: { bg: "bg-orange-500/20", icon: "text-orange-400" },
       slides: { bg: "bg-teal-500/20", icon: "text-teal-400" },
       table: { bg: "bg-green-500/20", icon: "text-green-400" },
+      note: { bg: "bg-yellow-500/20", icon: "text-yellow-400" },
     }
     return styleMap[type] || { bg: "bg-muted", icon: "text-muted-foreground" }
   }
@@ -306,6 +393,7 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
           title={selectedItem.title}
           sourceCount={selectedItem.sourceCount}
           flashcards={getFlashcardsFromContent()}
+          contentId={selectedItem.id}
           onBack={() => {
             setActiveView("studio")
             setSelectedItem(null)
@@ -322,6 +410,7 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
           title={selectedItem.title}
           sourceCount={selectedItem.sourceCount}
           questions={getQuizFromContent()}
+          contentId={selectedItem.id}
           onBack={() => {
             setActiveView("studio")
             setSelectedItem(null)
@@ -334,11 +423,22 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
 
 
   return (
-    <div className="w-full h-full border-l border-border bg-card flex flex-col">
+    <div className="w-full h-full border-l border-border bg-card flex flex-col relative">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold">Studio</h2>
+          <button 
+            onClick={() => {
+              setActiveView("studio")
+              setSelectedItem(null)
+              setNoteTitle("")
+              setNoteContent("")
+              onResetStudioWidth?.()
+            }} 
+            className={`font-semibold hover:text-primary transition-colors ${activeView !== "studio" ? "text-muted-foreground" : ""}`}
+          >
+            Studio
+          </button>
           {activeView === "note" && (
             <>
               <span className="text-muted-foreground">{">"}</span>
@@ -347,9 +447,6 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
           )}
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setActiveView("studio")} className="p-1 hover:bg-secondary rounded transition-colors">
-            <Plus className="w-5 h-5 text-muted-foreground" />
-          </button>
           <button onClick={onCollapse} className="p-1 hover:bg-secondary rounded transition-colors">
             <PanelRightClose className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -497,14 +594,16 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
             </div>
           </div>
 
-          {/* Add Note Button */}
-          <div className="p-4 border-t border-border mt-auto">
+          {/* Floating Add Note Button */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
             <Button
-              onClick={() => setActiveView("note")}
-              variant="outline"
-              className="w-full justify-center gap-2 rounded-full bg-background hover:bg-secondary"
+              onClick={() => {
+                setActiveView("note")
+                onExpandStudio?.()
+              }}
+              className="gap-2 rounded-full !bg-white !text-black hover:!bg-gray-200 shadow-xl !border-none px-5 font-medium h-11 text-sm"
             >
-              <BookOpen className="w-4 h-4" />
+              <FileText className="w-4 h-4" />
               Add note
             </Button>
           </div>
@@ -514,73 +613,113 @@ export function StudioPanel({ notebookId, onCollapse, onOpenView, triggerTool }:
               title={currentAudio.title}
               duration={currentAudio.duration}
               url={currentAudio.url}
+              contentId={currentAudio.id}
               onClose={() => setShowAudioPlayer(false)}
             />
           )}
         </>
       ) : activeView === "note" ? (
-        <>
-          {/* Note Editor */}
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">New Note</h3>
-              <button className="p-1 hover:bg-secondary rounded transition-colors">
-                <Trash2 className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
+        <div className="flex flex-col h-full">
 
-            {/* Toolbar */}
-            <div className="flex items-center gap-1 mb-4 flex-wrap">
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Undo className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Redo className="w-4 h-4" />
-              </Button>
-              <div className="w-px h-5 bg-border mx-1" />
-              <select className="bg-secondary text-sm px-2 py-1 rounded">
-                <option>Normal</option>
-                <option>Heading 1</option>
-                <option>Heading 2</option>
-              </select>
-              <div className="w-px h-5 bg-border mx-1" />
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Bold className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Italic className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Link className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <List className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <ListOrdered className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <Wand2 className="w-4 h-4" />
-              </Button>
-            </div>
+                {/* Note Editor Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border gap-4">
+                  <div className="flex flex-col gap-1 flex-1">
+                    <input
+                      type="text"
+                      value={noteTitle}
+                      onChange={(e) => setNoteTitle(e.target.value)}
+                      placeholder="New Note"
+                      disabled={isSavedResponse}
+                      className="w-full text-lg font-semibold bg-transparent border-none outline-none placeholder:text-muted-foreground/50 h-auto p-0 disabled:opacity-80 disabled:cursor-not-allowed"
+                    />
+                    {isSavedResponse && (
+                      <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-md w-fit">
+                        (Saved responses are view only)
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      if (selectedItem?.id) {
+                        handleDeleteItem(e as any, selectedItem.id)
+                        setActiveView("studio")
+                        setSelectedItem(null)
+                        onResetStudioWidth?.()
+                      } else {
+                        setNoteTitle("")
+                        setNoteContent("")
+                      }
+                    }}
+                    className="p-2 hover:bg-secondary rounded-lg transition-colors group self-start"
+                    title="Delete note"
+                  >
+                    <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-red-400" />
+                  </button>
+                </div>
 
-            {/* Editor */}
-            <textarea
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-              placeholder="Start writing..."
-              className="w-full h-64 bg-transparent resize-none outline-none text-sm"
+                {/* NoteEditor Component */}
+                <div className="flex-1 overflow-hidden min-h-0">
+                  <NoteEditor
+                    initialTitle={noteTitle}
+                    initialContent={noteContent}
+                    showTitle={false}
+                    readOnly={isSavedResponse}
+              onSave={async (title, content) => {
+                setNoteTitle(title)
+                setNoteContent(content)
+                
+                try {
+                  // Save as generated content (Studio Item)
+                  // Use generationApi to create a "note" type content
+                  // This keeps it in the "Studio" tab until explicitly converted
+                  await import("@/lib/api/generation").then(({ generationApi }) => 
+                    generationApi.createContent(
+                      notebookId,
+                      "note",
+                      { content: content }, // Store HTML content in the JSON payload
+                      title || "Untitled Note"
+                    )
+                  );
+                  
+                  toast.success("Note saved to Studio")
+                  // Refresh list
+                  refresh()
+                } catch (error) {
+                  console.error("Failed to save note:", error)
+                  toast.error("Failed to save note")
+                }
+              }}
+              onAutoSave={(title, content) => {
+                setNoteTitle(title)
+                setNoteContent(content)
+              }}
+              placeholder="Start writing your note..."
+              className="h-full pb-24"
             />
           </div>
 
-          {/* Convert Button */}
-          <div className="mt-auto p-4 border-t border-border">
-            <Button className="w-full justify-center gap-2 rounded-full">
-              <FileText className="w-4 h-4" />
-              Convert to source
+          {/* Convert Button - Floating */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 w-full max-w-[200px]">
+            <Button
+              onClick={handleConvertToSource}
+              disabled={isConvertingNote}
+              variant="secondary"
+              className="w-full justify-center gap-2 rounded-full font-medium shadow-xl border border-border/50"
+            >
+              {isConvertingNote ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Converting...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4" />
+                  Convert to source
+                </>
+              )}
             </Button>
           </div>
-        </>
+        </div>
       ) : null}
     </div>
   )

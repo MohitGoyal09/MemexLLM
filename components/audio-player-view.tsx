@@ -7,21 +7,51 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Play, Pause, ThumbsUp, ThumbsDown, X, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { submitFeedback } from "@/lib/api/feedback"
+import type { FeedbackRating } from "@/lib/api/types"
+import { cn } from "@/lib/utils"
 
 interface AudioPlayerViewProps {
   title: string
   duration: string
   url?: string
+  contentId?: string
   onClose: () => void
 }
 
-export function AudioPlayerView({ title, duration, url, onClose }: AudioPlayerViewProps) {
+export function AudioPlayerView({ title, duration, url, contentId, onClose }: AudioPlayerViewProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [audioDuration, setAudioDuration] = useState(0)
-  
+  const [feedbackStatus, setFeedbackStatus] = useState<FeedbackRating | null>(null)
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
+
   const audioRef = useRef<HTMLAudioElement>(null)
   const progressRef = useRef<HTMLDivElement>(null)
+
+  // Handle feedback submission
+  const handleFeedback = async (rating: FeedbackRating) => {
+    if (!contentId || feedbackStatus === rating) return
+
+    setIsSubmittingFeedback(true)
+    try {
+      await submitFeedback({
+        content_type: "podcast",
+        content_id: contentId,
+        rating: rating
+      })
+      setFeedbackStatus(rating)
+    } catch (error) {
+      console.error("Failed to submit feedback:", error)
+    } finally {
+      setIsSubmittingFeedback(false)
+    }
+  }
+
+  // Reset feedback when content changes
+  useEffect(() => {
+    setFeedbackStatus(null)
+  }, [contentId])
 
   // Handle URL changes - Managed by key={url} and src={url} now
   useEffect(() => {
@@ -118,11 +148,35 @@ export function AudioPlayerView({ title, duration, url, onClose }: AudioPlayerVi
           <span className="text-sm font-medium truncate max-w-[200px]">{title}</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="w-7 h-7">
-            <ThumbsUp className="w-4 h-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "w-7 h-7 transition-colors",
+              feedbackStatus === "thumbs_up" && "bg-green-100 dark:bg-green-900/30"
+            )}
+            disabled={isSubmittingFeedback || !contentId}
+            onClick={() => handleFeedback("thumbs_up")}
+          >
+            <ThumbsUp className={cn(
+              "w-4 h-4",
+              feedbackStatus === "thumbs_up" && "fill-current text-green-600 dark:text-green-400"
+            )} />
           </Button>
-          <Button variant="ghost" size="icon" className="w-7 h-7">
-            <ThumbsDown className="w-4 h-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "w-7 h-7 transition-colors",
+              feedbackStatus === "thumbs_down" && "bg-red-100 dark:bg-red-900/30"
+            )}
+            disabled={isSubmittingFeedback || !contentId}
+            onClick={() => handleFeedback("thumbs_down")}
+          >
+            <ThumbsDown className={cn(
+              "w-4 h-4",
+              feedbackStatus === "thumbs_down" && "fill-current text-red-600 dark:text-red-400"
+            )} />
           </Button>
           <Button variant="ghost" size="icon" className="w-7 h-7">
             <MoreVertical className="w-4 h-4" />

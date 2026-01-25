@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Plus_Jakarta_Sans, DM_Serif_Display, JetBrains_Mono } from "next/font/google"
+import { Toaster } from "sonner"
 
 import "./globals.css"
 

@@ -9,7 +9,7 @@ export interface StudioItem {
   title: string;
   sourceCount: number;
   timeAgo: string;
-  type: "quiz" | "audio" | "flashcards" | "mindmap" | "report";
+  type: "quiz" | "audio" | "flashcards" | "mindmap" | "report" | "note";
   status: "pending" | "processing" | "completed" | "failed";
   isNew: boolean;
   hasInteractive?: boolean;
@@ -26,6 +26,7 @@ const contentTypeToDisplayType = (
     quiz: "quiz",
     flashcard: "flashcards",
     mindmap: "mindmap",
+    note: "note",
   };
   return map[contentType] || "report";
 };
@@ -56,6 +57,7 @@ const generateTitle = (contentType: ContentType, content?: Record<string, unknow
     quiz: "Quiz",
     flashcard: "Flashcards",
     mindmap: "Mind Map",
+    note: "Note",
   };
   return defaultTitles[contentType] || "Generated Content";
 };

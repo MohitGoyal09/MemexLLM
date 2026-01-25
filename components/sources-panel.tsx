@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 
 import {
   Plus,
@@ -19,6 +19,7 @@ import {
   CheckCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 import { Source } from "@/lib/types"
 
@@ -31,6 +32,7 @@ interface SourcesPanelProps {
   onSelectAll: () => void
   onCollapse: () => void
   onRefresh?: () => Promise<void> | void
+  highlightedSourceId?: string | null
 }
 
 const getSourceIcon = (type: Source["type"]) => {
@@ -69,10 +71,37 @@ export function SourcesPanel({
   onSelectAll,
   onCollapse,
   onRefresh,
+  highlightedSourceId,
 }: SourcesPanelProps) {
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [highlightAnimation, setHighlightAnimation] = useState<string | null>(null)
+  const sourceRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
   const completedSources = sources.filter((s) => s.status === "completed" || !s.status)
   const processingSources = sources.filter((s) => s.status === "pending" || s.status === "processing")
+
+  // Handle scroll-to and highlight when a source is clicked from citation
+  useEffect(() => {
+    if (highlightedSourceId) {
+      const sourceElement = sourceRefs.current.get(highlightedSourceId)
+      if (sourceElement) {
+        // Scroll into view with smooth animation
+        sourceElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        })
+
+        // Trigger highlight animation
+        setHighlightAnimation(highlightedSourceId)
+
+        // Remove animation class after it completes
+        const timeout = setTimeout(() => {
+          setHighlightAnimation(null)
+        }, 2000)
+
+        return () => clearTimeout(timeout)
+      }
+    }
+  }, [highlightedSourceId])
 
   const handleRefresh = async () => {
     if (!onRefresh) return
@@ -202,10 +231,17 @@ export function SourcesPanel({
                 return (
                   <button
                     key={source.id}
+                    ref={(el) => {
+                      if (el) sourceRefs.current.set(source.id, el)
+                      else sourceRefs.current.delete(source.id)
+                    }}
                     onClick={() => onToggleSource(source.id)}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-secondary transition-colors text-left group ${
-                      isProcessing ? "opacity-70" : ""
-                    } ${isFailed ? "opacity-50" : ""}`}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-secondary transition-all text-left group",
+                      isProcessing && "opacity-70",
+                      isFailed && "opacity-50",
+                      highlightAnimation === source.id && "ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/10 animate-pulse"
+                    )}
                     disabled={isProcessing}
                   >
                     <div

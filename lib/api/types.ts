@@ -81,7 +81,7 @@ export interface Citation {
   id: string;
   message_id: string;
   document_id: string;
-  filename: string;
+  filename?: string;  // Optional - may be missing from older indexed documents
   text_preview: string;
   score: number;
   page_number: number | null;
@@ -131,7 +131,7 @@ export interface ConversationSuggestionsResponse {
 }
 
 // === Content Generation ===
-export type ContentType = "podcast" | "quiz" | "flashcard" | "mindmap";
+export type ContentType = "podcast" | "quiz" | "flashcard" | "mindmap" | "note";
 
 export interface GenerateContentRequest {
   content_type: ContentType;
@@ -235,4 +235,38 @@ export interface HealthResponse {
   };
   environment: string;
   version: string;
+}
+
+// === Feedback ===
+export type FeedbackContentType =
+  | "chat_response"
+  | "podcast"
+  | "quiz"
+  | "flashcard"
+  | "mindmap"
+  | "note";
+
+export type FeedbackRating = "thumbs_up" | "thumbs_down";
+
+export interface FeedbackCreateRequest {
+  content_type: FeedbackContentType;
+  content_id: string;
+  rating: FeedbackRating;
+  comment?: string;
+}
+
+export interface FeedbackResponse {
+  id: string;
+  user_id: string;
+  content_type: FeedbackContentType;
+  content_id: string;
+  rating: FeedbackRating;
+  comment: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeedbackStatusResponse {
+  has_feedback: boolean;
+  feedback: FeedbackResponse | null;
 }

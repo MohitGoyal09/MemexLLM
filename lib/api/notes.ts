@@ -1,11 +1,14 @@
 /**
- * Notes API - Local Storage Implementation
+ * Notes API - Local Storage Implementation with Backend Integration
  *
  * This module provides CRUD operations for notes stored in localStorage.
  * Notes are scoped to notebooks and support rich text content (HTML).
  *
- * Future: Can be upgraded to use a backend API by replacing the storage functions.
+ * The convertToSource function integrates with the backend to convert
+ * notes into indexed, searchable sources.
  */
+
+import { apiClient } from "./client";
 
 // === Types ===
 
@@ -16,6 +19,13 @@ export interface Note {
   content: string; // HTML content from rich text editor
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ConvertToSourceResponse {
+  success: boolean;
+  document_id: string;
+  message: string;
+  status: "pending" | "processing" | "completed" | "failed";
 }
 
 export interface CreateNoteRequest {
@@ -162,5 +172,38 @@ export const notesApi = {
     const allNotes = getAllNotes();
     const filteredNotes = allNotes.filter(note => note.notebookId !== notebookId);
     saveAllNotes(filteredNotes);
+  },
+
+  /**
+   * Convert a note to a searchable source (document)
+   * This calls the backend API to index the note content for RAG retrieval
+   */
+  convertToSource: async (
+    noteId: string,
+    title: string,
+    content: string,
+    notebookId: string
+  ): Promise<ConvertToSourceResponse> => {
+    return apiClient<ConvertToSourceResponse>(
+      "/notes/convert-to-source",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          note_id: noteId,
+          title,
+          content,
+          notebook_id: notebookId,
+        }),
+      }
+    );
+  },
+
+  /**
+   * Check the status of a note-to-source conversion
+   */
+  getConversionStatus: async (documentId: string): Promise<ConvertToSourceResponse> => {
+    return apiClient<ConvertToSourceResponse>(
+      `/notes/convert-status/${documentId}`
+    );
   },
 };

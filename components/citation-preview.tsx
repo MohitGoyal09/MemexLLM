@@ -1,64 +1,256 @@
 "use client"
 
-import React, { useState, useRef, useEffect, useCallback } from "react"
-import { FileText, X, ChevronRight, ExternalLink, Quote, BookOpen } from "lucide-react"
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { createPortal } from "react-dom"
+import {
+  FileText,
+  X,
+  ChevronRight,
+  Quote,
+  BookOpen,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Check,
+  AlertCircle
+} from "lucide-react"
 import { Citation } from "@/lib/api/types"
 import { cn } from "@/lib/utils"
+
+// ============================================================================
+// TYPES & INTERFACES
+// ============================================================================
 
 interface CitationPreviewProps {
   citation: Citation
   index: number
   className?: string
-  onViewSource?: (documentId: string) => void
+  onViewSource?: (documentId: string, pageNumber?: number | null) => void
 }
 
-export function CitationPreview({ citation, index, className, onViewSource }: CitationPreviewProps) {
+interface CitationFooterProps {
+  citations: Citation[]
+  className?: string
+  onViewSource?: (documentId: string, pageNumber?: number | null) => void
+}
+
+interface InlineCitationProps {
+  citations: Citation[]
+  onViewSource?: (documentId: string, pageNumber?: number | null) => void
+}
+
+interface PopoverPosition {
+  top: number
+  left: number
+  placement: "above" | "below"
+  horizontalAlign: "center" | "left" | "right"
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Get file icon styling based on file extension
+ */
+function getFileIconInfo(filename: string): { colorClass: string; label: string } {
+  const ext = filename?.split(".")?.pop()?.toLowerCase() || ""
+
+  const fileTypes: Record<string, { colorClass: string; label: string }> = {
+    pdf: { colorClass: "text-red-500", label: "PDF Document" },
+    doc: { colorClass: "text-blue-500", label: "Word Document" },
+    docx: { colorClass: "text-blue-500", label: "Word Document" },
+    txt: { colorClass: "text-slate-400", label: "Text File" },
+    md: { colorClass: "text-slate-400", label: "Markdown" },
+    html: { colorClass: "text-orange-500", label: "Web Page" },
+    htm: { colorClass: "text-orange-500", label: "Web Page" },
+    csv: { colorClass: "text-green-500", label: "Spreadsheet" },
+    xlsx: { colorClass: "text-green-600", label: "Excel File" },
+    xls: { colorClass: "text-green-600", label: "Excel File" },
+    pptx: { colorClass: "text-orange-600", label: "Presentation" },
+    ppt: { colorClass: "text-orange-600", label: "Presentation" },
+    json: { colorClass: "text-yellow-500", label: "JSON File" },
+  }
+
+  return fileTypes[ext] || { colorClass: "text-muted-foreground", label: "Document" }
+}
+
+/**
+ * Format text preview with smart truncation
+ */
+function formatTextPreview(
+  text: string | null | undefined,
+  maxLength: number = 350
+): { preview: string; isTruncated: boolean; fullText: string } {
+  if (!text || text.trim() === "") {
+    return {
+      preview: "No preview available",
+      isTruncated: false,
+      fullText: ""
+    }
+  }
+
+  // Clean up whitespace and normalize
+  const cleanText = text.replace(/\s+/g, " ").trim()
+
+  if (cleanText.length <= maxLength) {
+    return { preview: cleanText, isTruncated: false, fullText: cleanText }
+  }
+
+  // Smart truncation - try to break at sentence or clause boundaries
+  let breakPoint = maxLength
+  const sentenceEnd = cleanText.substring(0, maxLength).lastIndexOf(". ")
+  const clauseEnd = cleanText.substring(0, maxLength).lastIndexOf(", ")
+  const wordEnd = cleanText.substring(0, maxLength).lastIndexOf(" ")
+
+  if (sentenceEnd > maxLength * 0.6) {
+    breakPoint = sentenceEnd + 1
+  } else if (clauseEnd > maxLength * 0.6) {
+    breakPoint = clauseEnd + 1
+  } else if (wordEnd > maxLength * 0.8) {
+    breakPoint = wordEnd
+  }
+
+  return {
+    preview: cleanText.substring(0, breakPoint).trim() + "...",
+    isTruncated: true,
+    fullText: cleanText,
+  }
+}
+
+/**
+ * Get relevance indicator info
+ */
+function getRelevanceInfo(score: number): {
+  color: string;
+  bgColor: string;
+  label: string
+} {
+  if (score >= 0.8) {
+    return { color: "bg-emerald-500", bgColor: "bg-emerald-500/10", label: "Highly relevant" }
+  }
+  if (score >= 0.6) {
+    return { color: "bg-yellow-500", bgColor: "bg-yellow-500/10", label: "Relevant" }
+  }
+  if (score >= 0.4) {
+    return { color: "bg-orange-500", bgColor: "bg-orange-500/10", label: "Somewhat relevant" }
+  }
+  return { color: "bg-slate-400", bgColor: "bg-slate-400/10", label: "Low relevance" }
+}
+
+/**
+ * Calculate optimal popover position
+ */
+function calculatePopoverPosition(
+  triggerRect: DOMRect,
+  popoverWidth: number = 340,
+  popoverHeight: number = 280
+): PopoverPosition {
+  const padding = 16
+  const spaceAbove = triggerRect.top
+  const spaceBelow = window.innerHeight - triggerRect.bottom
+  const spaceLeft = triggerRect.left
+  const spaceRight = window.innerWidth - triggerRect.right
+
+  // Determine vertical placement
+  const placement = spaceAbove > popoverHeight + padding || spaceAbove > spaceBelow
+    ? "above"
+    : "below"
+
+  // Calculate top position
+  const top = placement === "above"
+    ? triggerRect.top - popoverHeight - 8
+    : triggerRect.bottom + 8
+
+  // Determine horizontal alignment
+  let horizontalAlign: "center" | "left" | "right" = "center"
+  let left = triggerRect.left + (triggerRect.width / 2) - (popoverWidth / 2)
+
+  if (left < padding) {
+    horizontalAlign = "left"
+    left = triggerRect.left
+  } else if (left + popoverWidth > window.innerWidth - padding) {
+    horizontalAlign = "right"
+    left = triggerRect.right - popoverWidth
+  }
+
+  // Ensure within bounds
+  left = Math.max(padding, Math.min(left, window.innerWidth - popoverWidth - padding))
+
+  return { top, left, placement, horizontalAlign }
+}
+
+// ============================================================================
+// CITATION BADGE COMPONENT
+// ============================================================================
+
+/**
+ * The inline citation badge [1], [2], etc.
+ * Handles both hover and click interactions with accessible keyboard navigation
+ */
+export function CitationPreview({
+  citation,
+  index,
+  className,
+  onViewSource
+}: CitationPreviewProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
-  const [position, setPosition] = useState<"above" | "below">("above")
-  const [horizontalPosition, setHorizontalPosition] = useState<"center" | "left" | "right">("center")
+  const [showFullText, setShowFullText] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [position, setPosition] = useState<PopoverPosition | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+
   const triggerRef = useRef<HTMLButtonElement>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Delay before showing popover on hover (prevents flickering)
-  const HOVER_DELAY = 150
-  // Delay before hiding popover when mouse leaves
-  const CLOSE_DELAY = 100
+  // Constants for hover delays
+  const HOVER_DELAY = 200
+  const CLOSE_DELAY = 150
 
-  // Calculate optimal position for popover
+  // Ensure we're mounted before rendering portal
+  useEffect(() => {
+    setIsMounted(true)
+    return () => setIsMounted(false)
+  }, [])
+
+  // Calculate position when opening
   useEffect(() => {
     if (isOpen && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
-      const spaceAbove = rect.top
-      const spaceBelow = window.innerHeight - rect.bottom
-      const spaceLeft = rect.left
-      const spaceRight = window.innerWidth - rect.right
-      const popoverWidth = 320 // w-80 = 20rem = 320px
+      setPosition(calculatePopoverPosition(rect))
+    }
+  }, [isOpen])
 
-      // Prefer showing above, but show below if not enough space
-      setPosition(spaceAbove > 280 || spaceAbove > spaceBelow ? "above" : "below")
+  // Update position on scroll/resize
+  useEffect(() => {
+    if (!isOpen) return
 
-      // Determine horizontal positioning
-      if (spaceLeft < popoverWidth / 2) {
-        setHorizontalPosition("left")
-      } else if (spaceRight < popoverWidth / 2) {
-        setHorizontalPosition("right")
-      } else {
-        setHorizontalPosition("center")
+    const updatePosition = () => {
+      if (triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect()
+        setPosition(calculatePopoverPosition(rect))
       }
+    }
+
+    window.addEventListener("scroll", updatePosition, true)
+    window.addEventListener("resize", updatePosition)
+
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true)
+      window.removeEventListener("resize", updatePosition)
     }
   }, [isOpen])
 
   // Handle hover with delay
   const handleMouseEnter = useCallback(() => {
-    // Clear any pending close timeout
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current)
       closeTimeoutRef.current = null
     }
-
     setIsHovering(true)
     hoverTimeoutRef.current = setTimeout(() => {
       setIsOpen(true)
@@ -66,19 +258,18 @@ export function CitationPreview({ citation, index, className, onViewSource }: Ci
   }, [])
 
   const handleMouseLeave = useCallback(() => {
-    // Clear any pending open timeout
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current)
       hoverTimeoutRef.current = null
     }
-
     setIsHovering(false)
     closeTimeoutRef.current = setTimeout(() => {
       setIsOpen(false)
+      setShowFullText(false)
     }, CLOSE_DELAY)
   }, [])
 
-  // Handle popover mouse enter/leave to keep it open when hovering the popover
+  // Keep popover open when hovering over it
   const handlePopoverMouseEnter = useCallback(() => {
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current)
@@ -89,10 +280,11 @@ export function CitationPreview({ citation, index, className, onViewSource }: Ci
   const handlePopoverMouseLeave = useCallback(() => {
     closeTimeoutRef.current = setTimeout(() => {
       setIsOpen(false)
+      setShowFullText(false)
     }, CLOSE_DELAY)
   }, [])
 
-  // Cleanup timeouts on unmount
+  // Cleanup timeouts
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
@@ -100,178 +292,166 @@ export function CitationPreview({ citation, index, className, onViewSource }: Ci
     }
   }, [])
 
-  // Close popover when clicking outside
+  // Close on click outside
   useEffect(() => {
+    if (!isOpen) return
+
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node
       if (
-        isOpen &&
         popoverRef.current &&
         triggerRef.current &&
-        !popoverRef.current.contains(event.target as Node) &&
-        !triggerRef.current.contains(event.target as Node)
+        !popoverRef.current.contains(target) &&
+        !triggerRef.current.contains(target)
       ) {
         setIsOpen(false)
+        setShowFullText(false)
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    // Small delay to prevent immediate close on click
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside)
+    }, 0)
+
+    return () => {
+      clearTimeout(timeoutId)
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
   }, [isOpen])
 
-  // Close on escape key
+  // Keyboard navigation
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && isOpen) {
+    if (!isOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         setIsOpen(false)
+        setShowFullText(false)
+        triggerRef.current?.focus()
       }
     }
 
-    document.addEventListener("keydown", handleEscape)
-    return () => document.removeEventListener("keydown", handleEscape)
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
   }, [isOpen])
 
-  // Get file icon based on filename extension
-  const getFileIcon = (filename: string) => {
-    const ext = filename.split(".").pop()?.toLowerCase()
-    const iconClasses = "w-4 h-4"
-
-    switch (ext) {
-      case "pdf":
-        return <FileText className={cn(iconClasses, "text-red-500")} />
-      case "doc":
-      case "docx":
-        return <FileText className={cn(iconClasses, "text-blue-500")} />
-      case "txt":
-      case "md":
-        return <FileText className={cn(iconClasses, "text-slate-400")} />
-      case "html":
-      case "htm":
-        return <FileText className={cn(iconClasses, "text-orange-500")} />
-      default:
-        return <FileText className={cn(iconClasses, "text-muted-foreground")} />
+  // Copy citation text
+  const handleCopy = useCallback(async () => {
+    const textToCopy = citation.text_preview || ""
+    try {
+      await navigator.clipboard.writeText(textToCopy)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      console.error("Failed to copy text")
     }
+  }, [citation.text_preview])
+
+  // Memoized text preview
+  const { preview, isTruncated, fullText } = useMemo(
+    () => formatTextPreview(citation.text_preview),
+    [citation.text_preview]
+  )
+
+  const { colorClass, label: fileTypeLabel } = getFileIconInfo(citation.filename || "")
+  const relevanceInfo = getRelevanceInfo(citation.score || 0)
+
+  // Validate citation data - more lenient: accept if we have document_id (core requirement)
+  // or any displayable content (filename, text_preview, or even just a score)
+  const hasValidData = citation && (
+    citation.document_id ||
+    citation.filename ||
+    (citation.text_preview && citation.text_preview.trim().length > 0)
+  )
+
+  // Handle missing/invalid citation
+  if (!hasValidData) {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center justify-center",
+          "min-w-[1.25rem] h-[1.25rem] px-1",
+          "text-[10px] font-bold",
+          "rounded bg-muted/50 text-muted-foreground",
+          "cursor-not-allowed",
+          className
+        )}
+        title="Source unavailable"
+      >
+        {index}
+      </span>
+    )
   }
 
-  // Get file type label
-  const getFileTypeLabel = (filename: string): string => {
-    const ext = filename.split(".").pop()?.toLowerCase()
-    switch (ext) {
-      case "pdf": return "PDF Document"
-      case "doc":
-      case "docx": return "Word Document"
-      case "txt": return "Text File"
-      case "md": return "Markdown"
-      case "html":
-      case "htm": return "Web Page"
-      default: return "Document"
-    }
-  }
-
-  // Format the text preview with smart truncation
-  const formatTextPreview = (text: string): { preview: string; isTruncated: boolean } => {
-    if (!text) return { preview: "No preview available", isTruncated: false }
-
-    // Clean up whitespace
-    const cleanText = text.replace(/\s+/g, ' ').trim()
-
-    // Smart truncation - try to break at sentence boundaries
-    const maxLength = 350
-    if (cleanText.length <= maxLength) {
-      return { preview: cleanText, isTruncated: false }
-    }
-
-    // Find a good break point (end of sentence or clause)
-    let breakPoint = maxLength
-    const sentenceEnd = cleanText.substring(0, maxLength).lastIndexOf('. ')
-    const clauseEnd = cleanText.substring(0, maxLength).lastIndexOf(', ')
-
-    if (sentenceEnd > maxLength * 0.6) {
-      breakPoint = sentenceEnd + 1
-    } else if (clauseEnd > maxLength * 0.6) {
-      breakPoint = clauseEnd + 1
-    }
-
-    return {
-      preview: cleanText.substring(0, breakPoint).trim() + "...",
-      isTruncated: true
-    }
-  }
-
-  // Calculate relevance indicator color
-  const getRelevanceColor = (score: number) => {
-    if (score >= 0.8) return "bg-emerald-500"
-    if (score >= 0.6) return "bg-yellow-500"
-    return "bg-orange-500"
-  }
-
-  const getRelevanceLabel = (score: number) => {
-    if (score >= 0.8) return "Highly relevant"
-    if (score >= 0.6) return "Relevant"
-    return "Somewhat relevant"
-  }
-
-  const { preview, isTruncated } = formatTextPreview(citation.text_preview)
+  // Derive display name: prefer filename, fall back to text preview snippet, then generic
+  const displayName = citation.filename ||
+    (citation.text_preview && citation.text_preview.trim().length > 10
+      ? citation.text_preview.trim().substring(0, 30) + "..."
+      : null) ||
+    "Source document"
 
   return (
-    <span className={cn("relative inline-block align-baseline", className)}>
-      {/* Citation Badge - Clickable with hover support */}
+    <>
+      {/* Citation Badge Trigger */}
       <button
         ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onFocus={handleMouseEnter}
+        onBlur={handleMouseLeave}
         className={cn(
           "inline-flex items-center justify-center",
           "min-w-[1.25rem] h-[1.25rem] px-1",
           "text-[10px] font-bold",
-          "rounded transition-all duration-150",
-          "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1",
-          "cursor-pointer select-none",
+          "rounded-sm transition-all duration-150",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1",
+          "cursor-pointer select-none align-middle",
           isOpen || isHovering
             ? "bg-primary text-primary-foreground shadow-md scale-110"
-            : "bg-primary/20 text-primary hover:bg-primary/30 hover:scale-105"
+            : "bg-primary/20 text-primary hover:bg-primary/30 hover:scale-105",
+          className
         )}
-        aria-label={`View source ${index}: ${citation.filename}`}
+        aria-label={`View source ${index}: ${displayName}`}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
       >
         {index}
       </button>
 
-      {/* Popover Preview with enhanced styling */}
-      {isOpen && (
+      {/* Popover Portal */}
+      {isMounted && isOpen && position && createPortal(
         <div
           ref={popoverRef}
           role="dialog"
-          aria-label={`Citation preview for ${citation.filename}`}
+          aria-label={`Citation preview for ${displayName}`}
           onMouseEnter={handlePopoverMouseEnter}
           onMouseLeave={handlePopoverMouseLeave}
-          className={cn(
-            "absolute z-[100] w-80",
-            "animate-in fade-in-0 zoom-in-95 duration-150",
-            position === "above"
-              ? "bottom-full mb-2 origin-bottom"
-              : "top-full mt-2 origin-top",
-            // Horizontal positioning
-            horizontalPosition === "center" && "left-1/2 -translate-x-1/2",
-            horizontalPosition === "left" && "left-0",
-            horizontalPosition === "right" && "right-0"
-          )}
+          className="fixed z-[9999] w-[340px] animate-in fade-in-0 zoom-in-95 duration-150"
+          style={{
+            top: position.top,
+            left: position.left,
+            transformOrigin: position.placement === "above" ? "bottom center" : "top center",
+          }}
         >
-          <div className="bg-popover border border-border rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm">
-            {/* Header with source info */}
+          <div className="bg-popover border border-border rounded-xl shadow-2xl overflow-hidden">
+            {/* Header */}
             <div className="flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-muted/80 to-muted/40 border-b border-border/50">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-background/80 flex items-center justify-center border border-border/50 shadow-sm">
-                  {getFileIcon(citation.filename)}
+                  <FileText className={cn("w-4 h-4", colorClass)} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground truncate leading-tight" title={citation.filename}>
-                    {citation.filename}
+                  <p
+                    className="text-sm font-semibold text-foreground truncate leading-tight"
+                    title={displayName}
+                  >
+                    {displayName}
                   </p>
                   <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
-                    <span>{getFileTypeLabel(citation.filename)}</span>
-                    {citation.page_number && (
+                    <span>{fileTypeLabel}</span>
+                    {citation.page_number != null && (
                       <>
                         <span className="text-muted-foreground/40">|</span>
                         <span className="font-medium">Page {citation.page_number}</span>
@@ -284,146 +464,556 @@ export function CitationPreview({ citation, index, className, onViewSource }: Ci
                 onClick={(e) => {
                   e.stopPropagation()
                   setIsOpen(false)
+                  setShowFullText(false)
                 }}
-                className="flex-shrink-0 p-1 rounded-md hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
+                className="flex-shrink-0 p-1.5 rounded-md hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground"
                 aria-label="Close preview"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            {/* Content Preview with quote styling */}
-            <div className="relative px-3 py-3">
+            {/* Content Preview */}
+            <div className="px-3 py-3">
               <div className="flex gap-2">
                 <Quote className="w-4 h-4 text-primary/40 flex-shrink-0 mt-0.5" />
-                <div className="flex-1 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
-                  <p className="text-sm text-foreground/90 leading-relaxed">
-                    {preview}
-                  </p>
+                <div className="flex-1 overflow-hidden">
+                  <div
+                    className={cn(
+                      "text-sm text-foreground/90 leading-relaxed transition-all duration-200",
+                      showFullText ? "max-h-60 overflow-y-auto pr-1" : "max-h-24 overflow-hidden"
+                    )}
+                  >
+                    <p>{showFullText ? fullText : preview}</p>
+                  </div>
+
+                  {/* Read more / Show less toggle */}
                   {isTruncated && (
-                    <span className="text-xs text-muted-foreground/70 mt-1 block">
-                      [excerpt]
-                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowFullText(!showFullText)
+                      }}
+                      className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                    >
+                      {showFullText ? (
+                        <>
+                          <ChevronUp className="w-3 h-3" />
+                          Show less
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-3 h-3" />
+                          Read more
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Footer with relevance indicator and action */}
+            {/* Footer */}
             <div className="px-3 py-2 bg-muted/20 border-t border-border/50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                {/* Relevance indicator */}
                 <div className="flex items-center gap-1.5">
-                  <div className={cn("w-2 h-2 rounded-full", getRelevanceColor(citation.score))} />
+                  <div className={cn("w-2 h-2 rounded-full", relevanceInfo.color)} />
                   <span className="text-[11px] text-muted-foreground">
-                    {getRelevanceLabel(citation.score)} ({Math.round(citation.score * 100)}%)
+                    {relevanceInfo.label} ({Math.round((citation.score || 0) * 100)}%)
                   </span>
                 </div>
               </div>
-              <button
-                className="inline-flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors font-medium group"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (onViewSource) {
-                    onViewSource(citation.document_id)
-                  }
-                  setIsOpen(false)
-                }}
-              >
-                <BookOpen className="w-3 h-3" />
-                View in source
-                <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                {/* Copy button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleCopy()
+                  }}
+                  className="p-1.5 rounded-md hover:bg-muted/60 transition-colors text-muted-foreground hover:text-foreground"
+                  aria-label={copied ? "Copied!" : "Copy citation text"}
+                  title={copied ? "Copied!" : "Copy text"}
+                >
+                  {copied ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+
+                {/* View source button */}
+                <button
+                  className="inline-flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors font-medium group"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (onViewSource) {
+                      onViewSource(citation.document_id, citation.page_number)
+                    }
+                    setIsOpen(false)
+                    setShowFullText(false)
+                  }}
+                >
+                  <BookOpen className="w-3 h-3" />
+                  View in source
+                  <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Arrow pointer - positioned based on horizontal alignment */}
+          {/* Arrow Pointer */}
           <div
             className={cn(
               "absolute w-2.5 h-2.5 rotate-45 bg-popover border-border",
-              position === "above"
-                ? "bottom-[-6px] border-r border-b"
-                : "top-[-6px] border-l border-t",
-              horizontalPosition === "center" && "left-1/2 -translate-x-1/2",
-              horizontalPosition === "left" && "left-4",
-              horizontalPosition === "right" && "right-4"
+              position.placement === "above"
+                ? "bottom-[-5px] border-r border-b"
+                : "top-[-5px] border-l border-t"
             )}
+            style={{
+              left: position.horizontalAlign === "center"
+                ? "calc(50% - 5px)"
+                : position.horizontalAlign === "left"
+                ? "20px"
+                : "calc(100% - 30px)",
+            }}
           />
-        </div>
+        </div>,
+        document.body
       )}
-    </span>
+    </>
   )
 }
 
-// Separate component for the sources footer
-interface CitationFooterProps {
-  citations: Citation[]
-  className?: string
-}
+// ============================================================================
+// CITATION FOOTER COMPONENT
+// ============================================================================
 
-export function CitationFooter({ citations, className }: CitationFooterProps) {
+/**
+ * Expandable footer showing all citations at the bottom of a message
+ */
+export function CitationFooter({
+  citations,
+  className,
+  onViewSource
+}: CitationFooterProps) {
   const [expandedCitation, setExpandedCitation] = useState<number | null>(null)
+  const [showAll, setShowAll] = useState(false)
 
   if (!citations || citations.length === 0) return null
 
+  // Show max 3 citations by default, expandable to show all
+  const INITIAL_DISPLAY_COUNT = 3
+  const displayedCitations = showAll ? citations : citations.slice(0, INITIAL_DISPLAY_COUNT)
+  const hasMore = citations.length > INITIAL_DISPLAY_COUNT
+
   return (
-    <div className={cn("mt-4 pt-4 border-t border-border/50", className)}>
-      <div className="flex items-center gap-2 mb-3">
-        <FileText className="w-4 h-4 text-muted-foreground" />
-        <span className="text-xs font-medium text-muted-foreground">
-          {citations.length} {citations.length === 1 ? "Source" : "Sources"} Referenced
-        </span>
-      </div>
-
-      <div className="space-y-2">
-        {citations.map((citation, idx) => (
-          <div
-            key={citation.id || idx}
-            className={cn(
-              "rounded-lg border border-border/50 overflow-hidden transition-all duration-200",
-              expandedCitation === idx ? "bg-muted/30" : "hover:bg-muted/20"
-            )}
+    <div className={cn("mt-5 pt-4 border-t border-border/50", className)}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground">
+            {citations.length} {citations.length === 1 ? "Source" : "Sources"} Referenced
+          </span>
+        </div>
+        {hasMore && (
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="text-xs text-primary hover:text-primary/80 transition-colors font-medium flex items-center gap-1"
           >
-            <button
-              onClick={() => setExpandedCitation(expandedCitation === idx ? null : idx)}
-              className="w-full px-3 py-2 flex items-center gap-3 text-left"
-            >
-              <span className="flex items-center justify-center w-5 h-5 rounded-md bg-primary/15 text-primary text-[10px] font-bold flex-shrink-0">
-                {idx + 1}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {citation.filename}
-                </p>
-                {citation.page_number && (
-                  <p className="text-xs text-muted-foreground">
-                    Page {citation.page_number}
-                  </p>
-                )}
-              </div>
-              <ChevronRight
-                className={cn(
-                  "w-4 h-4 text-muted-foreground transition-transform duration-200",
-                  expandedCitation === idx && "rotate-90"
-                )}
-              />
-            </button>
-
-            {expandedCitation === idx && (
-              <div className="px-3 pb-3 animate-in slide-in-from-top-2 duration-200">
-                <blockquote className="text-xs text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-3 italic ml-8">
-                  "{citation.text_preview}"
-                </blockquote>
-                <div className="flex items-center gap-2 mt-2 ml-8">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-[10px] text-muted-foreground">
-                    {Math.round(citation.score * 100)}% relevance
-                  </span>
-                </div>
-              </div>
+            {showAll ? (
+              <>
+                Show less
+                <ChevronUp className="w-3 h-3" />
+              </>
+            ) : (
+              <>
+                Show all ({citations.length})
+                <ChevronDown className="w-3 h-3" />
+              </>
             )}
-          </div>
-        ))}
+          </button>
+        )}
       </div>
+
+      {/* Citation List */}
+      <div className="space-y-2">
+        {displayedCitations.map((citation, idx) => {
+          const actualIndex = showAll ? idx : idx
+          const { preview, isTruncated, fullText } = formatTextPreview(citation.text_preview, 200)
+          const { colorClass } = getFileIconInfo(citation.filename || "")
+          const relevanceInfo = getRelevanceInfo(citation.score || 0)
+          const isExpanded = expandedCitation === actualIndex
+          // Derive display name for footer citations
+          const footerDisplayName = citation.filename ||
+            (citation.text_preview && citation.text_preview.trim().length > 10
+              ? citation.text_preview.trim().substring(0, 30) + "..."
+              : null) ||
+            "Source document"
+
+          return (
+            <div
+              key={citation.id || idx}
+              className={cn(
+                "rounded-lg border border-border/50 overflow-hidden transition-all duration-200",
+                isExpanded ? "bg-muted/30 shadow-sm" : "hover:bg-muted/20"
+              )}
+            >
+              {/* Collapsed View */}
+              <button
+                onClick={() => setExpandedCitation(isExpanded ? null : actualIndex)}
+                className="w-full px-3 py-2.5 flex items-center gap-3 text-left"
+              >
+                <span className="flex items-center justify-center w-6 h-6 rounded-md bg-primary/15 text-primary text-[11px] font-bold flex-shrink-0">
+                  {actualIndex + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <FileText className={cn("w-3.5 h-3.5 flex-shrink-0", colorClass)} />
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {footerDisplayName}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {citation.page_number != null && (
+                      <span className="text-xs text-muted-foreground">
+                        Page {citation.page_number}
+                      </span>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <div className={cn("w-1.5 h-1.5 rounded-full", relevanceInfo.color)} />
+                      <span className="text-[10px] text-muted-foreground">
+                        {Math.round((citation.score || 0) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight
+                  className={cn(
+                    "w-4 h-4 text-muted-foreground transition-transform duration-200 flex-shrink-0",
+                    isExpanded && "rotate-90"
+                  )}
+                />
+              </button>
+
+              {/* Expanded Content */}
+              {isExpanded && (
+                <div className="px-3 pb-3 animate-in slide-in-from-top-1 duration-200">
+                  <div className="ml-9">
+                    <blockquote className="text-xs text-muted-foreground leading-relaxed border-l-2 border-primary/30 pl-3 italic">
+                      &ldquo;{isExpanded ? fullText || preview : preview}&rdquo;
+                    </blockquote>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 mt-3">
+                      <div className={cn("px-2 py-0.5 rounded text-[10px] font-medium", relevanceInfo.bgColor)}>
+                        {relevanceInfo.label}
+                      </div>
+                      {onViewSource && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onViewSource(citation.document_id, citation.page_number)
+                          }}
+                          className="inline-flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors font-medium"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Open source
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Show more button at bottom */}
+      {hasMore && !showAll && (
+        <button
+          onClick={() => setShowAll(true)}
+          className="w-full mt-2 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors border border-dashed border-border/50 rounded-lg hover:border-border"
+        >
+          + {citations.length - INITIAL_DISPLAY_COUNT} more {citations.length - INITIAL_DISPLAY_COUNT === 1 ? "source" : "sources"}
+        </button>
+      )}
     </div>
   )
 }
+
+// ============================================================================
+// INLINE CITATION RENDERER
+// ============================================================================
+
+/**
+ * Component to render text with inline clickable citations
+ * Parses text for citation patterns like [1], [2] and makes them interactive
+ */
+export function InlineCitationRenderer({
+  text,
+  citations,
+  onViewSource
+}: {
+  text: string
+  citations?: Citation[]
+  onViewSource?: (documentId: string, pageNumber?: number | null) => void
+}) {
+  // Parse text and replace citation patterns with components
+  const renderWithCitations = useMemo(() => {
+    if (!citations || citations.length === 0) {
+      return <span>{text}</span>
+    }
+
+    // Match patterns like [1], [2], **[1]**, etc.
+    const citationPattern = /\*?\*?\[(\d+)\]\*?\*?/g
+    const parts: (string | React.ReactNode)[] = []
+    let lastIndex = 0
+    let match
+
+    while ((match = citationPattern.exec(text)) !== null) {
+      // Add text before the citation
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index))
+      }
+
+      const citationIndex = parseInt(match[1], 10)
+      // Handle both 0-indexed and 1-indexed citations
+      const adjustedIndex = citationIndex === 0 ? 1 : citationIndex
+      const citation = citations[adjustedIndex - 1]
+
+      if (citation) {
+        parts.push(
+          <CitationPreview
+            key={`${match.index}-${adjustedIndex}`}
+            citation={citation}
+            index={adjustedIndex}
+            onViewSource={onViewSource}
+            className="mx-0.5"
+          />
+        )
+      } else {
+        // Keep the original text if citation doesn't exist
+        parts.push(
+          <span
+            key={`missing-${match.index}`}
+            className="inline-flex items-center justify-center min-w-[1.25rem] h-[1.25rem] px-1 text-[10px] font-bold rounded bg-muted/30 text-muted-foreground mx-0.5"
+            title="Source not found"
+          >
+            {adjustedIndex}
+          </span>
+        )
+      }
+
+      lastIndex = match.index + match[0].length
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex))
+    }
+
+    return <>{parts}</>
+  }, [text, citations, onViewSource])
+
+  return <>{renderWithCitations}</>
+}
+
+// ============================================================================
+// MOBILE-FRIENDLY CITATION SHEET
+// ============================================================================
+
+interface CitationSheetProps {
+  citation: Citation | null
+  isOpen: boolean
+  onClose: () => void
+  onViewSource?: (documentId: string, pageNumber?: number | null) => void
+}
+
+/**
+ * Full-screen citation sheet for mobile devices
+ * Slides up from bottom for better touch interaction
+ */
+export function CitationSheet({
+  citation,
+  isOpen,
+  onClose,
+  onViewSource
+}: CitationSheetProps) {
+  const [showFullText, setShowFullText] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  // Reset state when closing
+  useEffect(() => {
+    if (!isOpen) {
+      setShowFullText(false)
+      setCopied(false)
+    }
+  }, [isOpen])
+
+  // Handle body scroll lock
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [isOpen])
+
+  if (!citation) return null
+
+  const { preview, isTruncated, fullText } = formatTextPreview(citation.text_preview, 300)
+  const { colorClass, label: fileTypeLabel } = getFileIconInfo(citation.filename || "")
+  const relevanceInfo = getRelevanceInfo(citation.score || 0)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(citation.text_preview || "")
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      console.error("Failed to copy")
+    }
+  }
+
+  return (
+    <>
+      {/* Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[9998] animate-in fade-in duration-200"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sheet */}
+      <div
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-[9999] bg-popover rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out",
+          "max-h-[85vh] overflow-hidden",
+          isOpen ? "translate-y-0" : "translate-y-full"
+        )}
+      >
+        {/* Handle bar */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pb-3 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-muted/80 flex items-center justify-center">
+              <FileText className={cn("w-5 h-5", colorClass)} />
+            </div>
+            <div>
+              <p className="text-base font-semibold text-foreground truncate max-w-[200px]">
+                {citation.filename || "Unknown source"}
+              </p>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span>{fileTypeLabel}</span>
+                {citation.page_number != null && (
+                  <>
+                    <span className="text-muted-foreground/40">|</span>
+                    <span>Page {citation.page_number}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-muted transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 overflow-y-auto max-h-[50vh]">
+          <div className="flex gap-3">
+            <Quote className="w-5 h-5 text-primary/40 flex-shrink-0 mt-1" />
+            <div className="flex-1">
+              <p className="text-sm text-foreground/90 leading-relaxed">
+                {showFullText ? fullText : preview}
+              </p>
+              {isTruncated && (
+                <button
+                  onClick={() => setShowFullText(!showFullText)}
+                  className="inline-flex items-center gap-1 mt-3 text-sm text-primary font-medium"
+                >
+                  {showFullText ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      Show less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      Read more
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-border/50 bg-muted/20 safe-area-inset-bottom">
+          {/* Relevance */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className={cn("w-2.5 h-2.5 rounded-full", relevanceInfo.color)} />
+            <span className="text-sm text-muted-foreground">
+              {relevanceInfo.label} ({Math.round((citation.score || 0) * 100)}% match)
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleCopy}
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-sm font-medium"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  Copy text
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                if (onViewSource) {
+                  onViewSource(citation.document_id, citation.page_number)
+                }
+                onClose()
+              }}
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium"
+            >
+              <BookOpen className="w-4 h-4" />
+              View source
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export type { CitationPreviewProps, CitationFooterProps, InlineCitationProps }

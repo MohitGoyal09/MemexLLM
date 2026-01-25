@@ -33,6 +33,13 @@ interface Message {
   isStreaming?: boolean
 }
 
+// Track highlighted source for citation linking
+interface HighlightedSource {
+  documentId: string
+  pageNumber?: number | null
+  timestamp: number
+}
+
 const getSourceIcon = (type: Source["type"]) => {
   const iconMap = {
     pdf: { icon: FileText, bg: "bg-red-500/20", color: "text-red-400" },
@@ -101,17 +108,19 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [lastChatTurn, setLastChatTurn] = useState<{ userMessage: string; assistantMessage: string } | null>(null)
+  const [studioRefreshKey, setStudioRefreshKey] = useState(0)
 
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false)
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false)
   // Narrower default widths to match NotebookLM proportions
   const [leftPanelWidth, setLeftPanelWidth] = useState(260)
-  const [rightPanelWidth, setRightPanelWidth] = useState(300)
+  const [rightPanelWidth, setRightPanelWidth] = useState(380)
 
   const [fullScreenView, setFullScreenView] = useState<FullScreenView | null>(null)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [notebookSettings, setNotebookSettings] = useState<NotebookSettings>(defaultSettings)
   const [triggerTool, setTriggerTool] = useState<string | null>(null)
+  const [highlightedSource, setHighlightedSource] = useState<HighlightedSource | null>(null)
 
   // Use studio hook for collapsed sidebar items
   const { items: studioItems } = useStudio({ notebookId, pollInterval: 5000 })
@@ -202,6 +211,10 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
   const selectAllSources = useCallback(() => {
     setSelectedSources((prev) => (prev.length === sources.length ? [] : sources.map((s) => s.id)))
   }, [sources])
+
+  const handleExpandStudio = useCallback(() => {
+    setRightPanelWidth((prev) => Math.max(prev, 600))
+  }, [])
 
   const handleSendMessage = useCallback(
     async (content: string) => {
@@ -328,6 +341,26 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
     }
   }, [notebookId])
 
+  // Handle viewing a source from a citation
+  const handleViewSource = useCallback((documentId: string, pageNumber?: number | null) => {
+    // Expand the left panel if collapsed
+    if (leftPanelCollapsed) {
+      setLeftPanelCollapsed(false)
+    }
+
+    // Set the highlighted source to trigger scroll and highlight effect
+    setHighlightedSource({
+      documentId,
+      pageNumber,
+      timestamp: Date.now()
+    })
+
+    // Clear the highlight after animation completes
+    setTimeout(() => {
+      setHighlightedSource(null)
+    }, 3000)
+  }, [leftPanelCollapsed])
+
   const handleSaveSettings = useCallback(
     async (settings: NotebookSettings) => {
       try {
@@ -407,6 +440,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
               onSelectAll={selectAllSources}
               onCollapse={() => setLeftPanelCollapsed(true)}
               onRefresh={refreshSources}
+              highlightedSourceId={highlightedSource?.documentId}
             />
           </ResizablePanel>
         )}
@@ -420,7 +454,9 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
             onSendMessage={handleSendMessage}
             onOpenSettings={() => setShowSettingsModal(true)}
             onDeleteHistory={handleDeleteHistory}
+            onViewSource={handleViewSource}
             lastChatTurn={lastChatTurn}
+            onNoteSaved={() => setStudioRefreshKey(prev => prev + 1)}
           />
         </div>
 
@@ -431,6 +467,10 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
               onCollapse={() => setRightPanelCollapsed(true)}
               onOpenView={(type, data) => setFullScreenView({ type, data })}
               triggerTool={triggerTool}
+              refreshKey={studioRefreshKey}
+              onSourceCreated={refreshSources}
+              onExpandStudio={handleExpandStudio}
+              onResetStudioWidth={() => setRightPanelWidth(380)}
             />
           </ResizablePanel>
         )}
@@ -512,11 +552,12 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
       {/* Full Screen View Overlay */}
       {fullScreenView && (
         <div className="absolute inset-0 z-50 bg-background animate-in fade-in duration-300">
-          {fullScreenView.type === "mindmap" && (
+      {fullScreenView.type === "mindmap" && (
             <MindMapView
               title={fullScreenView.data.title}
               sourceCount={fullScreenView.data.sourceCount}
               rootNode={fullScreenView.data.rootNode}
+              contentId={fullScreenView.data.contentId}
               onBack={() => setFullScreenView(null)}
             />
           )}
@@ -525,6 +566,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
               title={fullScreenView.data.title}
               sourceCount={fullScreenView.data.sourceCount}
               flashcards={fullScreenView.data.flashcards}
+              contentId={fullScreenView.data.contentId}
               onBack={() => setFullScreenView(null)}
             />
           )}
@@ -533,6 +575,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
               title={fullScreenView.data.title}
               sourceCount={fullScreenView.data.sourceCount}
               questions={fullScreenView.data.questions}
+              contentId={fullScreenView.data.contentId}
               onBack={() => setFullScreenView(null)}
             />
           )}

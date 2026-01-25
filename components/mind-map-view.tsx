@@ -13,6 +13,9 @@ import {
   ZoomOut,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { submitFeedback } from "@/lib/api/feedback"
+import type { FeedbackRating } from "@/lib/api/types"
+import { cn } from "@/lib/utils"
 
 interface MindMapNode {
   id: string
@@ -24,6 +27,7 @@ interface MindMapViewProps {
   title: string
   sourceCount: number
   rootNode: MindMapNode
+  contentId?: string
   onBack: () => void
 }
 
@@ -204,10 +208,31 @@ function MindMapNodeComponent({
 }
 
 
-export function MindMapView({ title, sourceCount, rootNode, onBack }: MindMapViewProps) {
+export function MindMapView({ title, sourceCount, rootNode, contentId, onBack }: MindMapViewProps) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
     [rootNode.id]: true,
   })
+  const [feedbackStatus, setFeedbackStatus] = useState<FeedbackRating | null>(null)
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
+
+  // Handle feedback submission
+  const handleFeedback = async (rating: FeedbackRating) => {
+    if (!contentId || feedbackStatus === rating) return
+
+    setIsSubmittingFeedback(true)
+    try {
+      await submitFeedback({
+        content_type: "mindmap",
+        content_id: contentId,
+        rating: rating
+      })
+      setFeedbackStatus(rating)
+    } catch (error) {
+      console.error("Failed to submit feedback:", error)
+    } finally {
+      setIsSubmittingFeedback(false)
+    }
+  }
   
   // Pan and Zoom State
   const [zoom, setZoom] = useState(100)
@@ -337,11 +362,27 @@ export function MindMapView({ title, sourceCount, rootNode, onBack }: MindMapVie
 
       {/* Bottom Controls */}
       <div className="absolute bottom-8 left-8 z-20 flex gap-2">
-        <Button variant="outline" className="h-9 px-4 rounded-full bg-[#0f172a]/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-md">
-          <ThumbsUp className="w-3.5 h-3.5 mr-2" /> Good
+        <Button
+          variant="outline"
+          className={cn(
+            "h-9 px-4 rounded-full bg-[#0f172a]/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-md",
+            feedbackStatus === "thumbs_up" && "bg-green-900/30 border-green-700 text-green-400 hover:bg-green-900/50"
+          )}
+          disabled={isSubmittingFeedback || !contentId}
+          onClick={() => handleFeedback("thumbs_up")}
+        >
+          <ThumbsUp className={cn("w-3.5 h-3.5 mr-2", feedbackStatus === "thumbs_up" && "fill-current")} /> Good
         </Button>
-        <Button variant="outline" className="h-9 px-4 rounded-full bg-[#0f172a]/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-md">
-          <ThumbsDown className="w-3.5 h-3.5 mr-2" /> Bad
+        <Button
+          variant="outline"
+          className={cn(
+            "h-9 px-4 rounded-full bg-[#0f172a]/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-md",
+            feedbackStatus === "thumbs_down" && "bg-red-900/30 border-red-700 text-red-400 hover:bg-red-900/50"
+          )}
+          disabled={isSubmittingFeedback || !contentId}
+          onClick={() => handleFeedback("thumbs_down")}
+        >
+          <ThumbsDown className={cn("w-3.5 h-3.5 mr-2", feedbackStatus === "thumbs_down" && "fill-current")} /> Bad
         </Button>
       </div>
 

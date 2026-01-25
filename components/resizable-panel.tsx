@@ -26,6 +26,10 @@ export function ResizablePanel({
   const [isResizing, setIsResizing] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    setWidth(defaultWidth)
+  }, [defaultWidth])
+
   const startResize = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     setIsResizing(true)
@@ -72,7 +76,7 @@ export function ResizablePanel({
   }, [isResizing, resize, stopResize])
 
   return (
-    <div ref={panelRef} className={`relative flex-shrink-0 ${className}`} style={{ width }}>
+    <div ref={panelRef} className={`relative flex-shrink-0 h-full ${className}`} style={{ width }}>
       {children}
 
       {/* Resize Handle */}
