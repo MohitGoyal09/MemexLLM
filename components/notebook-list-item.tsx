@@ -1,4 +1,4 @@
-import { Globe } from "lucide-react"
+import { Globe, MoreVertical } from "lucide-react"
 import { SynapseLogo } from "./synapse-logo"
 
 interface NotebookListItemProps {
@@ -13,18 +13,26 @@ interface NotebookListItemProps {
 }
 
 export function NotebookListItem({ notebook }: NotebookListItemProps) {
+  // Deterministic emoji
+  const emojis = ["📓", "🤖", "🚀", "💡", "🔮", "🧬", "🧠", "📈", "🎨", "🔬", "💼", "📚", "📡", "🧩", "🔥", "✨"]
+  const emojiIndex = notebook.id.charCodeAt(0) % emojis.length
+  const Emoji = emojis[emojiIndex]
+
   return (
-    <div className="grid grid-cols-[1fr_120px_140px_80px_60px] items-center gap-4 px-4 py-3 hover:bg-secondary/50 transition-colors rounded-lg group cursor-pointer">
-      <div className="flex items-center gap-3 min-w-0">
-        <SynapseLogo className="w-5 h-5 shrink-0" />
-        <span className="truncate text-sm">{notebook.title}</span>
+    <div className="grid grid-cols-[1fr_120px_140px_40px] items-center gap-4 px-6 py-4 hover:bg-secondary/30 transition-colors group cursor-pointer border-l-2 border-transparent hover:border-primary/50">
+      <div className="flex items-center gap-4 min-w-0">
+        <div className="w-8 h-8 rounded-lg bg-secondary/50 flex items-center justify-center text-lg shadow-sm border border-border/50">
+          {Emoji}
+        </div>
+        <span className="truncate text-sm font-medium text-foreground">{notebook.title}</span>
       </div>
-      <span className="text-sm text-muted-foreground">{notebook.sources} Sources</span>
-      <span className="text-sm text-muted-foreground">{notebook.date}</span>
-      <div className="flex justify-center">
-        {notebook.isPublic && <Globe className="w-4 h-4 text-muted-foreground" />}
+      <span className="text-xs text-muted-foreground">{notebook.sources} sources</span>
+      <span className="text-xs text-muted-foreground">{notebook.date}</span>
+      <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+        <button className="p-1.5 hover:bg-background rounded-md text-muted-foreground hover:text-foreground">
+          <MoreVertical className="w-4 h-4" />
+        </button>
       </div>
-      <span className="text-sm text-muted-foreground text-right">Reader</span>
     </div>
   )
 }

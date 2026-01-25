@@ -172,10 +172,10 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
         <div className="p-6">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-2xl font-semibold">Add sources</h2>
-            <Button variant="outline" className="gap-2 rounded-full bg-transparent">
+            {/* <Button variant="outline" className="gap-2 rounded-full bg-transparent">
               <Sparkles className="w-4 h-4" />
               Discover sources
-            </Button>
+            </Button> */}
           </div>
           <p className="text-muted-foreground mb-6">
             Sources let SynapseAI base its responses on the information that matters most to you.
@@ -184,7 +184,7 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
           </p>
 
           {/* Web Search */}
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <div className="flex items-center gap-3 p-4 bg-secondary rounded-xl">
               <Search className="w-5 h-5 text-muted-foreground" />
               <input
@@ -208,7 +208,7 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
-          </div>
+          </div> */}
 
           {/* Hidden File Input */}
           <input

@@ -1,16 +1,34 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
+import ReactFlow, {
+  Node,
+  Edge,
+  Position,
+  ConnectionLineType,
+  useNodesState,
+  useEdgesState,
+  Controls,
+  Background,
+  MarkerType,
+  ReactFlowProvider,
+  useReactFlow,
+  Handle,
+  Panel,
+  getRectOfNodes,
+  getTransformForBounds,
+} from "reactflow"
+import "reactflow/dist/style.css"
+import dagre from "dagre"
+import { toPng } from "html-to-image"
 import {
   Minimize2,
   ThumbsUp,
   ThumbsDown,
-  ChevronRight,
+  Download,
   Plus,
   Minus,
-  Download,
-  ZoomIn,
-  ZoomOut,
+  Maximize2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { submitFeedback } from "@/lib/api/feedback"
@@ -31,189 +49,212 @@ interface MindMapViewProps {
   onBack: () => void
 }
 
-// Branch Node Component
-function MindMapNodeComponent({
-  node,
-  isRoot = false,
-  isFirst = false,
-  isLast = false,
-  isOnly = false,
-  level = 0,
-  expanded,
-  onToggle,
-}: {
-  node: MindMapNode
-  isRoot?: boolean
-  isFirst?: boolean
-  isLast?: boolean
-  isOnly?: boolean
-  level?: number
-  expanded: Record<string, boolean>
-  onToggle: (id: string) => void
-}) {
-  const hasChildren = node.children && node.children.length > 0
-  const isExpanded = expanded[node.id]
-
-  // NotebookLLM Style Colors
-  const nodeStyles = isRoot
-    ? "bg-[#1e293b] border-[#334155] text-white shadow-lg shadow-black/20"
-    : "bg-[#0f172a] border-[#1e293b] text-slate-200 hover:border-slate-700 hover:bg-[#1e293b] transition-colors"
-
+// ----------------------------------------------------------------------
+// 1. Custom Node Component (The "Pill" Style)
+// ----------------------------------------------------------------------
+const CustomNode = ({ data, isConnectable }: any) => {
   return (
-    <div className="flex">
-      {/* 
-        Strict Flex Row:
-        [Connector] [Content] [Children Column]
-        
-        CRITICAL: 
-        - The `Connector` must determine the vertical connectivity.
-        - We use a CSS-based approach for 'Curly Brackets'.
-        - To avoid gaps, the outer wrapper has NO vertical padding/margin.
-        - Visual spacing is handled inside the Content Wrapper.
-      */}
-      
-      {/* Connector (The branch entering this node) */}
-      {!isRoot && (
-        <div className="w-16 relative shrink-0">
-          {/* 
-             Curly Bracket Logic:
-             We use absolute divs to draw the lines.
-             The vertical spine must align perfectly with siblings.
-          */}
-          
-          {/* Horizontal Entry Line (Connecting to node) */}
-          {/* Starts from the curve end and touches the node */}
-          <div className="absolute right-0 top-1/2 w-8 h-px bg-slate-700 -translate-y-[0.5px]" />
-
-          {/* Vertical Spine & Curves */}
-          {isOnly ? (
-             // Single child: Straight horizontal line from parent to here
-             <div className="absolute left-0 top-1/2 w-16 h-px bg-slate-700 -translate-y-[0.5px]" />
-          ) : (
-            <>
-              {/* Upper Vertical Line (From top to center) */}
-              {/* For first node: starts at 50% (center) going down? No, first node is top. 
-                  It needs to connect to the parent (which is vertically 'centered' relative to the group).
-                  Actually in this recursive layout:
-                  The 'Parent' output is at the vertical center of the Children Column.
-                  So the vertical spine runs along the LEFT edge of this block (left=0).
-              */}
-              
-              {/* Line Segments */}
-              
-              {/* 1. Upper Spine Segment */}
-              {!isFirst && (
-                <div className="absolute left-0 top-0 h-[50%] w-px bg-slate-700" />
-              )}
-              
-              {/* 2. Lower Spine Segment */}
-              {!isLast && (
-                 <div className="absolute left-0 top-1/2 h-[50%] w-px bg-slate-700" />
-              )}
-              
-              {/* 3. The Curve */}
-              {/* If First: Curve from Bottom-Left (Spine) to Right */}
-              {isFirst && (
-                <div className="absolute left-0 bottom-0 w-8 h-[50%] border-l border-t border-slate-700 rounded-tl-[32px] -translate-y-[0.5px]" />
-              )}
-              
-              {/* If Last: Curve from Top-Left (Spine) to Right */}
-              {isLast && (
-                <div className="absolute left-0 top-0 w-8 h-[50%] border-l border-b border-slate-700 rounded-bl-[32px] translate-y-[0.5px]" />
-              )}
-              
-              {/* If Middle: T-Junction - Straight Horizontal line from Spine */}
-              {!isFirst && !isLast && (
-                <div className="absolute left-0 top-1/2 w-8 h-px bg-slate-700 -translate-y-[0.5px]" />
-              )}
-            </>
-          )}
-        </div>
+    <div
+      className={cn(
+        "relative px-6 py-3 rounded-full border transition-all duration-300 min-w-[180px] text-center shadow-lg group",
+        data.isRoot
+          ? "bg-[#1e293b] border-[#475569] text-white font-medium text-lg tracking-tight shadow-black/20"
+          : "bg-[#0f172a] border-[#1e293b] text-slate-200 hover:border-indigo-500/50 hover:bg-[#1e293b]"
       )}
-
-      {/* Node Content Wrapper */}
-      {/* Visual Spacing added here (py-2) to separate nodes vertically without breaking connection lines */ }
-      <div className={`flex items-center group py-2 ${!isRoot ? 'pl-0' : ''}`}>
+    >
+      {/* Input Handle (Left) */}
+      {!data.isRoot && (
+        <Handle
+          type="target"
+          position={Position.Left}
+          isConnectable={isConnectable}
+          className="!bg-slate-600 !w-1 !h-1 !border-none opacity-0"
+        />
+      )}
+      
+      <div className="flex items-center justify-center gap-2">
+        <span className="text-sm">{data.label}</span>
         
-        {/* Node Card - Pill Shaped */}
-        <div
-          className={`
-            relative z-10 flex items-center gap-3 px-6 py-3.5 rounded-full border 
-            transition-all duration-300 select-none cursor-pointer
-            ${nodeStyles}
-            ${hasChildren ? 'pr-4' : 'pr-6'}
-          `}
-          style={{
-             minWidth: isRoot ? '220px' : '180px',
-             maxWidth: '360px'
-          }}
-          onClick={(e) => {
-             // Allow clicking the whole card to toggle if desired, or just select
-             e.stopPropagation()
-             // Optional: selectNode(node.id)
-          }}
-        >
-          <span className={`truncate text-sm ${isRoot ? 'font-medium text-lg tracking-tight' : 'font-normal tracking-normal'}`}>
-            {node.label}
-          </span>
-          
-          {/* Use the whole right side for the toggle if implies expansion */}
-          {hasChildren && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onToggle(node.id)
-              }}
-              className={`
-                flex items-center justify-center w-6 h-6 rounded-full
-                hover:bg-white/10 transition-colors
-                ${isExpanded ? 'bg-transparent' : ''}
-              `}
-            >
-              <ChevronRight
-                className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${
-                  isExpanded ? "rotate-0" : "" 
-                }`} 
-              />
-            </button>
-          )}
-        </div>
-
-        {/* Output Line (Parent to Children) */}
-        {hasChildren && isExpanded && (
-           <div className="w-16 h-px bg-slate-700" />
+        {/* Toggle Button */}
+        {data.hasChildren && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              data.onToggle(data.id)
+            }}
+            className="ml-2 p-0.5 rounded-full hover:bg-white/20 transition-colors"
+          >
+            {data.expanded ? (
+              <Minus className="w-3 h-3 text-slate-400" />
+            ) : (
+              <Plus className="w-3 h-3 text-slate-400" />
+            )}
+          </button>
         )}
       </div>
 
-      {/* Children Column */}
-      {/* No vertical gap here; specific padding inside children handles spacing */}
-      {hasChildren && isExpanded && (
-        <div className="flex flex-col">
-          {node.children!.map((child, idx, arr) => (
-            <MindMapNodeComponent
-              key={child.id}
-              node={child}
-              level={level + 1}
-              isFirst={idx === 0}
-              isLast={idx === arr.length - 1}
-              isOnly={arr.length === 1}
-              expanded={expanded}
-              onToggle={onToggle}
-            />
-          ))}
-        </div>
-      )}
+      {/* Output Handle (Right) */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        isConnectable={isConnectable}
+        className="!bg-slate-600 !w-1 !h-1 !border-none opacity-0"
+      />
     </div>
   )
 }
 
+const nodeTypes = {
+  custom: CustomNode,
+}
 
-export function MindMapView({ title, sourceCount, rootNode, contentId, onBack }: MindMapViewProps) {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({
-    [rootNode.id]: true,
+// ----------------------------------------------------------------------
+// 2. Dagre Layout Helper
+// ----------------------------------------------------------------------
+const dagreGraph = new dagre.graphlib.Graph()
+dagreGraph.setDefaultEdgeLabel(() => ({}))
+
+const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
+  const isHorizontal = true
+  dagreGraph.setGraph({ rankdir: isHorizontal ? "LR" : "TB", nodesep: 100, ranksep: 200 }) // Much more breathing room
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: 240, height: 80 }) // Larger bounding box
   })
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target)
+  })
+
+  dagre.layout(dagreGraph)
+
+  nodes.forEach((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id)
+    node.targetPosition = isHorizontal ? Position.Left : Position.Top
+    node.sourcePosition = isHorizontal ? Position.Right : Position.Bottom
+
+    // We make sure to pass the computed position back
+    node.position = {
+      x: nodeWithPosition.x - 110, // center offset (width/2)
+      y: nodeWithPosition.y - 30, // center offset (height/2)
+    }
+  })
+
+  return { nodes, edges }
+}
+
+// ----------------------------------------------------------------------
+// 3. Tree Flattener (Recursive -> Flat) with Expansion logic
+// ----------------------------------------------------------------------
+const flattenTree = (root: MindMapNode, expanded: Record<string, boolean>, onToggle: (id: string) => void) => {
+  const nodes: Node[] = []
+  const edges: Edge[] = []
+
+  const traverse = (node: MindMapNode, parentId: string | null = null) => {
+    const isExpanded = expanded[node.id]
+    const hasChildren = node.children && node.children.length > 0
+
+    // Add Node
+    nodes.push({
+      id: node.id,
+      type: "custom",
+      data: { 
+        label: node.label, 
+        isRoot: !parentId,
+        hasChildren,
+        expanded: isExpanded,
+        id: node.id,
+        onToggle
+      },
+      position: { x: 0, y: 0 }, 
+    })
+
+    // Add Edge
+    if (parentId) {
+      edges.push({
+        id: `e${parentId}-${node.id}`,
+        source: parentId,
+        target: node.id,
+        type: "default", // Organic bezier
+        style: { stroke: "#475569", strokeWidth: 2, opacity: 0.5 },
+        animated: false,
+      })
+    }
+
+    // Only traverse children if expanded
+    if (hasChildren && isExpanded) {
+      node.children!.forEach((child) => traverse(child, node.id))
+    }
+  }
+
+  traverse(root)
+  return { layoutedNodes: nodes, layoutedEdges: edges }
+}
+
+// ----------------------------------------------------------------------
+// 4. Main Component Wrapper
+// ----------------------------------------------------------------------
+// Inner component to access useReactFlow hook
+function MindMapInner({
+  title,
+  sourceCount,
+  onBack,
+  rootNode,
+  contentId,
+}: MindMapViewProps) {
+  // State for expanded nodes
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({
+    [rootNode.id]: true, // Root always expanded
+  })
+
+  // Toggle handler
+  const handleToggle = useCallback((id: string) => {
+    setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
+  }, [])
+
+  // Recalculate layout when expansion changes
+  const { nodes: computedNodes, edges: computedEdges } = useMemo(() => {
+    const { layoutedNodes, layoutedEdges } = flattenTree(rootNode, expanded, handleToggle)
+    return getLayoutedElements(layoutedNodes, layoutedEdges)
+  }, [rootNode, expanded, handleToggle])
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(computedNodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(computedEdges)
+
+  // Sync state when computed changes (layout update)
+  useEffect(() => {
+    setNodes(computedNodes)
+    setEdges(computedEdges)
+  }, [computedNodes, computedEdges, setNodes, setEdges])
   const [feedbackStatus, setFeedbackStatus] = useState<FeedbackRating | null>(null)
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
+  const { fitView, zoomIn, zoomOut, getNodes } = useReactFlow()
+
+  // Download Handler (Full Graph)
+  const downloadImage = () => {
+    const nodesBounds = getRectOfNodes(getNodes())
+    const transform = getTransformForBounds(nodesBounds, nodesBounds.width, nodesBounds.height, 0.5, 2)
+    
+    const selector = ".react-flow__viewport"
+    const element = document.querySelector(selector) as HTMLElement
+    if (!element) return
+
+    toPng(element, {
+      backgroundColor: "#030712",
+      width: nodesBounds.width + 100, // Add padding
+      height: nodesBounds.height + 100,
+      style: {
+        width: `${nodesBounds.width + 100}px`,
+        height: `${nodesBounds.height + 100}px`,
+        transform: `translate(${50 - nodesBounds.x}px, ${50 - nodesBounds.y}px) scale(1)`,
+      },
+    }).then((dataUrl) => {
+      const a = document.createElement("a")
+      a.setAttribute("download", `${title.replace(/\s+/g, "_")}_mindmap.png`)
+      a.setAttribute("href", dataUrl)
+      a.click()
+    })
+  }
 
   // Handle feedback submission
   const handleFeedback = async (rating: FeedbackRating) => {
@@ -224,7 +265,7 @@ export function MindMapView({ title, sourceCount, rootNode, contentId, onBack }:
       await submitFeedback({
         content_type: "mindmap",
         content_id: contentId,
-        rating: rating
+        rating: rating,
       })
       setFeedbackStatus(rating)
     } catch (error) {
@@ -233,62 +274,17 @@ export function MindMapView({ title, sourceCount, rootNode, contentId, onBack }:
       setIsSubmittingFeedback(false)
     }
   }
-  
-  // Pan and Zoom State
-  const [zoom, setZoom] = useState(100)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 })
 
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const toggleNode = (id: string) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))
-  }
-
-  const expandAll = () => {
-    const allIds: Record<string, boolean> = {}
-    const collectIds = (node: MindMapNode) => {
-      allIds[node.id] = true
-      node.children?.forEach(collectIds)
-    }
-    collectIds(rootNode)
-    setExpanded(allIds)
-  }
-
-  const collapseAll = () => {
-    setExpanded({ [rootNode.id]: true })
-  }
-
-  // Mouse Event Handlers for Panning
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).tagName === "BUTTON") return
-    setIsDragging(true)
-    setLastMousePos({ x: e.clientX, y: e.clientY })
-    if (containerRef.current) containerRef.current.style.cursor = "grabbing"
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return
-    const dx = e.clientX - lastMousePos.x
-    const dy = e.clientY - lastMousePos.y
-    setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }))
-    setLastMousePos({ x: e.clientX, y: e.clientY })
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-    if (containerRef.current) containerRef.current.style.cursor = "grab"
-  }
-
+  // Center view on layout change but maintain readable zoom
   useEffect(() => {
-     // Center nicely
-     setPan({ x: 150, y: window.innerHeight / 2 - 50 }) 
-  }, [])
+    // We prefer to center on the root node at zoom 1, rather than fitting everything
+    // But if we don't know root pos, fitView with maxZoom limit is good
+    window.requestAnimationFrame(() => fitView({ padding: 0.2, duration: 400, minZoom: 0.5, maxZoom: 1 }))
+  }, [nodes.length, fitView])
 
   return (
-    <div className="relative w-full h-full bg-[#030712] flex flex-col overflow-hidden text-slate-200 selection:bg-indigo-500/30">
-      {/* Header overlay */}
+    <div className="w-full h-full bg-[#030712] relative flex flex-col">
+      {/* Header Overlay */}
       <div className="absolute top-0 left-0 right-0 p-8 z-20 flex justify-between items-start pointer-events-none">
         <div className="pointer-events-auto space-y-1">
           <h2 className="text-3xl font-light text-slate-100 tracking-tight">{title}</h2>
@@ -297,70 +293,79 @@ export function MindMapView({ title, sourceCount, rootNode, contentId, onBack }:
             <p className="text-sm text-slate-400 font-medium">Based on {sourceCount} sources</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 pointer-events-auto bg-[#0f172a]/50 p-1 rounded-full border border-white/5 backdrop-blur-sm">
-          <Button variant="ghost" size="icon" onClick={expandAll} className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8">
-            <ZoomIn className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={collapseAll} className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8">
-            <ZoomOut className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8">
+        <div className="flex items-center gap-1 pointer-events-auto bg-[#0f172a]/80 p-1 rounded-full border border-white/5 backdrop-blur-sm shadow-xl">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={downloadImage}
+            className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
+            title="Download PNG"
+          >
             <Download className="w-4 h-4" />
           </Button>
           <div className="w-px h-4 bg-white/10 mx-1" />
-          <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
+          >
             <Minimize2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {/* Interactive Canvas */}
-      <div
-        ref={containerRef}
-        className="flex-1 w-full h-full overflow-hidden cursor-grab active:cursor-grabbing relative"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onWheel={(e) => {
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault()
-            const delta = e.deltaY > 0 ? -10 : 10
-            setZoom((z) => Math.max(10, Math.min(200, z + delta)))
-          } else {
-             setPan((p) => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }))
-          }
+      {/* React Flow Canvas */}
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        fitView
+        minZoom={0.1}
+        maxZoom={3}
+        defaultEdgeOptions={{
+          type: "default", // Bezier
+          style: { stroke: "#475569", strokeWidth: 1.5 },
         }}
+        className="bg-[#030712]"
+        proOptions={{ hideAttribution: true }}
       >
-        <div
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
-            transformOrigin: "0 0",
-            transition: isDragging ? "none" : "transform 0.1s cubic-bezier(0.4, 0, 0.2, 1)", 
-            willChange: "transform",
-          }}
-          className="absolute top-0 left-0 w-max h-max p-40"
-        >
-          <MindMapNodeComponent
-            node={rootNode}
-            isRoot
-            expanded={expanded}
-            onToggle={toggleNode}
-          />
-        </div>
+        <Background gap={40} size={1} color="#334155" variant={("dots" as any)} className="opacity-20" />
         
-        {/* Subtle Node-Link Dot Grid */}
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-[0.07]"
-          style={{
-            backgroundImage: "radial-gradient(#94a3b8 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-            transform: `translate(${pan.x % 32}px, ${pan.y % 32}px)`
-          }}
-        />
-      </div>
+        {/* Custom Controls Bottom Right */}
+        <Panel position="bottom-right" className="mb-8 mr-8">
+           <div className="flex flex-col bg-[#0f172a]/90 backdrop-blur-md border border-slate-800 rounded-full shadow-2xl p-1 gap-1">
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
+               onClick={() => zoomIn({ duration: 300 })}
+             >  
+               <Plus className="w-4 h-4" />
+             </Button>
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
+               onClick={() => zoomOut({ duration: 300 })}
+             >  
+               <Minus className="w-4 h-4" />
+             </Button>
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
+               onClick={() => fitView({ duration: 800 })}
+             >  
+               <Maximize2 className="w-4 h-4" />
+             </Button> 
+           </div>
+        </Panel>
+      </ReactFlow>
 
-      {/* Bottom Controls */}
+      {/* Feedback Controls (Bottom Left) */}
       <div className="absolute bottom-8 left-8 z-20 flex gap-2">
         <Button
           variant="outline"
@@ -371,7 +376,10 @@ export function MindMapView({ title, sourceCount, rootNode, contentId, onBack }:
           disabled={isSubmittingFeedback || !contentId}
           onClick={() => handleFeedback("thumbs_up")}
         >
-          <ThumbsUp className={cn("w-3.5 h-3.5 mr-2", feedbackStatus === "thumbs_up" && "fill-current")} /> Good
+          <ThumbsUp
+            className={cn("w-3.5 h-3.5 mr-2", feedbackStatus === "thumbs_up" && "fill-current")}
+          />{" "}
+          Good
         </Button>
         <Button
           variant="outline"
@@ -382,21 +390,23 @@ export function MindMapView({ title, sourceCount, rootNode, contentId, onBack }:
           disabled={isSubmittingFeedback || !contentId}
           onClick={() => handleFeedback("thumbs_down")}
         >
-          <ThumbsDown className={cn("w-3.5 h-3.5 mr-2", feedbackStatus === "thumbs_down" && "fill-current")} /> Bad
+          <ThumbsDown
+            className={cn("w-3.5 h-3.5 mr-2", feedbackStatus === "thumbs_down" && "fill-current")}
+          />{" "}
+          Bad
         </Button>
-      </div>
-
-      {/* Zoom Controls */}
-      <div className="absolute bottom-8 right-8 z-20 flex flex-col bg-[#0f172a]/90 backdrop-blur-md border border-slate-800 rounded-full shadow-2xl p-1 gap-1">
-        <button className="p-2.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors" onClick={() => setZoom(z => Math.min(200, z + 10))}>
-          <Plus className="w-4 h-4" />
-        </button>
-        <button className="p-2.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors" onClick={() => setZoom(z => Math.max(10, z - 10))}>
-          <Minus className="w-4 h-4" />
-        </button>
       </div>
     </div>
   )
 }
+
+export function MindMapView(props: MindMapViewProps) {
+  return (
+    <ReactFlowProvider>
+      <MindMapInner {...props} />
+    </ReactFlowProvider>
+  )
+}
+
 
 

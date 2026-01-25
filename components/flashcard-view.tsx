@@ -141,7 +141,7 @@ export function FlashcardView({ title, sourceCount, flashcards, contentId, onBac
               }}
             >
               <p className="text-base leading-relaxed">{currentCard?.answer}</p>
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 className="w-fit gap-2 mt-4 bg-transparent"
@@ -149,7 +149,7 @@ export function FlashcardView({ title, sourceCount, flashcards, contentId, onBac
               >
                 <FileText className="w-4 h-4" />
                 Explain
-              </Button>
+              </Button> */}
               {/* Progress bar */}
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-600 rounded-b-2xl overflow-hidden">
                 <div

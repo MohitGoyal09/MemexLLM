@@ -1,28 +1,49 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Share2, Settings, Grid3X3, User, TrendingUp, Globe, Loader2 } from "lucide-react"
+import { Plus, Share2, Settings, Grid3X3, User, TrendingUp, Globe, Loader2, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SynapseLogo } from "@/components/synapse-logo"
-import { LogoutButton } from "@/components/logout-button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { notebooksApi } from "@/lib/api"
+import { createClient } from "@/lib/supabase/client"
+import { authLogger } from "@/lib/auth-logger"
 
 interface NotebookHeaderProps {
   title: string
   notebookId?: string
   isNew?: boolean
-  onOpenSettings?: () => void
   onTitleChange?: (newTitle: string) => void
 }
 
-export function NotebookHeader({ title, notebookId, isNew, onOpenSettings, onTitleChange }: NotebookHeaderProps) {
+export function NotebookHeader({ title, notebookId, isNew, onTitleChange }: NotebookHeaderProps) {
   const router = useRouter()
   const [notebookTitle, setNotebookTitle] = useState(title)
   const [isEditing, setIsEditing] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+
+  // Fetch user on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserEmail(user.email || null)
+      }
+    }
+    fetchUser()
+  }, [])
 
   // Sync title when prop changes
   useEffect(() => {
@@ -73,9 +94,9 @@ export function NotebookHeader({ title, notebookId, isNew, onOpenSettings, onTit
   }
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+    <header className="flex items-center justify-between px-6 py-4 bg-transparent">
       <div className="flex items-center gap-3">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/home" className="flex items-center gap-2">
           <SynapseLogo className="w-8 h-8" />
         </Link>
         {isEditing ? (
@@ -113,19 +134,48 @@ export function NotebookHeader({ title, notebookId, isNew, onOpenSettings, onTit
           )}
           {isCreating ? "Creating..." : "Create notebook"}
         </Button>
-        <Button 
-          variant="outline" 
-          onClick={() => onOpenSettings?.()} 
-          className="gap-2 rounded-full bg-transparent"
-        >
-          <Settings className="w-4 h-4" />
-          Settings
-        </Button>
+
        
-        <LogoutButton variant="ghost" size="icon" className="rounded-full" />
-        <button className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
-          <User className="w-5 h-5 text-primary" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="w-9 h-9 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-all duration-200 focus:outline-none border border-primary/20">
+              <User className="w-5 h-5 text-primary" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 mt-2 shadow-xl border-border">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">My Account</p>
+                <p className="text-xs leading-none text-muted-foreground truncate">
+                  {userEmail || "Signed in"}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              className="text-destructive focus:text-destructive cursor-pointer py-2"
+              onClick={async () => {
+                const supabase = createClient();
+                const { data: { user } } = await supabase.auth.getUser();
+                const userId = user?.id;
+                authLogger.logLogout(userId);
+                try {
+                  const { error } = await supabase.auth.signOut();
+                  if (error) throw error;
+                  authLogger.logLogoutSuccess(userId);
+                  router.push("/auth/login");
+                } catch (error) {
+                  console.error("Logout failed:", error);
+                  router.push("/auth/login");
+                }
+              }}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )

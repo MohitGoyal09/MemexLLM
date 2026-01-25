@@ -391,18 +391,17 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col relative">
+    <div className="h-screen bg-[#050505] flex flex-col relative text-foreground">
       <NotebookHeader 
         title={notebook.title} 
         notebookId={notebookId}
-        onOpenSettings={() => setShowSettingsModal(true)} 
         onTitleChange={(newTitle) => setNotebook(prev => prev ? { ...prev, title: newTitle } : null)}
       />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden p-3 pt-1 gap-3 bg-[#050505] min-h-0">
         {/* Left Panel Toggle */}
         {leftPanelCollapsed && (
-          <div className="flex flex-col items-center py-4 px-2 border-r border-border bg-card w-[60px] flex-shrink-0 z-10">
+          <div className="flex flex-col items-center py-4 px-2 border border-border/40 bg-card w-[60px] flex-shrink-0 z-10 rounded-2xl shadow-sm">
             <button onClick={() => setLeftPanelCollapsed(false)} className="p-2 hover:bg-secondary rounded-lg transition-colors">
               <PanelLeft className="w-5 h-5 text-muted-foreground" />
             </button>
@@ -477,7 +476,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
 
         {/* Right Panel Toggle */}
         {rightPanelCollapsed && (
-          <div className="flex flex-col items-center py-4 px-2 border-l border-border bg-card w-[60px] flex-shrink-0 z-10">
+          <div className="flex flex-col items-center py-4 px-2 border border-border/40 bg-card w-[60px] flex-shrink-0 z-10 rounded-2xl shadow-sm">
             <button onClick={() => setRightPanelCollapsed(false)} className="p-2 hover:bg-secondary rounded-lg transition-colors mb-3">
               <PanelLeft className="w-5 h-5 text-muted-foreground rotate-180" />
             </button>

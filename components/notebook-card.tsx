@@ -28,19 +28,21 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
   const [title, setTitle] = useState(notebook.title)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Simple logic to pick a color based on ID or just random-ish
-  const colors = [
-    "bg-amber-900/20 hover:bg-amber-900/30",
-    "bg-blue-900/20 hover:bg-blue-900/30", 
-    "bg-emerald-900/20 hover:bg-emerald-900/30",
-    "bg-slate-900/50 hover:bg-slate-900/60",
-    "bg-purple-900/20 hover:bg-purple-900/30"
+  // Enhanced gradient backgrounds - brighter and more visible
+  const gradients = [
+    "bg-gradient-to-br from-amber-500/20 via-zinc-900/80 to-zinc-900/80 border-amber-500/30 hover:border-amber-500/50 hover:from-amber-500/30 hover:shadow-amber-500/10",
+    "bg-gradient-to-br from-blue-500/20 via-zinc-900/80 to-zinc-900/80 border-blue-500/30 hover:border-blue-500/50 hover:from-blue-500/30 hover:shadow-blue-500/10",
+    "bg-gradient-to-br from-emerald-500/20 via-zinc-900/80 to-zinc-900/80 border-emerald-500/30 hover:border-emerald-500/50 hover:from-emerald-500/30 hover:shadow-emerald-500/10", 
+    "bg-gradient-to-br from-violet-500/20 via-zinc-900/80 to-zinc-900/80 border-violet-500/30 hover:border-violet-500/50 hover:from-violet-500/30 hover:shadow-violet-500/10",
+    "bg-gradient-to-br from-rose-500/20 via-zinc-900/80 to-zinc-900/80 border-rose-500/30 hover:border-rose-500/50 hover:from-rose-500/30 hover:shadow-rose-500/10"
   ]
-  const colorIndex = notebook.id.charCodeAt(0) % colors.length
-  const bgColor = colors[colorIndex]
+  const colorIndex = notebook.id.charCodeAt(0) % gradients.length
+  const cardStyle = gradients[colorIndex]
 
-  // Choose icon based on category or variant
-  const Icon = notebook.category.includes("AI") ? Bot : Book
+  // Curated emojis for notebook covers
+  const emojis = ["📓", "🤖", "🚀", "💡", "🔮", "🧬", "🧠", "📈", "🎨", "🔬", "💼", "📚", "📡", "🧩", "🔥", "✨"]
+  const emojiIndex = notebook.id.charCodeAt(0) % emojis.length
+  const Emoji = emojis[emojiIndex]
 
   const handleSave = async (e: React.MouseEvent | React.FocusEvent | React.KeyboardEvent) => {
     e.preventDefault()
@@ -65,32 +67,32 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
   }
 
   return (
-    <div className={`group relative flex flex-col justify-between p-5 rounded-xl border border-border transition-all cursor-pointer h-full min-h-[180px] ${bgColor}`}>
+    <div className={`group relative flex flex-col p-5 rounded-2xl border transition-all duration-300 cursor-pointer h-full min-h-[200px] shadow-sm hover:shadow-md hover:-translate-y-1 ${cardStyle}`}>
       
-      {/* Top Section: Icon & Menu */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-10 h-10 rounded-lg bg-background/20 flex items-center justify-center">
-          <Icon className="w-6 h-6 text-foreground/80" />
+      {/* Cover Icon Area */}
+      <div className="flex items-start justify-between mb-6">
+        <div className="w-12 h-12 rounded-xl bg-background/60 backdrop-blur-sm border border-border/50 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
+          <span className="text-2xl">{Emoji}</span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button 
-                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-background/20"
+                className="text-muted-foreground/60 hover:text-foreground p-1.5 rounded-full hover:bg-background/40 transition-colors opacity-0 group-hover:opacity-100"
                 onClick={(e) => e.preventDefault()} // Prevent link click
             >
-              <MoreVertical className="w-4 h-4" />
+              <MoreVertical className="w-5 h-5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48 shadow-xl dropdown-content rounded-xl border-border/60">
             <DropdownMenuItem onClick={(e) => { 
                 e.preventDefault()
                 e.stopPropagation()
                 setIsEditing(true) 
-            }}>
-              <Pencil className="w-4 h-4 mr-2" />
+            }} className="py-2.5 cursor-pointer">
+              <Pencil className="w-4 h-4 mr-2 text-muted-foreground" />
               Edit title
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.preventDefault(); /* handle delete */ }}>
+            <DropdownMenuItem className="text-destructive focus:text-destructive py-2.5 cursor-pointer" onClick={(e) => { e.preventDefault(); /* handle delete */ }}>
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </DropdownMenuItem>
@@ -99,7 +101,7 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
       </div>
 
       {/* Content */}
-      <div className="flex flex-col gap-2 relative z-10">
+      <div className="flex flex-col gap-3 mt-auto relative z-10">
         {isEditing ? (
             <div className="relative">
                 <input
@@ -109,7 +111,7 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
                     onChange={(e) => setTitle(e.target.value)}
                     onBlur={handleSave}
                     onKeyDown={(e) => e.key === "Enter" && handleSave(e)}
-                    className="w-full bg-background/50 border border-primary/50 rounded px-2 py-1 text-lg font-semibold text-foreground outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full bg-background/50 border border-primary/50 rounded-lg px-2 py-1 text-xl font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/20"
                     autoFocus
                 />
                 {isSaving && (
@@ -119,17 +121,17 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
                 )}
             </div>
         ) : (
-            <h3 className="text-lg font-semibold text-foreground line-clamp-2 leading-tight">
+            <h3 className="text-xl font-bold text-foreground line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors duration-300">
             {notebook.title}
             </h3>
         )}
         
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+        <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground/80">
           <span>{notebook.date}</span>
-          <span>•</span>
+          <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
           <span>{notebook.sources} sources</span>
           {notebook.isPublic && (
-             <Globe className="w-3 h-3 ml-2" />
+             <Globe className="w-3.5 h-3.5 ml-auto text-muted-foreground/60" />
           )}
         </div>
       </div>

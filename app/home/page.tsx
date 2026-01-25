@@ -101,10 +101,8 @@ export default function HomePage() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         
         {/* Header Controls */}
-        <div className="flex items-center justify-end gap-4 mb-8">
-           <div className="text-sm text-muted-foreground font-medium mr-auto">
-              {allNotebooks.length > 0 ? "Most recent" : "Get started"}
-           </div>
+        <div className="flex items-center justify-end gap-4 mb-8 ">
+           
 
            <div className="flex items-center bg-secondary/50 rounded-lg p-1 border border-border/50">
              <button
@@ -155,8 +153,8 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="space-y-12">
-            {/* Recent Notebooks Section */}
-            {recentNotebooks.length > 0 && (
+            {/* Recent Notebooks Section - Only in Grid View */}
+            {viewMode === "grid" && recentNotebooks.length > 0 && (
               <section>
                 <h2 className="text-xl font-semibold mb-6">Recent notebooks</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -178,12 +176,12 @@ export default function HomePage() {
                   {/* Create New Card */}
                    <div 
                       onClick={handleCreateNew}
-                      className={`h-48 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/50 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 group ${isCreating ? 'opacity-50 pointer-events-none' : ''}`}
+                      className={`h-full min-h-[200px] rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-primary/50 hover:bg-zinc-900 hover:shadow-md hover:shadow-primary/5 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 group ${isCreating ? 'opacity-50 pointer-events-none' : ''}`}
                    >
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                         {isCreating ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Plus className="w-6 h-6 text-primary" />}
+                      <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300 shadow-sm">
+                         {isCreating ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Plus className="w-7 h-7 text-primary" />}
                       </div>
-                      <span className="font-medium text-muted-foreground group-hover:text-foreground transition-colors">{isCreating ? "Creating notebook..." : "Create new notebook"}</span>
+                      <span className="font-semibold text-muted-foreground group-hover:text-primary transition-colors">{isCreating ? "Creating notebook..." : "Create new notebook"}</span>
                    </div>
 
                   {/* All Notebooks */}
@@ -195,12 +193,11 @@ export default function HomePage() {
                 </div>
               ) : (
                  <div className="bg-card rounded-xl border border-border overflow-hidden">
-                  <div className="grid grid-cols-[1fr_120px_140px_80px_60px] items-center gap-4 px-4 py-3 border-b border-border text-sm text-muted-foreground font-medium">
+                  <div className="grid grid-cols-[1fr_120px_140px_40px] items-center gap-4 px-6 py-3 border-b border-border/50 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     <span>Title</span>
                     <span>Sources</span>
                     <span>Created</span>
-                    <span className="text-center">Public</span>
-                    <span className="text-right">Action</span>
+                    <span className="sr-only">Actions</span>
                   </div>
                   <div className="divide-y divide-border/50">
                     {allNotebooks.map((notebook) => (

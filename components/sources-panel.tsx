@@ -17,6 +17,7 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
+  RefreshCw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -114,7 +115,7 @@ export function SourcesPanel({
   }
 
   return (
-    <div className="w-full h-full border-r border-border bg-card flex flex-col">
+    <div className="w-full h-full rounded-2xl overflow-hidden bg-card flex flex-col shadow-sm border border-border/40">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="font-semibold">Sources</h2>
@@ -126,7 +127,7 @@ export function SourcesPanel({
               className="p-1 hover:bg-secondary rounded transition-colors group disabled:opacity-50"
               title="Refresh sources"
             >
-              <Loader2 className={`w-4 h-4 text-muted-foreground group-hover:text-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={cn("w-4 h-4 text-muted-foreground group-hover:text-foreground", isRefreshing && "animate-spin")} />
             </button>
           )}
           <button onClick={onCollapse} className="p-1 hover:bg-secondary rounded transition-colors">
@@ -149,7 +150,7 @@ export function SourcesPanel({
         </div>
 
         {/* Deep Research CTA */}
-        <div className="mx-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+        {/* <div className="mx-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
           <div className="flex items-start gap-2">
             <Sparkles className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
             <div>
@@ -158,10 +159,10 @@ export function SourcesPanel({
                 <span className="text-muted-foreground">for an in-depth report and new sources!</span>
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Web Search */}
+          </div> */}
+        {/* </div> */}
+{/* 
+        Web Search
         <div className="p-4">
           <div className="flex items-center gap-2 p-3 bg-secondary/50 rounded-lg border border-border">
             <Search className="w-4 h-4 text-muted-foreground" />
@@ -184,7 +185,7 @@ export function SourcesPanel({
               <ArrowRight className="w-4 h-4 text-primary" />
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Processing Banner */}
         {processingSources.length > 0 && (
