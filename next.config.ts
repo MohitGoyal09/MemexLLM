@@ -56,10 +56,7 @@ const nextConfig: NextConfig = {
   //   turbo: {},
   // },
 
-  // @ts-expect-error - eslint property is missing in NextConfig type
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+
 
   images: {
     remotePatterns: [

@@ -9,7 +9,18 @@ import {
   type RateLimitStatus,
 } from "./rate-limit";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const getBaseUrl = () => {
+  let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  if (url.endsWith("/")) {
+    url = url.slice(0, -1);
+  }
+  return url;
+};
+
+const API_BASE_URL = getBaseUrl();
 const DEFAULT_TIMEOUT_MS = 30000; // 30 seconds
 const DEFAULT_MAX_RETRIES = 3; // Maximum retry attempts for rate limited requests
 
