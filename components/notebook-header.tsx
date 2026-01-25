@@ -23,9 +23,10 @@ interface NotebookHeaderProps {
   notebookId?: string
   isNew?: boolean
   onTitleChange?: (newTitle: string) => void
+  onOpenSettings?: () => void
 }
 
-export function NotebookHeader({ title, notebookId, isNew, onTitleChange }: NotebookHeaderProps) {
+export function NotebookHeader({ title, notebookId, isNew, onTitleChange, onOpenSettings }: NotebookHeaderProps) {
   const router = useRouter()
   const [notebookTitle, setNotebookTitle] = useState(title)
   const [isEditing, setIsEditing] = useState(false)
@@ -136,6 +137,13 @@ export function NotebookHeader({ title, notebookId, isNew, onTitleChange }: Note
         </Button>
 
        
+
+        {onOpenSettings && (
+          <Button variant="ghost" size="icon" onClick={onOpenSettings} className="rounded-full w-9 h-9">
+            <Settings className="w-5 h-5 text-muted-foreground" />
+          </Button>
+        )}
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="w-9 h-9 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-all duration-200 focus:outline-none border border-primary/20">
