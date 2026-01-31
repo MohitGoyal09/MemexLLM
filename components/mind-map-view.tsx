@@ -52,15 +52,20 @@ interface MindMapViewProps {
 // ----------------------------------------------------------------------
 // 1. Custom Node Component (The "Pill" Style)
 // ----------------------------------------------------------------------
+// PERFORMANCE NOTE: ReactFlow handles canvas rendering internally with
+// requestAnimationFrame and proper cleanup. Custom nodes should avoid
+// expensive re-renders by using React.memo if needed.
 const CustomNode = ({ data, isConnectable }: any) => {
   return (
     <div
       className={cn(
         "relative px-6 py-3 rounded-full border transition-all duration-300 min-w-[180px] text-center shadow-lg group",
         data.isRoot
-          ? "bg-[#1e293b] border-[#475569] text-white font-medium text-lg tracking-tight shadow-black/20"
-          : "bg-[#0f172a] border-[#1e293b] text-slate-200 hover:border-indigo-500/50 hover:bg-[#1e293b]"
+          ? "bg-secondary border-border text-foreground font-medium text-lg tracking-tight shadow-black/20"
+          : "bg-card border-border text-foreground/90 hover:border-primary/50 hover:bg-secondary"
       )}
+      role="treeitem"
+      aria-expanded={data.hasChildren ? data.expanded : undefined}
     >
       {/* Input Handle (Left) */}
       {!data.isRoot && (
@@ -68,13 +73,13 @@ const CustomNode = ({ data, isConnectable }: any) => {
           type="target"
           position={Position.Left}
           isConnectable={isConnectable}
-          className="!bg-slate-600 !w-1 !h-1 !border-none opacity-0"
+          className="!bg-muted-foreground !w-1 !h-1 !border-none opacity-0"
         />
       )}
-      
+
       <div className="flex items-center justify-center gap-2">
         <span className="text-sm">{data.label}</span>
-        
+
         {/* Toggle Button */}
         {data.hasChildren && (
           <button
@@ -82,12 +87,14 @@ const CustomNode = ({ data, isConnectable }: any) => {
               e.stopPropagation()
               data.onToggle(data.id)
             }}
-            className="ml-2 p-0.5 rounded-full hover:bg-white/20 transition-colors"
+            className="ml-2 p-0.5 rounded-full hover:bg-foreground/20 transition-colors"
+            aria-label={data.expanded ? `Collapse ${data.label}` : `Expand ${data.label}`}
+            aria-expanded={data.expanded}
           >
             {data.expanded ? (
-              <Minus className="w-3 h-3 text-slate-400" />
+              <Minus className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
             ) : (
-              <Plus className="w-3 h-3 text-slate-400" />
+              <Plus className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
             )}
           </button>
         )}
@@ -98,7 +105,7 @@ const CustomNode = ({ data, isConnectable }: any) => {
         type="source"
         position={Position.Right}
         isConnectable={isConnectable}
-        className="!bg-slate-600 !w-1 !h-1 !border-none opacity-0"
+        className="!bg-muted-foreground !w-1 !h-1 !border-none opacity-0"
       />
     </div>
   )
@@ -176,7 +183,7 @@ const flattenTree = (root: MindMapNode, expanded: Record<string, boolean>, onTog
         source: parentId,
         target: node.id,
         type: "default", // Organic bezier
-        style: { stroke: "#475569", strokeWidth: 2, opacity: 0.5 },
+        style: { stroke: "var(--border)", strokeWidth: 2, opacity: 0.5 },
         animated: false,
       })
     }
@@ -240,7 +247,7 @@ function MindMapInner({
     if (!element) return
 
     toPng(element, {
-      backgroundColor: "#030712",
+      backgroundColor: "var(--background)",
       width: nodesBounds.width + 100, // Add padding
       height: nodesBounds.height + 100,
       style: {
@@ -283,34 +290,35 @@ function MindMapInner({
   }, [nodes.length, fitView])
 
   return (
-    <div className="w-full h-full bg-[#030712] relative flex flex-col">
+    <div className="w-full h-full bg-background relative flex flex-col">
       {/* Header Overlay */}
       <div className="absolute top-0 left-0 right-0 p-8 z-20 flex justify-between items-start pointer-events-none">
         <div className="pointer-events-auto space-y-1">
-          <h2 className="text-3xl font-light text-slate-100 tracking-tight">{title}</h2>
+          <h2 className="text-3xl font-light text-foreground tracking-tight">{title}</h2>
           <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
-            <p className="text-sm text-slate-400 font-medium">Based on {sourceCount} sources</p>
+            <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+            <p className="text-sm text-muted-foreground font-medium">Based on {sourceCount} sources</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 pointer-events-auto bg-[#0f172a]/80 p-1 rounded-full border border-white/5 backdrop-blur-sm shadow-xl">
+        <div className="flex items-center gap-1 pointer-events-auto bg-card/80 p-1 rounded-full border border-border/30 backdrop-blur-sm shadow-xl">
           <Button
             variant="ghost"
             size="icon"
             onClick={downloadImage}
-            className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
-            title="Download PNG"
+            className="rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 w-8 h-8"
+            aria-label="Download mind map as PNG"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-4 h-4" aria-hidden="true" />
           </Button>
-          <div className="w-px h-4 bg-white/10 mx-1" />
+          <div className="w-px h-4 bg-border mx-1" aria-hidden="true" />
           <Button
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
+            className="rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 w-8 h-8"
+            aria-label="Close mind map view"
           >
-            <Minimize2 className="w-4 h-4" />
+            <Minimize2 className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -327,40 +335,43 @@ function MindMapInner({
         maxZoom={3}
         defaultEdgeOptions={{
           type: "default", // Bezier
-          style: { stroke: "#475569", strokeWidth: 1.5 },
+          style: { stroke: "var(--border)", strokeWidth: 1.5 },
         }}
-        className="bg-[#030712]"
+        className="bg-background"
         proOptions={{ hideAttribution: true }}
       >
-        <Background gap={40} size={1} color="#334155" variant={("dots" as any)} className="opacity-20" />
-        
+        <Background gap={40} size={1} color="var(--muted-foreground)" variant={("dots" as any)} className="opacity-20" />
+
         {/* Custom Controls Bottom Right */}
         <Panel position="bottom-right" className="mb-8 mr-8">
-           <div className="flex flex-col bg-[#0f172a]/90 backdrop-blur-md border border-slate-800 rounded-full shadow-2xl p-1 gap-1">
-             <Button 
-               variant="ghost" 
-               size="icon" 
-               className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
+           <div className="flex flex-col bg-card/90 backdrop-blur-md border border-border rounded-full shadow-2xl p-1 gap-1" role="toolbar" aria-label="Mind map zoom controls">
+             <Button
+               variant="ghost"
+               size="icon"
+               className="rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 w-8 h-8"
                onClick={() => zoomIn({ duration: 300 })}
-             >  
-               <Plus className="w-4 h-4" />
+               aria-label="Zoom in"
+             >
+               <Plus className="w-4 h-4" aria-hidden="true" />
              </Button>
-             <Button 
-               variant="ghost" 
-               size="icon" 
-               className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
+             <Button
+               variant="ghost"
+               size="icon"
+               className="rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 w-8 h-8"
                onClick={() => zoomOut({ duration: 300 })}
-             >  
-               <Minus className="w-4 h-4" />
+               aria-label="Zoom out"
+             >
+               <Minus className="w-4 h-4" aria-hidden="true" />
              </Button>
-             <Button 
-               variant="ghost" 
-               size="icon" 
-               className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 w-8 h-8"
+             <Button
+               variant="ghost"
+               size="icon"
+               className="rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 w-8 h-8"
                onClick={() => fitView({ duration: 800 })}
-             >  
-               <Maximize2 className="w-4 h-4" />
-             </Button> 
+               aria-label="Fit to view"
+             >
+               <Maximize2 className="w-4 h-4" aria-hidden="true" />
+             </Button>
            </div>
         </Panel>
       </ReactFlow>
@@ -370,8 +381,8 @@ function MindMapInner({
         <Button
           variant="outline"
           className={cn(
-            "h-9 px-4 rounded-full bg-[#0f172a]/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-md",
-            feedbackStatus === "thumbs_up" && "bg-green-900/30 border-green-700 text-green-400 hover:bg-green-900/50"
+            "h-9 px-4 rounded-full bg-card/80 border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-all backdrop-blur-md",
+            feedbackStatus === "thumbs_up" && "bg-success/10 border-success/50 text-success hover:bg-success/20"
           )}
           disabled={isSubmittingFeedback || !contentId}
           onClick={() => handleFeedback("thumbs_up")}
@@ -384,8 +395,8 @@ function MindMapInner({
         <Button
           variant="outline"
           className={cn(
-            "h-9 px-4 rounded-full bg-[#0f172a]/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white transition-all backdrop-blur-md",
-            feedbackStatus === "thumbs_down" && "bg-red-900/30 border-red-700 text-red-400 hover:bg-red-900/50"
+            "h-9 px-4 rounded-full bg-card/80 border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-all backdrop-blur-md",
+            feedbackStatus === "thumbs_down" && "bg-destructive/10 border-destructive/50 text-destructive hover:bg-destructive/20"
           )}
           disabled={isSubmittingFeedback || !contentId}
           onClick={() => handleFeedback("thumbs_down")}

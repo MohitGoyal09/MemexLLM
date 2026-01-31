@@ -132,7 +132,7 @@ function LinkInput({
       />
       <button
         type="submit"
-        className="p-1 hover:bg-green-500/20 rounded text-green-500"
+        className="p-1 hover:bg-success/20 rounded text-success"
         title="Apply link"
       >
         <Check className="w-4 h-4" />
@@ -140,7 +140,7 @@ function LinkInput({
       <button
         type="button"
         onClick={onCancel}
-        className="p-1 hover:bg-red-500/20 rounded text-red-500"
+        className="p-1 hover:bg-destructive/20 rounded text-destructive"
         title="Cancel"
       >
         <X className="w-4 h-4" />
@@ -202,7 +202,7 @@ export function NoteEditor({
       Highlight.configure({
         multicolor: false,
         HTMLAttributes: {
-          class: "bg-yellow-200 dark:bg-yellow-800/50 rounded px-0.5",
+          class: "bg-warning/30 dark:bg-warning/20 rounded px-0.5",
         },
       }),
       CharacterCount,
@@ -571,7 +571,7 @@ export function NoteEditor({
             <span>{wordCount} words</span>
             <span>{characterCount} characters</span>
             {hasUnsavedChanges && !isSaving && (
-              <span className="text-yellow-500">Unsaved changes</span>
+              <span className="text-warning">Unsaved changes</span>
             )}
             {isSaving && (
               <span className="flex items-center gap-1 text-primary">
@@ -580,7 +580,7 @@ export function NoteEditor({
               </span>
             )}
             {lastSaved && !isSaving && !hasUnsavedChanges && (
-              <span className="text-green-500">
+              <span className="text-success">
                 Saved {formatRelativeTime(lastSaved)}
               </span>
             )}

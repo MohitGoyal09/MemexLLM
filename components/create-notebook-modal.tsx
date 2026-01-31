@@ -35,33 +35,48 @@ export function CreateNotebookModal({ open, onOpenChange }: CreateNotebookModalP
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-notebook-title"
+    >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+        aria-hidden="true"
+      />
 
       {/* Modal */}
       <div className="relative w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-border mx-4">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <SynapseLogo className="w-8 h-8" />
-            <span className="text-xl font-semibold">Create New Notebook</span>
+            <SynapseLogo className="w-8 h-8" aria-hidden="true" />
+            <span id="create-notebook-title" className="text-xl font-semibold">Create New Notebook</span>
           </div>
-          <button onClick={() => onOpenChange(false)} className="p-2 hover:bg-secondary rounded-lg transition-colors">
-            <X className="w-5 h-5" />
+          <button
+            onClick={() => onOpenChange(false)}
+            className="p-2 hover:bg-secondary rounded-lg transition-colors"
+            aria-label="Close modal"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6">
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">Notebook Title</label>
+            <label htmlFor="notebook-title" className="block text-sm font-medium mb-2">Notebook Title</label>
             <input
+              id="notebook-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter a title for your notebook"
               className="w-full px-4 py-3 bg-secondary rounded-xl outline-none focus:ring-2 focus:ring-primary"
+              autoFocus
             />
           </div>
 

@@ -55,36 +55,36 @@ export const studioTools = [
     label: "Audio",
     fullLabel: "Audio Overview",
     beta: false,
-    bgColor: "bg-[#2a1f3d]",
-    borderColor: "border-purple-500/30",
-    iconColor: "text-purple-400",
+    bgColor: "bg-secondary",
+    borderColor: "border-primary/30",
+    iconColor: "text-primary",
   },
   {
     icon: Workflow,
     label: "Mind Map",
     fullLabel: "Mind Map",
     beta: false,
-    bgColor: "bg-[#1f2a3d]",
-    borderColor: "border-violet-500/30",
-    iconColor: "text-violet-400",
+    bgColor: "bg-secondary",
+    borderColor: "border-info/30",
+    iconColor: "text-info",
   },
   {
     icon: GalleryVerticalEnd,
     label: "Flashcards",
     fullLabel: "Flashcards",
     beta: false,
-    bgColor: "bg-[#1f2d3d]",
-    borderColor: "border-blue-500/30",
-    iconColor: "text-blue-400",
+    bgColor: "bg-secondary",
+    borderColor: "border-info/30",
+    iconColor: "text-info",
   },
   {
     icon: BrainCircuit,
     label: "Quiz",
     fullLabel: "Quiz",
     beta: false,
-    bgColor: "bg-[#2a3d1f]",
-    borderColor: "border-lime-500/30",
-    iconColor: "text-lime-400",
+    bgColor: "bg-secondary",
+    borderColor: "border-success/30",
+    iconColor: "text-success",
   },
 ]
 
@@ -304,29 +304,29 @@ export function StudioPanel({
 
   const getItemIconStyle = (type: GeneratedItem["type"]) => {
     const styleMap = {
-      quiz: { bg: "bg-lime-500/20", icon: "text-lime-400" },
-      audio: { bg: "bg-rose-500/20", icon: "text-rose-400" },
-      flashcards: { bg: "bg-blue-500/20", icon: "text-blue-400" },
-      mindmap: { bg: "bg-sky-500/20", icon: "text-sky-400" },
-      report: { bg: "bg-emerald-500/20", icon: "text-emerald-400" },
-      video: { bg: "bg-cyan-500/20", icon: "text-cyan-400" },
-      infographic: { bg: "bg-orange-500/20", icon: "text-orange-400" },
-      slides: { bg: "bg-teal-500/20", icon: "text-teal-400" },
-      table: { bg: "bg-green-500/20", icon: "text-green-400" },
-      note: { bg: "bg-yellow-500/20", icon: "text-yellow-400" },
+      quiz: { bg: "bg-success/20", icon: "text-success" },
+      audio: { bg: "bg-primary/20", icon: "text-primary" },
+      flashcards: { bg: "bg-info/20", icon: "text-info" },
+      mindmap: { bg: "bg-info/20", icon: "text-info" },
+      report: { bg: "bg-success/20", icon: "text-success" },
+      video: { bg: "bg-info/20", icon: "text-info" },
+      infographic: { bg: "bg-warning/20", icon: "text-warning" },
+      slides: { bg: "bg-info/20", icon: "text-info" },
+      table: { bg: "bg-success/20", icon: "text-success" },
+      note: { bg: "bg-warning/20", icon: "text-warning" },
     }
     return styleMap[type] || { bg: "bg-muted", icon: "text-muted-foreground" }
   }
 
   const getStatusBadge = (status?: string) => {
     if (!status || status === "completed") return null
-    
+
     const statusStyles = {
-      pending: "bg-yellow-500/20 text-yellow-400",
-      processing: "bg-blue-500/20 text-blue-400",
-      failed: "bg-red-500/20 text-red-400",
+      pending: "bg-warning/20 text-warning",
+      processing: "bg-info/20 text-info",
+      failed: "bg-destructive/20 text-destructive",
     }
-    
+
     return (
       <span className={`px-2 py-0.5 text-[10px] rounded-full font-medium ${statusStyles[status as keyof typeof statusStyles] || ""}`}>
         {status === "processing" && <Loader2 className="w-3 h-3 inline mr-1 animate-spin" />}
@@ -475,8 +475,8 @@ export function StudioPanel({
                   >
                     {animatingTool === tool.label && (
                       <div className="absolute inset-0 pointer-events-none">
-                        <Sparkles className="absolute top-1 right-1 w-3 h-3 text-yellow-400 animate-ping" />
-                        <Sparkles className="absolute bottom-1 left-1 w-3 h-3 text-yellow-400 animate-ping delay-100" />
+                        <Sparkles className="absolute top-1 right-1 w-3 h-3 text-warning animate-ping" />
+                        <Sparkles className="absolute bottom-1 left-1 w-3 h-3 text-warning animate-ping delay-100" />
                       </div>
                     )}
 
@@ -508,9 +508,9 @@ export function StudioPanel({
 
             {/* Error Display */}
             {error && (
-              <div className="mx-4 mb-4 flex items-center gap-3 p-3 bg-red-500/10 rounded-lg border border-red-500/30">
-                <AlertCircle className="w-5 h-5 text-red-400" />
-                <p className="text-sm text-red-400">{error}</p>
+              <div className="mx-4 mb-4 flex items-center gap-3 p-3 bg-destructive/10 rounded-lg border border-destructive/30">
+                <AlertCircle className="w-5 h-5 text-destructive" />
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
 
@@ -583,9 +583,9 @@ export function StudioPanel({
                       )}
                       <button 
                         onClick={(e) => handleDeleteItem(e, item.id)}
-                        className="p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 rounded"
+                        className="p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/20 rounded"
                       >
-                        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-400" />
+                        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                       </button>
                     </div>
                   </div>
@@ -601,7 +601,7 @@ export function StudioPanel({
                 setActiveView("note")
                 onExpandStudio?.()
               }}
-              className="gap-2 rounded-full !bg-white !text-black hover:!bg-gray-200 shadow-xl !border-none px-5 font-medium h-11 text-sm"
+              className="gap-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl border-none px-5 font-medium h-11 text-sm"
             >
               <FileText className="w-4 h-4" />
               Add note
@@ -653,7 +653,7 @@ export function StudioPanel({
                     className="p-2 hover:bg-secondary rounded-lg transition-colors group self-start"
                     title="Delete note"
                   >
-                    <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-red-400" />
+                    <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-destructive" />
                   </button>
                 </div>
 

@@ -9,5 +9,6 @@ export interface Source {
   chunkCount?: number
   mimeType?: string
   errorMessage?: string | null
+  preview?: string | null
 }
 

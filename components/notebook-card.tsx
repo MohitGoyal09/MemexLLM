@@ -66,20 +66,21 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
   }
 
   return (
-    <div className={`group relative flex flex-col p-5 rounded-2xl border transition-all duration-300 cursor-pointer h-full min-h-[200px] shadow-sm hover:shadow-md hover:-translate-y-1 ${cardStyle}`}>
-      
+    <article className={`group relative flex flex-col p-5 rounded-2xl border transition-all duration-300 cursor-pointer h-full min-h-[200px] shadow-sm hover:shadow-md hover:-translate-y-1 ${cardStyle}`} aria-labelledby={`notebook-title-${notebook.id}`}>
+
       {/* Cover Icon Area */}
       <div className="flex items-start justify-between mb-6">
-        <div className="w-12 h-12 rounded-xl bg-background/60 backdrop-blur-sm border border-border/50 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
+        <div className="w-12 h-12 rounded-xl bg-background/60 backdrop-blur-sm border border-border/50 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300" aria-hidden="true">
           <span className="text-2xl">{Emoji}</span>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button 
+            <button
                 className="text-muted-foreground/60 hover:text-foreground p-1.5 rounded-full hover:bg-background/40 transition-colors opacity-0 group-hover:opacity-100"
                 onClick={(e) => e.preventDefault()} // Prevent link click
+                aria-label={`Options for ${notebook.title}`}
             >
-              <MoreVertical className="w-5 h-5" />
+              <MoreVertical className="w-5 h-5" aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 shadow-xl dropdown-content rounded-xl border-border/60">
@@ -120,20 +121,20 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
                 )}
             </div>
         ) : (
-            <h3 className="text-xl font-bold text-foreground line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors duration-300">
+            <h3 id={`notebook-title-${notebook.id}`} className="text-xl font-bold text-foreground line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors duration-300">
             {notebook.title}
             </h3>
         )}
-        
+
         <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground/80">
-          <span>{notebook.date}</span>
-          <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+          <time dateTime={notebook.date}>{notebook.date}</time>
+          <span className="w-1 h-1 rounded-full bg-muted-foreground/40" aria-hidden="true" />
           <span>{notebook.sources} sources</span>
           {notebook.isPublic && (
-             <Globe className="w-3.5 h-3.5 ml-auto text-muted-foreground/60" />
+             <Globe className="w-3.5 h-3.5 ml-auto text-muted-foreground/60" aria-label="Public notebook" />
           )}
         </div>
       </div>
-    </div>
+    </article>
   )
 }

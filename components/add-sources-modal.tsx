@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import { X, Search, Globe, Sparkles, Upload, Link, HardDrive, FileText, ArrowRight, Loader2, CheckCircle, AlertCircle } from "lucide-react"
+import { X, Search, Globe, Sparkles, Upload, Link, HardDrive, FileText, ArrowRight, Loader2, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SynapseLogo } from "@/components/synapse-logo"
 
@@ -47,6 +47,10 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
   const [uploads, setUploads] = useState<UploadProgress[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [fileSizeError, setFileSizeError] = useState<string | null>(null)
+  
+  const [view, setView] = useState<"default" | "website">("default")
+  const [urlInput, setUrlInput] = useState("")
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   if (!open) return null
@@ -150,28 +154,123 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
     fileInputRef.current?.click()
   }
 
+  const handleUrlSubmit = async () => {
+    if (!urlInput.trim()) return
+
+    if (!notebookId) {
+      const isYoutube = urlInput.includes("youtube.com") || urlInput.includes("youtu.be")
+      onAddSources([{
+        id: Date.now().toString(),
+        name: urlInput,
+        type: isYoutube ? "video" : "link",
+        status: "pending",
+      }])
+      onOpenChange(false)
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      const response = await documentsApi.processUrl(notebookId, urlInput)
+      const isYoutube = urlInput.includes("youtube.com") || urlInput.includes("youtu.be")
+      onAddSources([{
+        id: response.document_id,
+        name: urlInput,
+        type: isYoutube ? "video" : "link",
+        status: response.processing_status as any,
+      }])
+      onOpenChange(false)
+    } catch (error) {
+      console.error("Failed to add URL:", error)
+    } finally {
+      setIsUploading(false)
+      setUrlInput("")
+      setView("default")
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-sources-title"
+    >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => onOpenChange(false)} aria-hidden="true" />
 
       {/* Modal */}
       <div className="relative w-full max-w-2xl bg-card rounded-2xl shadow-2xl border border-border mx-4">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <SynapseLogo className="w-8 h-8" />
+            <SynapseLogo className="w-8 h-8" aria-hidden="true" />
             <span className="text-xl font-semibold">SynapseAI</span>
           </div>
-          <button onClick={() => onOpenChange(false)} className="p-2 hover:bg-secondary rounded-lg transition-colors">
-            <X className="w-5 h-5" />
+          <button onClick={() => onOpenChange(false)} className="p-2 hover:bg-secondary rounded-lg transition-colors" aria-label="Close modal">
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        {/* Content */}
+        {view === "website" ? (
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <button 
+                onClick={() => setView("default")}
+                className="p-2 -ml-2 rounded-full hover:bg-secondary transition-colors"
+                aria-label="Back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h2 className="text-xl font-semibold">Add from Web</h2>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  URL
+                </label>
+                <div className="flex items-center gap-2 p-3 rounded-lg border bg-secondary/50 focus-within:border-neutral-500 transition-colors">
+                  {urlInput.includes("youtube") || urlInput.includes("youtu.be") ? (
+                     <div className="flex items-center justify-center w-5 h-5 bg-red-600 rounded text-[10px] font-bold text-white">YT</div>
+                  ) : (
+                     <Globe className="w-5 h-5 text-muted-foreground" />
+                  )}
+                  <input
+                    className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
+                    placeholder="https://example.com or YouTube URL"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleUrlSubmit()}
+                    autoFocus
+                  />
+                </div>
+                <p className="text-[0.8rem] text-muted-foreground">
+                  Paste a website link, article, or YouTube video URL.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setView("default")}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleUrlSubmit} 
+                  disabled={!urlInput || isUploading}
+                  className="rounded-full"
+                >
+                  {isUploading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Add source
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-6">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-2xl font-semibold">Add sources</h2>
+            <h2 id="add-sources-title" className="text-2xl font-semibold">Add sources</h2>
             {/* <Button variant="outline" className="gap-2 rounded-full bg-transparent">
               <Sparkles className="w-4 h-4" />
               Discover sources
@@ -222,31 +321,36 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
 
           {/* File Size Error */}
           {fileSizeError && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm text-red-500 font-medium">File size limit exceeded</p>
-                <p className="text-xs text-red-400 mt-1">{fileSizeError}</p>
+                <p className="text-sm text-destructive font-medium">File size limit exceeded</p>
+                <p className="text-xs text-destructive mt-1">{fileSizeError}</p>
               </div>
               <button
                 onClick={() => setFileSizeError(null)}
-                className="p-1 hover:bg-red-500/10 rounded transition-colors"
+                className="p-1 hover:bg-destructive/10 rounded transition-colors"
               >
-                <X className="w-4 h-4 text-red-500" />
+                <X className="w-4 h-4 text-destructive" />
               </button>
             </div>
           )}
 
           {/* Upload Progress */}
           {uploads.length > 0 && (
-            <div className="mb-4 space-y-2">
+            <div className="mb-4 space-y-2" aria-live="polite" aria-label="Upload progress">
               {uploads.map((upload, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 bg-secondary rounded-lg">
-                  {upload.status === "uploading" && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-                  {upload.status === "success" && <CheckCircle className="w-4 h-4 text-green-500" />}
-                  {upload.status === "error" && <AlertCircle className="w-4 h-4 text-red-500" />}
+                  {upload.status === "uploading" && <Loader2 className="w-4 h-4 animate-spin text-primary" aria-hidden="true" />}
+                  {upload.status === "success" && <CheckCircle className="w-4 h-4 text-success" aria-hidden="true" />}
+                  {upload.status === "error" && <AlertCircle className="w-4 h-4 text-destructive" aria-hidden="true" />}
                   <span className="flex-1 text-sm truncate">{upload.file.name}</span>
-                  {upload.error && <span className="text-xs text-red-500">{upload.error}</span>}
+                  <span className="sr-only">
+                    {upload.status === "uploading" && "Uploading"}
+                    {upload.status === "success" && "Upload complete"}
+                    {upload.status === "error" && `Upload failed: ${upload.error}`}
+                  </span>
+                  {upload.error && <span className="text-xs text-destructive" aria-hidden="true">{upload.error}</span>}
                 </div>
               ))}
             </div>
@@ -283,7 +387,7 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
               <Upload className="w-4 h-4" />
               Upload files
             </Button>
-            <Button variant="secondary" className="gap-2 rounded-full">
+            <Button variant="secondary" className="gap-2 rounded-full" onClick={() => setView("website")}>
               <Link className="w-4 h-4" />
               Websites
             </Button>
@@ -305,6 +409,7 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
             Maximum file size: {MAX_FILE_SIZE_MB}MB per file
           </p>
         </div>
+        )}
       </div>
     </div>
   )

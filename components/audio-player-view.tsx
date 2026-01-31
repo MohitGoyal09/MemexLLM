@@ -153,14 +153,14 @@ export function AudioPlayerView({ title, duration, url, contentId, onClose }: Au
             size="icon"
             className={cn(
               "w-7 h-7 transition-colors",
-              feedbackStatus === "thumbs_up" && "bg-green-100 dark:bg-green-900/30"
+              feedbackStatus === "thumbs_up" && "bg-success/10"
             )}
             disabled={isSubmittingFeedback || !contentId}
             onClick={() => handleFeedback("thumbs_up")}
           >
             <ThumbsUp className={cn(
               "w-4 h-4",
-              feedbackStatus === "thumbs_up" && "fill-current text-green-600 dark:text-green-400"
+              feedbackStatus === "thumbs_up" && "fill-current text-success"
             )} />
           </Button>
           <Button
@@ -168,14 +168,14 @@ export function AudioPlayerView({ title, duration, url, contentId, onClose }: Au
             size="icon"
             className={cn(
               "w-7 h-7 transition-colors",
-              feedbackStatus === "thumbs_down" && "bg-red-100 dark:bg-red-900/30"
+              feedbackStatus === "thumbs_down" && "bg-destructive/10"
             )}
             disabled={isSubmittingFeedback || !contentId}
             onClick={() => handleFeedback("thumbs_down")}
           >
             <ThumbsDown className={cn(
               "w-4 h-4",
-              feedbackStatus === "thumbs_down" && "fill-current text-red-600 dark:text-red-400"
+              feedbackStatus === "thumbs_down" && "fill-current text-destructive"
             )} />
           </Button>
           <Button variant="ghost" size="icon" className="w-7 h-7">

@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation"
 import { notebooksApi } from "@/lib/api"
 import { createClient } from "@/lib/supabase/client"
 import { authLogger } from "@/lib/auth-logger"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 
 interface NotebookHeaderProps {
   title: string
@@ -143,6 +144,8 @@ export function NotebookHeader({ title, notebookId, isNew, onTitleChange, onOpen
             <Settings className="w-5 h-5 text-muted-foreground" />
           </Button>
         )}
+
+        <ThemeSwitcher />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

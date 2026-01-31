@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Settings, Grid3X3, User, Plus, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { SynapseLogo } from "@/components/synapse-logo"
+import { LuminaLogo } from "@/components/lumina-logo"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +16,11 @@ import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { authLogger } from "@/lib/auth-logger"
 import { useRouter } from "next/navigation"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 
 export function Header() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [isScrolled, setIsScrolled] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -32,21 +34,45 @@ export function Header() {
     fetchUser()
   }, [])
 
+  // Scroll detection for sticky state
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
-    <header className="flex items-center justify-between px-6 py-4 border-b border-border/30 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-      <Link href="/home" className="flex items-center gap-3 group">
-        <SynapseLogo className="w-8 h-8 group-hover:animate-synapse-glow transition-all" />
-        <span className="text-xl font-display font-semibold text-foreground group-hover:text-primary transition-colors">SynapseAI</span>
+    <header
+      className={`flex items-center justify-between px-6 py-4 sticky top-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'bg-black/80 backdrop-blur-xl border-b border-primary/20'
+          : 'bg-transparent border-b border-transparent'
+      }`}
+      role="banner"
+    >
+      <Link
+        href="/home"
+        className="flex items-center gap-3 group transition-transform duration-300 hover:scale-105"
+        aria-label="Lumina - Go to home"
+      >
+        <LuminaLogo className="w-8 h-8 group-hover:animate-glow-pulse transition-all" aria-hidden="true" />
+        <span className="text-xl font-display font-semibold text-foreground group-hover:text-primary transition-colors">Lumina</span>
       </Link>
 
-      <div className="flex items-center gap-3">
+      <nav className="flex items-center gap-3" aria-label="Main navigation">
+        <ThemeSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="w-9 h-9 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-all duration-200 focus:outline-none border border-primary/20 hover:border-primary/40 hover:shadow-primary/20 hover:shadow-md">
-              <User className="w-5 h-5 text-primary" />
+            <button
+              className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 flex items-center justify-center transition-all duration-300 focus:outline-none border border-primary/30 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20 hover:scale-105"
+              aria-label="User menu"
+            >
+              <User className="w-5 h-5 text-primary" aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 mt-2 shadow-xl border-border">
+          <DropdownMenuContent align="end" className="w-56 mt-2 shadow-xl border-border bg-neutral-950/95 backdrop-blur-xl">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">My Account</p>
@@ -56,7 +82,7 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer py-2"
               onClick={async () => {
                 const supabase = createClient();
@@ -79,7 +105,7 @@ export function Header() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </nav>
     </header>
   )
 }

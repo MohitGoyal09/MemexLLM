@@ -40,7 +40,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       // Allow connections to self, backend API (localhost in dev), and Supabase domains
-      "connect-src 'self' http://localhost:8000 https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in",
+      "connect-src 'self' http://localhost:8000 https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://*.sentry.io https://*.posthog.com https://us.i.posthog.com https://*.google-analytics.com https://*.analytics.google.com",
       "font-src 'self' data:",
       "media-src 'self' blob: https://*.supabase.co https://*.supabase.in",  // Critical for audio playback
       "frame-ancestors 'none'",
@@ -80,5 +80,32 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const { withSentryConfig } = require("@sentry/nextjs");
+
+export default withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+
+  org: "synapseai",
+  project: "javascript-nextjs-sentry",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // For all available options, see:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Route browser requests to Sentry through the Next.js rewrite to circumvent ad-blockers
+  tunnelRoute: "/monitoring",
+
+  // Hides source maps from generated client bundles
+  hideSourceMaps: true,
+
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
+});
+
 

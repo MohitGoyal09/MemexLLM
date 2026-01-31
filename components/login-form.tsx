@@ -123,8 +123,8 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</p>}
-              <Button type="submit" className="w-full h-11 hover:shadow-primary transition-all" disabled={isLoading}>
+              {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md" role="alert" aria-live="polite">{error}</p>}
+              <Button type="submit" className="w-full h-11 hover:shadow-primary transition-all" disabled={isLoading} aria-busy={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
 
@@ -147,8 +147,9 @@ export function LoginForm({
                 className="w-full gap-2"
                 onClick={handleGoogleSignIn}
                 disabled={isGoogleLoading}
+                aria-busy={isGoogleLoading}
               >
-                <FcGoogle className="w-5 h-5" />
+                <FcGoogle className="w-5 h-5" aria-hidden="true" />
                 {isGoogleLoading ? "Redirecting..." : "Sign in with Google"}
               </Button>
             </div>

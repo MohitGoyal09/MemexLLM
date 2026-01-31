@@ -58,19 +58,19 @@ function getFileIconInfo(filename: string): { colorClass: string; label: string 
   const ext = filename?.split(".")?.pop()?.toLowerCase() || ""
 
   const fileTypes: Record<string, { colorClass: string; label: string }> = {
-    pdf: { colorClass: "text-red-500", label: "PDF Document" },
-    doc: { colorClass: "text-blue-500", label: "Word Document" },
-    docx: { colorClass: "text-blue-500", label: "Word Document" },
-    txt: { colorClass: "text-slate-400", label: "Text File" },
-    md: { colorClass: "text-slate-400", label: "Markdown" },
-    html: { colorClass: "text-orange-500", label: "Web Page" },
-    htm: { colorClass: "text-orange-500", label: "Web Page" },
-    csv: { colorClass: "text-green-500", label: "Spreadsheet" },
-    xlsx: { colorClass: "text-green-600", label: "Excel File" },
-    xls: { colorClass: "text-green-600", label: "Excel File" },
-    pptx: { colorClass: "text-orange-600", label: "Presentation" },
-    ppt: { colorClass: "text-orange-600", label: "Presentation" },
-    json: { colorClass: "text-yellow-500", label: "JSON File" },
+    pdf: { colorClass: "text-[var(--file-pdf)]", label: "PDF Document" },
+    doc: { colorClass: "text-[var(--file-doc)]", label: "Word Document" },
+    docx: { colorClass: "text-[var(--file-doc)]", label: "Word Document" },
+    txt: { colorClass: "text-[var(--file-text)]", label: "Text File" },
+    md: { colorClass: "text-[var(--file-text)]", label: "Markdown" },
+    html: { colorClass: "text-[var(--file-audio)]", label: "Web Page" },
+    htm: { colorClass: "text-[var(--file-audio)]", label: "Web Page" },
+    csv: { colorClass: "text-[var(--file-data)]", label: "Spreadsheet" },
+    xlsx: { colorClass: "text-[var(--file-data)]", label: "Excel File" },
+    xls: { colorClass: "text-[var(--file-data)]", label: "Excel File" },
+    pptx: { colorClass: "text-[var(--file-audio)]", label: "Presentation" },
+    ppt: { colorClass: "text-[var(--file-audio)]", label: "Presentation" },
+    json: { colorClass: "text-warning", label: "JSON File" },
   }
 
   return fileTypes[ext] || { colorClass: "text-muted-foreground", label: "Document" }
@@ -128,15 +128,15 @@ function getRelevanceInfo(score: number): {
   label: string
 } {
   if (score >= 0.8) {
-    return { color: "bg-emerald-500", bgColor: "bg-emerald-500/10", label: "Highly relevant" }
+    return { color: "bg-success", bgColor: "bg-success/10", label: "Highly relevant" }
   }
   if (score >= 0.6) {
-    return { color: "bg-yellow-500", bgColor: "bg-yellow-500/10", label: "Relevant" }
+    return { color: "bg-warning", bgColor: "bg-warning/10", label: "Relevant" }
   }
   if (score >= 0.4) {
-    return { color: "bg-orange-500", bgColor: "bg-orange-500/10", label: "Somewhat relevant" }
+    return { color: "bg-warning/70", bgColor: "bg-warning/5", label: "Somewhat relevant" }
   }
-  return { color: "bg-slate-400", bgColor: "bg-slate-400/10", label: "Low relevance" }
+  return { color: "bg-muted-foreground", bgColor: "bg-muted/50", label: "Low relevance" }
 }
 
 /**
@@ -537,7 +537,7 @@ export function CitationPreview({
                   title={copied ? "Copied!" : "Copy text"}
                 >
                   {copied ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <Check className="w-3.5 h-3.5 text-success" />
                   ) : (
                     <Copy className="w-3.5 h-3.5" />
                   )}
@@ -797,11 +797,11 @@ export function InlineCitationRenderer({
         )
       } else {
         // Keep the original text if citation doesn't exist
+        // Citation not found - render as inactive badge without tooltip
         parts.push(
           <span
             key={`missing-${match.index}`}
             className="inline-flex items-center justify-center min-w-[1.25rem] h-[1.25rem] px-1 text-[10px] font-bold rounded bg-muted/30 text-muted-foreground mx-0.5"
-            title="Source not found"
           >
             {adjustedIndex}
           </span>
@@ -983,7 +983,7 @@ export function CitationSheet({
             >
               {copied ? (
                 <>
-                  <Check className="w-4 h-4 text-emerald-500" />
+                  <Check className="w-4 h-4 text-success" />
                   Copied!
                 </>
               ) : (

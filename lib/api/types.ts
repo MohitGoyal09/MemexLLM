@@ -56,6 +56,7 @@ export interface Document {
   status: DocumentStatus;
   error_message: string | null;
   chunk_count: number;
+  preview?: string | null;
   created_at: string;
 }
 
@@ -74,6 +75,17 @@ export interface UploadDocumentResponse {
 export interface DocumentUrlResponse {
   url: string;
   expires_in: number;
+}
+
+export interface ProcessUrlRequest {
+  url: string;
+  notebook_id: string;
+}
+
+export interface ProcessUrlResponse {
+  status: string;
+  document_id: string;
+  processing_status: DocumentStatus;
 }
 
 // === Chat ===

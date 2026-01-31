@@ -87,6 +87,67 @@ function useIsMobile(): boolean {
 }
 
 /**
+ * Dynamic thinking indicator with contextual messages
+ */
+function ThinkingIndicator({ hasContent }: { hasContent: boolean }) {
+  const [phaseIndex, setPhaseIndex] = useState(0)
+  const [dots, setDots] = useState("")
+  
+  const phases = useMemo(() => [
+    "Thinking",
+    "Searching sources",
+    "Analyzing",
+    "Generating response",
+  ], [])
+  
+  useEffect(() => {
+    // Only cycle through phases if no content yet
+    if (hasContent) return
+    
+    const phaseInterval = setInterval(() => {
+      setPhaseIndex((prev) => (prev + 1) % phases.length)
+    }, 2500)
+    
+    return () => clearInterval(phaseInterval)
+  }, [hasContent, phases])
+  
+  // Animate dots
+  useEffect(() => {
+    const dotsInterval = setInterval(() => {
+      setDots((prev) => (prev.length >= 3 ? "" : prev + "."))
+    }, 400)
+    
+    return () => clearInterval(dotsInterval)
+  }, [])
+  
+  // If content has started, show typing indicator
+  if (hasContent) {
+    return (
+      <span className="inline-flex items-center gap-1.5 ml-1">
+        <span className="flex gap-0.5">
+          <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+          <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+          <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        </span>
+      </span>
+    )
+  }
+  
+  return (
+    <div className="flex items-center gap-2.5 text-muted-foreground py-3">
+      <div className="relative w-5 h-5">
+        <div className="absolute inset-0 rounded-full border-2 border-primary/30" />
+        <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+      <span className="text-sm font-medium">
+        {phases[phaseIndex]}
+        <span className="inline-block w-5 text-left">{dots}</span>
+      </span>
+    </div>
+  )
+}
+
+/**
  * Pre-processes markdown content to fix common LLM formatting issues
  * and normalize citation formats for consistent rendering
  */
@@ -104,12 +165,21 @@ function preprocessMarkdownContent(content: string): string {
   // 3. Ensure proper spacing before numbered lists
   processed = processed.replace(/([.!?])\s*(\d+\.)\s+/g, "$1\n\n$2 ")
 
-  // 4. Normalize citation formats to **[N]** for consistent rendering
+  // 4. Handle comma-separated citation lists like [1, 2, 3, 4, 5] or **[1, 2, 3]**
+  // Convert them to individual bold citations: **[1]** **[2]** **[3]**
+  processed = processed.replace(
+    /\*?\*?\[(\d+(?:\s*,\s*\d+)+)\]\*?\*?/g,
+    (match, numbers: string) => {
+      const nums = numbers.split(/\s*,\s*/)
+      return nums.map((n: string) => `**[${n.trim()}]**`).join(" ")
+    }
+  )
+
+  // 5. Normalize citation formats to **[N]** for consistent rendering
   // Handle various LLM citation formats:
   // - [1] -> **[1]**
   // - [[1]] -> **[1]**
   // - [^1] -> **[1]** (footnote style)
-  // - (1) -> **[1]** (parenthetical style)
   // But avoid double-bolding already formatted citations
 
   // First, normalize bracketed citations that aren't already bold
@@ -121,7 +191,7 @@ function preprocessMarkdownContent(content: string): string {
   // Handle footnote style [^1] -> **[1]**
   processed = processed.replace(/\[\^(\d+)\]/g, "**[$1]**")
 
-  // 5. Clean up any excessive newlines (more than 2 consecutive)
+  // 6. Clean up any excessive newlines (more than 2 consecutive)
   processed = processed.replace(/\n{3,}/g, "\n\n")
 
   return processed
@@ -162,11 +232,28 @@ function AssistantMessage({
 }: AssistantMessageProps) {
   const [copied, setCopied] = useState(false)
   const [isSavingNote, setIsSavingNote] = useState(false)
+  const [debouncedContent, setDebouncedContent] = useState(message.content || "")
+
+  // Debounce content updates during streaming for smoother markdown rendering
+  useEffect(() => {
+    if (!message.isStreaming) {
+      // Not streaming - use content directly
+      setDebouncedContent(message.content || "")
+      return
+    }
+    
+    // During streaming, debounce updates for better markdown parsing
+    const timer = setTimeout(() => {
+      setDebouncedContent(message.content || "")
+    }, 50) // Small delay to batch token updates
+    
+    return () => clearTimeout(timer)
+  }, [message.content, message.isStreaming])
 
   // Preprocess content once
   const processedContent = useMemo(
-    () => preprocessMarkdownContent(message.content || ""),
-    [message.content]
+    () => preprocessMarkdownContent(debouncedContent),
+    [debouncedContent]
   )
 
   // Extract used citation indices for the footer
@@ -365,9 +452,7 @@ function AssistantMessage({
 
         {/* Streaming indicator */}
         {message.isStreaming && (
-          <span className="inline-flex items-center gap-1 text-primary animate-pulse">
-            <Loader2 className="w-3 h-3 animate-spin" />
-          </span>
+          <ThinkingIndicator hasContent={!!message.content} />
         )}
 
         {/* Citation Footer */}
@@ -524,7 +609,7 @@ export function ChatPanel({
       const { toast } = await import("sonner")
       toast.error("Failed to save to note")
     }
-  }, [notebookId])
+  }, [notebookId, onNoteSaved])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const isMobile = useIsMobile()

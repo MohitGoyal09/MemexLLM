@@ -114,7 +114,7 @@ export const chatApi = {
           if (line.startsWith("data: ")) {
             const data = line.slice(6);
             
-            // Check if it's a citations event (JSON object)
+            // Check if it's a citations event (JSON object with citations key)
             if (data.startsWith("{")) {
               try {
                 const parsed = JSON.parse(data);
@@ -129,7 +129,14 @@ export const chatApi = {
               // Stream complete marker
               break;
             } else {
-              onToken(data);
+              // Token is JSON-encoded string, parse to get actual content with newlines
+              try {
+                const token = JSON.parse(data);
+                onToken(token);
+              } catch {
+                // Fallback: use raw data if not valid JSON
+                onToken(data);
+              }
             }
           }
         }

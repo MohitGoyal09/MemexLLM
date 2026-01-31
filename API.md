@@ -826,6 +826,87 @@ No response body.
 
 ---
 
+## Suggestion Endpoints
+
+### `GET /api/v1/chat/{notebook_id}/suggestions`
+
+Generate contextual suggested questions based on notebook content.
+
+**Authentication:** Required  
+**Rate Limit:** 10/min  
+**Cache:** Results cached for 5 minutes
+
+#### Path Parameters
+
+- `notebook_id` (UUID): Notebook identifier
+
+#### Response (200 OK)
+
+```json
+{
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What are the key findings regarding the algorithm's efficiency?",
+      "context": "Based on: research_paper.pdf"
+    },
+    {
+      "id": "q2",
+      "text": "How does the proposed method compare to existing baselines?",
+      "context": "Based on: evaluation_results.csv"
+    }
+  ],
+  "generated_at": "2024-01-26T12:00:00Z",
+  "document_count": 5
+}
+```
+
+#### Errors
+
+- **404 Not Found**: Notebook doesn't exist
+- **500 Internal Server Error**: Generation failed
+
+---
+
+### `POST /api/v1/chat/{notebook_id}/suggestions`
+
+Generate follow-up question suggestions based on the last conversation turn.
+
+**Authentication:** Required  
+**Rate Limit:** 20/min
+
+#### Path Parameters
+
+- `notebook_id` (UUID): Notebook identifier
+
+#### Request Body
+
+```json
+{
+  "last_user_message": "Explain the transformer architecture.",
+  "last_assistant_message": "The Transformer architecture, introduced by Vaswani et al., relies entirely on attention mechanisms..."
+}
+```
+
+#### Response (200 OK)
+
+```json
+{
+  "questions": [
+    "How does the self-attention mechanism work specifically?",
+    "What is the role of positional encodings?",
+    "How does it differ from RNNs?"
+  ]
+}
+```
+
+#### Errors
+
+- **404 Not Found**: Notebook doesn't exist
+- **500 Internal Server Error**: Generation failed
+
+---
+
 ## Content Generation Endpoints
 
 ### `POST /api/v1/generation/{notebook_id}/generate`

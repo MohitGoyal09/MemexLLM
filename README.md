@@ -30,6 +30,10 @@
 - Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
 - Styling with [Tailwind CSS](https://tailwindcss.com)
 - Components with [shadcn/ui](https://ui.shadcn.com/)
+- **Dark/Light Mode**: Full system support with auto-detection and manual toggle
+- **User Management**: Profile menu, secure logout, and session handling
+- **Smart Suggestions**: Context-aware questions generated from your documents and chat history
+- **Rich Text Notes**: Create and manage manual notes alongside AI-generated content
 - Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
   - Environment variables automatically assigned to Vercel project
 

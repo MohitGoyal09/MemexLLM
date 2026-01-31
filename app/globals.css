@@ -106,7 +106,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -157,4 +157,122 @@
 
 .ProseMirror ol li::marker {
   color: currentColor;
+}
+
+/* ============================================================================
+   ACCESSIBILITY - Reduced Motion, Focus, High Contrast
+   ============================================================================ */
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: none;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  :root {
+    --border-opacity: 1;
+    --text-opacity: 1;
+  }
+
+  .border-lumina-500\/20,
+  .border-primary\/20,
+  .border-border\/50,
+  .border-border\/40,
+  .border-border\/30 {
+    border-color: oklch(0.7 0.17 68 / 0.8);
+  }
+
+  .text-neutral-400,
+  .text-muted-foreground {
+    color: oklch(0.8 0 0);
+  }
+
+  /* Ensure adequate contrast on buttons */
+  .bg-primary {
+    background-color: oklch(0.7 0.17 68);
+  }
+}
+
+/* ============================================================================
+   SKIP LINK - Accessibility Navigation
+   ============================================================================ */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 8px 16px;
+  z-index: 100;
+  text-decoration: none;
+  font-weight: 500;
+  border-radius: 0 0 var(--radius-md) 0;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* ============================================================================
+   PERFORMANCE OPTIMIZATION - GPU Acceleration Hints
+   ============================================================================ */
+
+/*
+ * PERFORMANCE NOTES FOR DEVELOPERS:
+ *
+ * 1. Canvas animations should use requestAnimationFrame with proper cleanup:
+ *    - Store the animation frame ID
+ *    - Cancel on unmount: cancelAnimationFrame(animationFrameId)
+ *    - Check if component is still mounted before updating state
+ *
+ * 2. Neural network/visualization components should only render when in viewport:
+ *    - Use IntersectionObserver to detect visibility
+ *    - Pause animations when not visible
+ *    - Consider using react-intersection-observer library
+ *
+ * 3. Debounce scroll listeners with 100ms delay:
+ *    - Use lodash.debounce or custom debounce utility
+ *    - Always cleanup event listeners on unmount
+ *    - Example: const debouncedHandler = debounce(handler, 100)
+ *
+ * 4. Lazy load images below the fold:
+ *    - Use loading="lazy" attribute on <img> elements
+ *    - Use Next.js Image component with priority={false} for below-fold images
+ */
+
+/* Add will-change to animated gradient elements for GPU acceleration */
+.animate-synapse-glow,
+.animate-synapse-pulse,
+.animate-shimmer,
+.animate-float {
+  will-change: transform, filter, opacity;
+}
+
+/* Animated backgrounds should use GPU */
+.bg-gradient-animated,
+[style*="radial-gradient"] {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Reserve space for fonts to prevent layout shift */
+body {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

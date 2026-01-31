@@ -65,6 +65,8 @@ function documentToSource(doc: ApiDocument): Source {
     "image/jpeg": "image",
     "audio/mpeg": "audio",
     "video/mp4": "video",
+    "video/youtube": "video",
+    "text/html": "link",
   }
   const type = mimeToType[doc.mime_type] || "file"
 
@@ -76,6 +78,7 @@ function documentToSource(doc: ApiDocument): Source {
     chunkCount: doc.chunk_count,
     mimeType: doc.mime_type,
     errorMessage: doc.error_message,
+    preview: doc.preview || null,
   }
 }
 
@@ -179,24 +182,52 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
     }
   }, [notebookId])
 
+  const handleDeleteSource = useCallback(async (documentId: string) => {
+    try {
+      await documentsApi.delete(documentId)
+      // Remove from selected sources if it was selected
+      setSelectedSources(prev => prev.filter(id => id !== documentId))
+      // Refresh the sources list
+      await refreshSources()
+    } catch (err) {
+      console.error("Failed to delete source:", err)
+      throw err
+    }
+  }, [refreshSources])
+
   // Poll for document processing status
+  // IMPORTANT: Do NOT include `sources` in dependencies - it causes infinite re-render loops
+  // Instead, track processing state separately
   useEffect(() => {
+    // Check if any source is still processing
     const hasProcessing = sources.some((s) => s.status === "pending" || s.status === "processing")
     
     if (!hasProcessing) return
 
+    // Use a longer interval (5s) to reduce server load
     const pollInterval = setInterval(async () => {
       try {
         const documents = await documentsApi.list(notebookId)
         const updatedSources = documents.map(documentToSource)
-        setSources(updatedSources)
+        
+        // Only update state if there's a change (compare IDs and statuses)
+        setSources((prev) => {
+          const prevKey = prev.map(s => `${s.id}:${s.status}`).join(',')
+          const newKey = updatedSources.map(s => `${s.id}:${s.status}`).join(',')
+          
+          if (prevKey !== newKey) {
+            return updatedSources
+          }
+          return prev // No change, avoid re-render
+        })
       } catch (err) {
         console.error("Failed to poll document status:", err)
       }
-    }, 3000)
+    }, 5000) // Increased from 3000 to 5000ms
 
     return () => clearInterval(pollInterval)
-  }, [sources, notebookId])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notebookId, sources.map(s => `${s.id}:${s.status}`).join(',')]) // Stable dependency key
 
   const handleAddSource = useCallback((newSources: Source[]) => {
     setSources((prev) => [...prev, ...newSources])
@@ -243,11 +274,19 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
 
       try {
         if (isStreamingEnabled) {
+          // Accumulate full response for suggestions
+          let fullResponse = ""
+
           await chatApi.sendMessageStream(
             notebookId,
             content,
             // On token
             (token) => {
+              // Debug: log tokens with newlines
+              if (token.includes('\n')) {
+                console.log('Token with newline:', JSON.stringify(token))
+              }
+              fullResponse += token
               setMessages((prev) =>
                 prev.map((msg) => (msg.id === assistantId ? { ...msg, content: msg.content + token } : msg))
               )
@@ -262,18 +301,15 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
             },
             // On complete
             () => {
-              setMessages((prev) => {
-                // Get the final assistant message content for suggestions
-                const finalAssistantMsg = prev.find(msg => msg.id === assistantId)
-                if (finalAssistantMsg) {
-                  // Set last chat turn to trigger conversation-based suggestions
-                  setLastChatTurn({
-                    userMessage: content,
-                    assistantMessage: finalAssistantMsg.content
-                  })
-                }
-                return prev.map((msg) => (msg.id === assistantId ? { ...msg, isStreaming: false } : msg))
+              // Trigger conversation-based suggestions with guaranteed full text
+              setLastChatTurn({
+                userMessage: content,
+                assistantMessage: fullResponse
               })
+
+              setMessages((prev) =>
+                prev.map((msg) => (msg.id === assistantId ? { ...msg, isStreaming: false } : msg))
+              )
               setIsStreaming(false)
             },
             // On error
@@ -343,6 +379,19 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
 
   // Handle viewing a source from a citation
   const handleViewSource = useCallback((documentId: string, pageNumber?: number | null) => {
+    // Validate documentId
+    if (!documentId) {
+      console.warn("handleViewSource called with invalid documentId")
+      return
+    }
+
+    // Check if the document exists in sources
+    const sourceExists = sources.some(s => s.id === documentId)
+    if (!sourceExists) {
+      console.warn(`Source ${documentId} not found in notebook sources`)
+      // Still try to highlight in case it's just not loaded yet
+    }
+
     // Expand the left panel if collapsed
     if (leftPanelCollapsed) {
       setLeftPanelCollapsed(false)
@@ -359,7 +408,7 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
     setTimeout(() => {
       setHighlightedSource(null)
     }, 3000)
-  }, [leftPanelCollapsed])
+  }, [leftPanelCollapsed, sources])
 
   const handleSaveSettings = useCallback(
     async (settings: NotebookSettings) => {
@@ -391,14 +440,14 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
   }
 
   return (
-    <div className="h-screen bg-[#050505] flex flex-col relative text-foreground">
-      <NotebookHeader 
-        title={notebook.title} 
+    <div className="h-screen bg-[#050505] flex flex-col relative text-foreground overflow-hidden">
+      <NotebookHeader
+        title={notebook.title}
         notebookId={notebookId}
         onTitleChange={(newTitle) => setNotebook(prev => prev ? { ...prev, title: newTitle } : null)}
       />
 
-      <div className="flex-1 flex overflow-hidden p-3 pt-1 gap-3 bg-[#050505] min-h-0">
+      <div className="flex-1 flex p-3 pt-1 gap-3 bg-[#050505] min-h-0 overflow-hidden">
         {/* Left Panel Toggle */}
         {leftPanelCollapsed && (
           <div className="flex flex-col items-center py-4 px-2 border border-border/40 bg-card w-[60px] flex-shrink-0 z-10 rounded-2xl shadow-sm">
@@ -439,13 +488,14 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
               onSelectAll={selectAllSources}
               onCollapse={() => setLeftPanelCollapsed(true)}
               onRefresh={refreshSources}
+              onDeleteSource={handleDeleteSource}
               highlightedSourceId={highlightedSource?.documentId}
             />
           </ResizablePanel>
         )}
 
         {/* Chat Panel - takes remaining space */}
-        <div className="flex-1 min-w-[300px]">
+        <div className="flex-1 min-w-[300px] flex flex-col overflow-hidden">
           <ChatPanel
             messages={messages}
             sourceCount={selectedSources.length}

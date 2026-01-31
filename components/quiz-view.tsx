@@ -88,10 +88,10 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
     // Show result immediately after answering
     if (hasAnswered) {
       if (index === currentQuestion.correctAnswer) {
-        return "border-green-500 bg-green-500/10"
+        return "border-success bg-success/10"
       }
       if (index === selectedAnswer && index !== currentQuestion.correctAnswer) {
-        return "border-red-500 bg-red-500/10"
+        return "border-destructive bg-destructive/10"
       }
     }
     if (selectedAnswer === index && !hasAnswered) {
@@ -129,8 +129,8 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
           <p className="text-muted-foreground mb-6">{percentage}% correct</p>
           
           <div className="w-full max-w-xs h-3 bg-muted rounded-full overflow-hidden mb-6">
-            <div 
-              className={`h-full transition-all duration-500 ${percentage >= 70 ? 'bg-green-500' : percentage >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+            <div
+              className={`h-full transition-all duration-500 ${percentage >= 70 ? 'bg-success' : percentage >= 40 ? 'bg-warning' : 'bg-destructive'}`}
               style={{ width: `${percentage}%` }}
             />
           </div>
@@ -196,9 +196,9 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground font-medium">{String.fromCharCode(65 + index)}.</span>
                 <span className="flex-1">{option}</span>
-                {hasAnswered && index === currentQuestion.correctAnswer && <Check className="w-5 h-5 text-green-500" />}
+                {hasAnswered && index === currentQuestion.correctAnswer && <Check className="w-5 h-5 text-success" />}
                 {hasAnswered && index === selectedAnswer && index !== currentQuestion.correctAnswer && (
-                  <X className="w-5 h-5 text-red-500" />
+                  <X className="w-5 h-5 text-destructive" />
                 )}
               </div>
             </button>
@@ -207,9 +207,9 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
 
         {/* Feedback message after answering */}
         {hasAnswered && (
-          <div className={`mt-4 p-3 rounded-lg ${selectedAnswer === currentQuestion.correctAnswer ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-            {selectedAnswer === currentQuestion.correctAnswer 
-              ? "✓ Correct!" 
+          <div className={`mt-4 p-3 rounded-lg ${selectedAnswer === currentQuestion.correctAnswer ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
+            {selectedAnswer === currentQuestion.correctAnswer
+              ? "✓ Correct!"
               : `✗ Incorrect. The correct answer is ${String.fromCharCode(65 + currentQuestion.correctAnswer)}.`
             }
           </div>
@@ -238,14 +238,14 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
             size="sm"
             className={cn(
               "gap-2 rounded-full bg-transparent transition-colors",
-              feedbackStatus === "thumbs_up" && "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700"
+              feedbackStatus === "thumbs_up" && "bg-success/10 border-success/50"
             )}
             disabled={isSubmittingFeedback || !contentId}
             onClick={() => handleFeedback("thumbs_up")}
           >
             <ThumbsUp className={cn(
               "w-4 h-4",
-              feedbackStatus === "thumbs_up" && "fill-current text-green-600 dark:text-green-400"
+              feedbackStatus === "thumbs_up" && "fill-current text-success"
             )} />
             Good content
           </Button>
@@ -254,14 +254,14 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
             size="sm"
             className={cn(
               "gap-2 rounded-full bg-transparent transition-colors",
-              feedbackStatus === "thumbs_down" && "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700"
+              feedbackStatus === "thumbs_down" && "bg-destructive/10 border-destructive/50"
             )}
             disabled={isSubmittingFeedback || !contentId}
             onClick={() => handleFeedback("thumbs_down")}
           >
             <ThumbsDown className={cn(
               "w-4 h-4",
-              feedbackStatus === "thumbs_down" && "fill-current text-red-600 dark:text-red-400"
+              feedbackStatus === "thumbs_down" && "fill-current text-destructive"
             )} />
             Bad content
           </Button>

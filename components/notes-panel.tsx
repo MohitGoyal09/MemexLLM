@@ -50,8 +50,8 @@ function DeleteConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in duration-200">
       <div className="bg-card border border-border rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl animate-in zoom-in-95 duration-200">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-            <Trash2 className="w-5 h-5 text-red-500" />
+          <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+            <Trash2 className="w-5 h-5 text-destructive" />
           </div>
           <div>
             <h3 className="font-semibold">Delete Note</h3>
@@ -133,8 +133,8 @@ function NoteListItem({
         isSelected && "bg-secondary border-primary/20"
       )}
     >
-      <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <StickyNote className="w-4 h-4 text-amber-400" />
+      <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <StickyNote className="w-4 h-4 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm truncate">{note.title || "Untitled"}</p>
@@ -161,7 +161,7 @@ function NoteListItem({
               e.stopPropagation();
               onDelete();
             }}
-            className="text-red-500 focus:text-red-500 focus:bg-red-500/10"
+            className="text-destructive focus:text-destructive focus:bg-destructive/10"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Delete
@@ -176,8 +176,8 @@ function NoteListItem({
 function EmptyState({ onCreateNote }: { onCreateNote: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
-        <BookOpen className="w-8 h-8 text-amber-500/50" />
+      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+        <BookOpen className="w-8 h-8 text-primary/50" />
       </div>
       <h3 className="font-medium text-sm mb-1">No notes yet</h3>
       <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
@@ -205,10 +205,10 @@ function LoadingState() {
 function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
-        <AlertCircle className="w-8 h-8 text-red-500/50" />
+      <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+        <AlertCircle className="w-8 h-8 text-destructive/50" />
       </div>
-      <h3 className="font-medium text-sm mb-1 text-red-500">Error loading notes</h3>
+      <h3 className="font-medium text-sm mb-1 text-destructive">Error loading notes</h3>
       <p className="text-xs text-muted-foreground mb-4">{error}</p>
       <Button onClick={onRetry} variant="outline" size="sm">
         Try Again
@@ -383,9 +383,9 @@ export function NotesPanel({ notebookId, onBack }: NotesPanelProps) {
             </Button>
             <button
               onClick={() => setNoteToDelete(currentNote)}
-              className="p-1 hover:bg-red-500/20 rounded transition-colors"
+              className="p-1 hover:bg-destructive/20 rounded transition-colors"
             >
-              <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-500" />
+              <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
             </button>
           </div>
         </div>

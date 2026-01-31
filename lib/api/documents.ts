@@ -1,5 +1,5 @@
 import { apiClient, apiUpload } from "./client";
-import type { Document, UploadDocumentResponse, DocumentUrlResponse } from "./types";
+import type { Document, UploadDocumentResponse, DocumentUrlResponse, ProcessUrlResponse } from "./types";
 
 export const documentsApi = {
   /**
@@ -17,6 +17,15 @@ export const documentsApi = {
     formData.append("notebook_id", notebookId);
     return apiUpload<UploadDocumentResponse>("/documents/upload", formData);
   },
+
+  /**
+   * Process a URL (Web or YouTube)
+   */
+  processUrl: (notebookId: string, url: string) =>
+    apiClient<ProcessUrlResponse>("/documents/url", {
+      method: "POST",
+      body: JSON.stringify({ notebook_id: notebookId, url }),
+    }),
 
   /**
    * Get a signed URL to view/download a document

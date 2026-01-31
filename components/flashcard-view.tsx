@@ -118,7 +118,7 @@ export function FlashcardView({ title, sourceCount, flashcards, contentId, onBac
                 See answer
               </button>
               {/* Progress bar */}
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-600 rounded-b-2xl overflow-hidden">
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted rounded-b-2xl overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${((currentIndex + 1) / flashcards.length) * 100}%` }}
@@ -151,7 +151,7 @@ export function FlashcardView({ title, sourceCount, flashcards, contentId, onBac
                 Explain
               </Button> */}
               {/* Progress bar */}
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-600 rounded-b-2xl overflow-hidden">
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted rounded-b-2xl overflow-hidden">
                 <div
                   className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${((currentIndex + 1) / flashcards.length) * 100}%` }}
@@ -195,14 +195,14 @@ export function FlashcardView({ title, sourceCount, flashcards, contentId, onBac
           size="sm"
           className={cn(
             "gap-2 rounded-full bg-transparent transition-colors",
-            feedbackStatus === "thumbs_up" && "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700"
+            feedbackStatus === "thumbs_up" && "bg-success/10 border-success/50"
           )}
           disabled={isSubmittingFeedback || !contentId}
           onClick={() => handleFeedback("thumbs_up")}
         >
           <ThumbsUp className={cn(
             "w-4 h-4",
-            feedbackStatus === "thumbs_up" && "fill-current text-green-600 dark:text-green-400"
+            feedbackStatus === "thumbs_up" && "fill-current text-success"
           )} />
           Good content
         </Button>
@@ -211,14 +211,14 @@ export function FlashcardView({ title, sourceCount, flashcards, contentId, onBac
           size="sm"
           className={cn(
             "gap-2 rounded-full bg-transparent transition-colors",
-            feedbackStatus === "thumbs_down" && "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700"
+            feedbackStatus === "thumbs_down" && "bg-destructive/10 border-destructive/50"
           )}
           disabled={isSubmittingFeedback || !contentId}
           onClick={() => handleFeedback("thumbs_down")}
         >
           <ThumbsDown className={cn(
             "w-4 h-4",
-            feedbackStatus === "thumbs_down" && "fill-current text-red-600 dark:text-red-400"
+            feedbackStatus === "thumbs_down" && "fill-current text-destructive"
           )} />
           Bad content
         </Button>

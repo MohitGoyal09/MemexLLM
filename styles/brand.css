@@ -221,6 +221,19 @@
   --info-700: oklch(0.40 0.09 230);
   --info-800: oklch(0.32 0.06 230);
   --info-900: oklch(0.25 0.04 230);
+
+  /* -------------------------------------------------------------------------
+     FILE TYPE COLORS - Semantic colors for different file types
+     ------------------------------------------------------------------------- */
+  --file-pdf: oklch(0.58 0.20 25);      /* Coral red */
+  --file-doc: oklch(0.55 0.14 240);     /* Document blue */
+  --file-image: oklch(0.58 0.14 145);   /* Image green */
+  --file-video: oklch(0.55 0.14 300);   /* Video purple */
+  --file-audio: oklch(0.60 0.14 50);    /* Audio orange */
+  --file-link: oklch(0.58 0.12 195);    /* Link cyan */
+  --file-code: oklch(0.55 0.10 280);    /* Code violet */
+  --file-data: oklch(0.58 0.14 160);    /* Data teal */
+  --file-text: oklch(0.50 0.02 50);     /* Text gray */
 }
 
 /* ============================================================================
@@ -329,24 +342,62 @@
   --sidebar-ring: var(--synapse-500);
 }
 
-/* Light mode overrides */
+/* Light mode overrides - Warm Paper Theme */
 :root:not(.dark) {
-  --background: var(--neural-50);
+  /* Warm cream backgrounds like premium paper */
+  --background: oklch(0.985 0.008 85);  /* Warm cream */
   --foreground: var(--neural-900);
-  --card: white;
+
+  --card: oklch(0.995 0.005 85);  /* Almost white with warmth */
   --card-foreground: var(--neural-900);
+
+  --popover: oklch(0.995 0.005 85);
+  --popover-foreground: var(--neural-900);
+
   --primary: var(--synapse-600);
   --primary-hover: var(--synapse-700);
   --primary-foreground: white;
-  --secondary: var(--neural-100);
+
+  --secondary: oklch(0.96 0.01 85);  /* Warm light gray */
   --secondary-foreground: var(--neural-800);
-  --muted: var(--neural-100);
-  --muted-foreground: var(--neural-600);
+
+  --muted: oklch(0.94 0.01 85);
+  --muted-foreground: var(--neural-500);
+
   --accent: var(--synapse-100);
   --accent-foreground: var(--synapse-800);
-  --border: var(--neural-200);
-  --input: var(--neural-100);
+
+  --border: oklch(0.88 0.015 80);  /* Warm border */
+  --border-subtle: oklch(0.92 0.01 80);
+  --input: oklch(0.96 0.008 85);
   --ring: var(--synapse-500);
+
+  /* Surface hierarchy for light mode */
+  --surface-0: oklch(0.985 0.008 85);
+  --surface-1: oklch(0.995 0.005 85);
+  --surface-2: oklch(0.97 0.008 85);
+  --surface-3: oklch(0.94 0.01 85);
+  --surface-4: oklch(0.90 0.012 85);
+
+  /* Text hierarchy */
+  --text-primary: var(--neural-900);
+  --text-secondary: var(--neural-700);
+  --text-tertiary: var(--neural-600);
+  --text-muted: var(--neural-500);
+
+  /* Semantic feedback (lighter backgrounds in light mode) */
+  --success: var(--success-600);
+  --success-bg: oklch(0.95 0.05 145);
+  --warning: var(--warning-600);
+  --warning-bg: oklch(0.95 0.05 85);
+  --error: var(--error-600);
+  --error-bg: oklch(0.95 0.04 15);
+  --info: var(--info-600);
+  --info-bg: oklch(0.95 0.04 230);
+
+  /* Destructive */
+  --destructive: var(--error-600);
+  --destructive-foreground: white;
 }
 
 
@@ -929,6 +980,44 @@
   }
 }
 
+/* -------------------------------------------------------------------------
+   Lumina Neural Maximalism Animations
+   Phase 4: Animation Choreography
+   ------------------------------------------------------------------------- */
+
+@keyframes lumina-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.7 0.17 68 / 0.4); }
+  50% { box-shadow: 0 0 0 12px oklch(0.7 0.17 68 / 0); }
+}
+
+@keyframes diagonal-slide-in {
+  0% { transform: translateX(-20px) translateY(20px); opacity: 0; }
+  100% { transform: translateX(0) translateY(0); opacity: 1; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 8px oklch(0.7 0.17 68 / 0.5)); }
+  50% { filter: drop-shadow(0 0 20px oklch(0.7 0.17 68 / 0.8)); }
+}
+
+@keyframes ripple {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(20); opacity: 0; }
+}
+
+/* Lumina Neural Maximalism Animation Utilities */
+.animate-lumina-pulse {
+  animation: lumina-pulse 2s ease-in-out infinite;
+}
+
+.animate-diagonal-slide-in {
+  animation: diagonal-slide-in 0.7s ease-out forwards;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1206,20 +1295,36 @@
 .surface-4 { background-color: var(--surface-4); }
 
 /* -------------------------------------------------------------------------
-   Glass Effect (Glassmorphism)
+   Glass Effect (Glassmorphism) - Works in both light and dark modes
    ------------------------------------------------------------------------- */
-.glass {
+.dark .glass {
   background: oklch(0.12 0.008 50 / 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid oklch(1 0 0 / 0.05);
 }
 
-.glass-strong {
+.dark .glass-strong {
   background: oklch(0.12 0.008 50 / 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid oklch(1 0 0 / 0.08);
+}
+
+:root:not(.dark) .glass {
+  background: oklch(0.99 0.005 85 / 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(0 0 0 / 0.06);
+  box-shadow: 0 4px 20px oklch(0 0 0 / 0.04);
+}
+
+:root:not(.dark) .glass-strong {
+  background: oklch(0.99 0.005 85 / 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid oklch(0 0 0 / 0.08);
+  box-shadow: 0 4px 30px oklch(0 0 0 / 0.06);
 }
 
 

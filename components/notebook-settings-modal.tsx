@@ -153,29 +153,38 @@ export function NotebookSettingsModal({ open, onOpenChange, settings: initialSet
   ]
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-modal-title"
+    >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => onOpenChange(false)} aria-hidden="true" />
 
       {/* Modal */}
       <div className="relative w-full max-w-2xl bg-card rounded-2xl shadow-2xl border border-border mx-4 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
-          <h2 className="text-xl font-semibold">Notebook Settings</h2>
+          <h2 id="settings-modal-title" className="text-xl font-semibold">Notebook Settings</h2>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={handleReset} className="text-muted-foreground hover:text-foreground">
-              <RotateCcw className="w-4 h-4 mr-2" />
+              <RotateCcw className="w-4 h-4 mr-2" aria-hidden="true" />
               Reset defaults
             </Button>
-            <button onClick={() => onOpenChange(false)} className="p-2 hover:bg-secondary rounded-lg transition-colors">
-              <X className="w-5 h-5" />
+            <button onClick={() => onOpenChange(false)} className="p-2 hover:bg-secondary rounded-lg transition-colors" aria-label="Close settings">
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center px-6 border-b border-border space-x-6 flex-shrink-0">
+        <div className="flex items-center px-6 border-b border-border space-x-6 flex-shrink-0" role="tablist" aria-label="Settings categories">
           <button
+            role="tab"
+            aria-selected={activeTab === "retrieval"}
+            aria-controls="retrieval-panel"
+            id="retrieval-tab"
             onClick={() => setActiveTab("retrieval")}
             className={`py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === "retrieval"
@@ -186,6 +195,10 @@ export function NotebookSettingsModal({ open, onOpenChange, settings: initialSet
             Retrieval (RAG)
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === "generation"}
+            aria-controls="generation-panel"
+            id="generation-tab"
             onClick={() => setActiveTab("generation")}
             className={`py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === "generation"
@@ -200,7 +213,7 @@ export function NotebookSettingsModal({ open, onOpenChange, settings: initialSet
         {/* Content */}
         <div className="p-6 overflow-y-auto min-h-0 flex-1">
           {activeTab === "retrieval" && (
-            <div className="grid gap-8">
+            <div id="retrieval-panel" role="tabpanel" aria-labelledby="retrieval-tab" className="grid gap-8">
               {/* Chunking Strategy */}
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Chunking Strategy</h3>
@@ -310,7 +323,7 @@ export function NotebookSettingsModal({ open, onOpenChange, settings: initialSet
           )}
 
           {activeTab === "generation" && (
-            <div className="grid gap-8">
+            <div id="generation-panel" role="tabpanel" aria-labelledby="generation-tab" className="grid gap-8">
                {/* Style */}
                <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Style & Tone</h3>

@@ -147,7 +147,20 @@ export async function apiClient<T>(
         ...fetchOptions,
         headers: { ...headers, ...fetchOptions.headers },
         signal: controller.signal,
+        redirect: "manual", // Prevent automatic redirects to handle 307/308 properly
       });
+
+      // Handle redirect responses (307/308) - don't follow automatically to avoid CORS issues
+      if (response.status === 307 || response.status === 308) {
+        const redirectUrl = response.headers.get("location");
+        if (redirectUrl) {
+          console.warn(`Redirect detected (${response.status}) to: ${redirectUrl}`);
+        }
+        throw new ApiError(
+          response.status,
+          `Redirect detected. This may be a CORS or authentication configuration issue.`
+        );
+      }
 
       // Always process rate limit headers from response
       processRateLimitHeaders(response, response.status === 429);
@@ -244,7 +257,20 @@ export async function apiUpload<T>(
         headers: { Authorization: `Bearer ${session.access_token}` },
         body: formData,
         signal: controller.signal,
+        redirect: "manual", // Prevent automatic redirects to handle 307/308 properly
       });
+
+      // Handle redirect responses (307/308) - don't follow automatically to avoid CORS issues
+      if (response.status === 307 || response.status === 308) {
+        const redirectUrl = response.headers.get("location");
+        if (redirectUrl) {
+          console.warn(`Redirect detected (${response.status}) to: ${redirectUrl}`);
+        }
+        throw new ApiError(
+          response.status,
+          `Redirect detected. This may be a CORS or authentication configuration issue.`
+        );
+      }
 
       // Always process rate limit headers from response
       processRateLimitHeaders(response, response.status === 429);
