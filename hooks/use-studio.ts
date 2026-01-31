@@ -252,6 +252,25 @@ export function useStudio({ notebookId, pollInterval = 3000 }: UseStudioOptions)
         // Try async generation first
         const response = await generationApi.generateAsync(notebookId, contentType);
         
+        // Optimistically add to list immediately
+        const optimisticItem: StudioItem = {
+          id: response.content_id,
+          title: generateTitle(contentType),
+          sourceCount: 5, // Placeholder until refetch
+          timeAgo: "Just now",
+          type: contentTypeToDisplayType(contentType),
+          status: "processing", // Show as processing immediately
+          isNew: true,
+          hasInteractive: contentType === "podcast",
+          content: undefined
+        };
+
+        setItems(prev => [optimisticItem, ...prev]);
+        newItemIds.current.add(response.content_id);
+
+        // Fetch latest state from server to confirm
+        fetchContent();
+        
         // Add to generating tasks for polling (check for duplicates first)
         setGeneratingTasks((prev) => {
           // Don't add if already tracking this content

@@ -469,7 +469,7 @@ export function StudioPanel({
                       hover:brightness-110 active:scale-[0.98]
                       transition-all duration-200 ease-out
                       text-left group overflow-hidden
-                      ${animatingTool === tool.label ? "animate-bounce scale-105 ring-2 ring-primary" : ""}
+                      ${animatingTool === tool.label ? "animate-pulse scale-105 ring-2 ring-primary" : ""}
                       ${generatingTool === tool.label ? "opacity-70" : ""}
                     `}
                   >
@@ -493,8 +493,8 @@ export function StudioPanel({
               </div>
             </div>
 
-            {/* Generating Status */}
-            {generatingTool && (
+            {/* Generating Status - Removed to use list item state instead */}
+            {/* {generatingTool && (
               <div className="mx-4 mb-4 flex items-center gap-3 p-3 bg-secondary/50 rounded-lg border border-border animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <Loader2 className="w-4 h-4 text-primary animate-spin" />
@@ -504,7 +504,7 @@ export function StudioPanel({
                   <p className="text-xs text-muted-foreground">This may take a moment</p>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Error Display */}
             {error && (
