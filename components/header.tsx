@@ -45,9 +45,9 @@ export function Header() {
 
   return (
     <header
-      className={`flex items-center justify-between px-6 py-4 sticky top-0 z-50 transition-all duration-300 ${
+      className={`flex items-center justify-between px-6 py-4 sticky top-0 z-50 transition-all duration-200 ${
         isScrolled
-          ? 'bg-black/80 backdrop-blur-xl border-b border-primary/20'
+          ? 'bg-card/95 backdrop-blur-xl border-b border-border shadow-sm'
           : 'bg-transparent border-b border-transparent'
       }`}
       role="banner"
@@ -58,7 +58,7 @@ export function Header() {
         aria-label="MemexLLM - Go to home"
       >
         <LuminaLogo className="w-8 h-8 group-hover:animate-glow-pulse transition-all" aria-hidden="true" />
-        <span className="text-xl font-display font-semibold text-foreground group-hover:text-primary transition-colors">MemexLLM</span>
+        <span className="text-xl font-semibold text-foreground group-hover:text-synapse-400 transition-colors duration-200">MemexLLM</span>
       </Link>
 
       <nav className="flex items-center gap-3" aria-label="Main navigation">
@@ -66,13 +66,13 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 flex items-center justify-center transition-all duration-300 focus:outline-none border border-primary/30 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20 hover:scale-105"
+              className="w-9 h-9 rounded-full bg-surface-3 hover:bg-surface-4 flex items-center justify-center transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-synapse-500 border border-border hover:border-synapse-700/50"
               aria-label="User menu"
             >
-              <User className="w-5 h-5 text-primary" aria-hidden="true" />
+              <User className="w-5 h-5 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 mt-2 shadow-xl border-border bg-neutral-950/95 backdrop-blur-xl">
+          <DropdownMenuContent align="end" className="w-56 mt-2 shadow-xl border-border bg-surface-2/95 backdrop-blur-xl">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">My Account</p>

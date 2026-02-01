@@ -440,14 +440,14 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
   }
 
   return (
-    <div className="h-screen bg-[#050505] flex flex-col relative text-foreground overflow-hidden">
+    <div className="h-screen bg-background flex flex-col relative text-foreground overflow-hidden">
       <NotebookHeader
         title={notebook.title}
         notebookId={notebookId}
         onTitleChange={(newTitle) => setNotebook(prev => prev ? { ...prev, title: newTitle } : null)}
       />
 
-      <div className="flex-1 flex p-3 pt-1 gap-3 bg-[#050505] min-h-0 overflow-hidden">
+      <div className="flex-1 flex p-3 pt-1 gap-3 bg-background min-h-0 overflow-hidden">
         {/* Left Panel Toggle */}
         {leftPanelCollapsed && (
           <div className="flex flex-col items-center py-4 px-2 border border-border/40 bg-card w-[60px] flex-shrink-0 z-10 rounded-2xl shadow-sm">
@@ -552,27 +552,14 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
               <div className="h-px w-8 bg-border my-2" />
 
               {studioItems.slice(0, 5).map((item) => {
-                let iconColor = "text-muted-foreground"
-                let bgColor = "bg-secondary"
-
-                if (item.type === "audio") {
-                  iconColor = "text-purple-400"
-                  bgColor = "bg-purple-500/20"
-                } else if (item.type === "mindmap") {
-                  iconColor = "text-violet-400"
-                  bgColor = "bg-violet-500/20"
-                } else if (item.type === "flashcards") {
-                  iconColor = "text-blue-400"
-                  bgColor = "bg-blue-500/20"
-                } else if (item.type === "quiz") {
-                  iconColor = "text-lime-400"
-                  bgColor = "bg-lime-500/20"
-                }
+                // Unified neutral styling - amber only for primary actions
+                const iconColor = "text-muted-foreground"
+                const bgColor = "bg-surface-2"
 
                 return (
                   <div
                     key={item.id}
-                    className={`w-8 h-8 rounded-lg ${bgColor} flex items-center justify-center flex-shrink-0`}
+                    className={`w-8 h-8 rounded-lg ${bgColor} flex items-center justify-center flex-shrink-0 border border-border`}
                     title={item.title}
                   >
                     <span className={`text-[10px] font-bold ${iconColor}`}>{item.type[0].toUpperCase()}</span>

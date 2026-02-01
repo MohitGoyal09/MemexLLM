@@ -84,7 +84,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-background text-foreground">
         <Header />
         <main className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center justify-center h-64">
@@ -96,14 +96,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative">
-      {/* Gradient mesh background */}
+    <div className="min-h-screen bg-background text-foreground relative">
+      {/* Gradient mesh background - subtle in light mode, more visible in dark */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none opacity-50 dark:opacity-100"
         style={{
           background: `
-            radial-gradient(ellipse 60% 40% at 10% 20%, oklch(0.65 0.17 68 / 0.12) 0%, transparent 50%),
-            radial-gradient(ellipse 40% 30% at 90% 80%, oklch(0.55 0.11 185 / 0.08) 0%, transparent 50%)
+            radial-gradient(ellipse 60% 40% at 10% 20%, oklch(0.65 0.17 68 / 0.10) 0%, transparent 50%),
+            radial-gradient(ellipse 40% 30% at 90% 80%, oklch(0.55 0.11 185 / 0.06) 0%, transparent 50%)
           `
         }}
       />
@@ -113,12 +113,13 @@ export default function HomePage() {
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-8">
 
         {/* Header Controls */}
-        <div className="flex items-center justify-end gap-4 mb-8 animate-fade-up">
-          <div className="flex items-center bg-neutral-900/50 rounded-lg p-1 border border-neutral-800">
+        <div className="flex items-center justify-between mb-8 animate-fade-up">
+           <h2 className="text-2xl font-semibold">My Notebooks</h2>
+           <div className="flex items-center bg-surface-2 rounded-lg p-1 border border-border">
             <button
               onClick={() => setViewMode("grid")}
               className={`p-1.5 rounded-md transition-all duration-200 ${
-                viewMode === "grid" ? "bg-neutral-800 text-white shadow-sm" : "text-neutral-500 hover:text-white"
+                viewMode === "grid" ? "bg-surface-4 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -126,21 +127,12 @@ export default function HomePage() {
             <button
               onClick={() => setViewMode("list")}
               className={`p-1.5 rounded-md transition-all duration-200 ${
-                viewMode === "list" ? "bg-neutral-800 text-white shadow-sm" : "text-neutral-500 hover:text-white"
+                viewMode === "list" ? "bg-surface-4 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <List className="w-4 h-4" />
             </button>
           </div>
-
-          <Button
-            onClick={handleCreateNew}
-            disabled={isCreating}
-            className="gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black font-semibold h-9 text-xs px-4 cursor-pointer shadow-lg shadow-amber-500/20"
-          >
-            {isCreating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-            {isCreating ? "Creating..." : "Create new"}
-          </Button>
         </div>
 
         {error && (
@@ -149,115 +141,52 @@ export default function HomePage() {
           </div>
         )}
 
-        {allNotebooks.length === 0 ? (
-          /* Enhanced Empty State with Neural Maximalism */
-          <div className="relative flex flex-col items-center justify-center h-[60vh] text-center animate-fade-up">
-            {/* Neural network background decoration */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-amber-500/10 blur-3xl animate-pulse" />
-              <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full bg-teal-500/10 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-            </div>
-
-            {/* Animated icon with glow-pulse */}
-            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/30 flex items-center justify-center mb-8 animate-pulse">
-              <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-xl animate-pulse" />
-              <Sparkles className="w-12 h-12 text-amber-400 relative z-10" />
-            </div>
-
-            {/* Gradient text headline */}
-            <h2 className="text-3xl font-display font-bold mb-4 bg-gradient-to-r from-amber-400 via-white to-teal-400 bg-clip-text text-transparent">
-              Your Research Command Center
-            </h2>
-            <p className="text-neutral-400 mb-10 max-w-md text-lg">
-              Create your first notebook to start transforming documents into actionable insights with AI-powered analysis
-            </p>
-
-            {/* CTA button with glow */}
-            <Button
+        {viewMode === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-up">
+            {/* Create New Card - Always First */}
+            <div
               onClick={handleCreateNew}
-              disabled={isCreating}
-              className="relative gap-3 rounded-full px-8 h-12 text-base font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-black shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
+              className={`cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-dashed border-border hover:border-primary/50 bg-transparent hover:bg-card/50 rounded-xl flex flex-col items-center justify-center p-8 min-h-[220px] group ${isCreating ? 'opacity-50 pointer-events-none' : ''}`}
             >
-              {isCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-              {isCreating ? "Creating..." : "Create your first notebook"}
-            </Button>
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200">
+                {isCreating ? <Loader2 className="w-6 h-6 text-primary animate-spin" /> : <Plus className="w-6 h-6 text-primary" />}
+              </div>
+              <p className="font-medium text-foreground">Create New Notebook</p>
+              <p className="text-xs text-muted-foreground mt-1">Start a new knowledge workspace</p>
+            </div>
+
+            {/* Notebook Cards */}
+            {allNotebooks.map((notebook, index) => (
+              <Link
+                href={`/notebook/${notebook.id}`}
+                key={notebook.id}
+                className="animate-diagonal-slide-in hover:-translate-y-1 transition-all duration-300"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <NotebookCard notebook={notebook} onUpdate={handleNotebookUpdate} />
+              </Link>
+            ))}
           </div>
         ) : (
-          <div className="space-y-12">
-            {/* Recent Notebooks Section - Only in Grid View */}
-            {viewMode === "grid" && recentNotebooks.length > 0 && (
-              <section className="animate-fade-up">
-                <h2 className="text-xl font-display font-semibold mb-6">Recent notebooks</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {recentNotebooks.map((notebook, index) => (
-                    <Link
-                      href={`/notebook/${notebook.id}`}
-                      key={notebook.id}
-                      className="animate-diagonal-slide-in hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <NotebookCard notebook={notebook} variant="recent" onUpdate={handleNotebookUpdate} />
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* My Notebooks (All) Section */}
-            <section className="animate-fade-up" style={{ animationDelay: '100ms' }}>
-              <h2 className="text-xl font-semibold mb-6">My notebooks</h2>
-
-              {viewMode === "grid" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {/* Create New Card - Enhanced with Neural Maximalism */}
-                  <div
-                    onClick={handleCreateNew}
-                    className={`relative h-full min-h-[200px] rounded-2xl bg-transparent border-2 border-dashed border-amber-500/30 hover:border-amber-500/50 hover:bg-gradient-to-br hover:from-amber-500/10 hover:to-transparent transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-4 group overflow-hidden ${isCreating ? 'opacity-50 pointer-events-none' : ''}`}
-                  >
-                    {/* Radial glow on hover */}
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,oklch(0.7_0.17_68_/_0.15)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                    <div className="relative w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 group-hover:bg-amber-500/20 transition-all duration-300 shadow-sm">
-                      {isCreating ? <Loader2 className="w-6 h-6 text-amber-400 animate-spin" /> : <Plus className="w-7 h-7 text-amber-400" />}
-                    </div>
-                    <span className="relative font-semibold text-neutral-500 group-hover:text-amber-400 transition-colors">{isCreating ? "Creating notebook..." : "Create new notebook"}</span>
-                  </div>
-
-                  {/* All Notebooks with staggered animation */}
-                  {allNotebooks.map((notebook, index) => (
-                    <Link
-                      href={`/notebook/${notebook.id}`}
-                      key={notebook.id}
-                      className="animate-diagonal-slide-in hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300"
-                      style={{ animationDelay: `${(index + 1) * 50}ms` }}
-                    >
-                      <NotebookCard notebook={notebook} onUpdate={handleNotebookUpdate} />
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-neutral-950/50 rounded-xl border border-neutral-800 overflow-hidden">
-                  <div className="grid grid-cols-[1fr_120px_140px_40px] items-center gap-4 px-6 py-3 border-b border-neutral-800 text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    <span>Title</span>
-                    <span>Sources</span>
-                    <span>Created</span>
-                    <span className="sr-only">Actions</span>
-                  </div>
-                  <div className="divide-y divide-neutral-800/50">
-                    {allNotebooks.map((notebook, index) => (
-                      <Link
-                        href={`/notebook/${notebook.id}`}
-                        key={notebook.id}
-                        className="block animate-fade-up hover:bg-neutral-900/50 transition-colors"
-                        style={{ animationDelay: `${index * 30}ms` }}
-                      >
-                        <NotebookListItem notebook={notebook} />
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </section>
+          <div className="bg-surface-2 rounded-xl border border-border overflow-hidden shadow-sm animate-fade-up">
+            <div className="grid grid-cols-[1fr_120px_140px_40px] items-center gap-4 px-6 py-3 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <span>Title</span>
+              <span>Sources</span>
+              <span>Created</span>
+              <span className="sr-only">Actions</span>
+            </div>
+            <div className="divide-y divide-border">
+              {allNotebooks.map((notebook, index) => (
+                <Link
+                  href={`/notebook/${notebook.id}`}
+                  key={notebook.id}
+                  className="block animate-fade-up hover:bg-surface-3 transition-colors"
+                  style={{ animationDelay: `${index * 30}ms` }}
+                >
+                  <NotebookListItem notebook={notebook} />
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </main>

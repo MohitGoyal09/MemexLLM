@@ -1,12 +1,14 @@
 'use client';
-import { useState, MouseEvent } from 'react';
-import { Button, ButtonProps } from './ui/button';
+import { useState, MouseEvent, ComponentProps } from 'react';
+import { Button } from './ui/button';
 
 interface Ripple {
   x: number;
   y: number;
   id: number;
 }
+
+type ButtonProps = ComponentProps<typeof Button>;
 
 export function RippleButton({ children, onClick, ...props }: ButtonProps) {
   const [ripples, setRipples] = useState<Ripple[]>([]);

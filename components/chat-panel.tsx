@@ -16,7 +16,10 @@ import {
   Sparkles,
   FileText,
   Check,
-  Loader2
+  Loader2,
+  MessageSquare,
+  Mic,
+  MicOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -556,6 +559,8 @@ export function ChatPanel({
   onNoteSaved
 }: ChatPanelProps) {
   const [input, setInput] = useState("")
+  const [isListening, setIsListening] = useState(false)
+  const speechRecognitionRef = useRef<any>(null)
   const [mobileCitation, setMobileCitation] = useState<{
     citation: Citation
     index: number
@@ -590,15 +595,16 @@ export function ChatPanel({
     try {
       const { generationApi } = await import("@/lib/api/generation")
       const { toast } = await import("sonner")
+      const { marked } = await import("marked")
       
-      // Strip markdown for a cleaner note
-      // Keep some formatting but convert to HTML-like structure
+      // Convert markdown to HTML for the rich text editor
+      const htmlContent = await marked.parse(content)
       const title = `Chat Response - ${new Date().toLocaleDateString()}`
       
       await generationApi.createContent(
         notebookId,
         "note",
-        { content: content },
+        { content: htmlContent },
         title
       )
       
@@ -662,11 +668,77 @@ export function ChatPanel({
     setMobileCitation(null)
   }, [])
 
+  // Speech-to-Text handler
+  const toggleSpeechRecognition = useCallback(async () => {
+    // Check if browser supports Web Speech API
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    
+    if (!SpeechRecognition) {
+      console.warn("Speech recognition not supported in this browser")
+      return
+    }
+
+    if (isListening) {
+      // Stop listening
+      speechRecognitionRef.current?.stop()
+      setIsListening(false)
+      return
+    }
+
+    // Explicitly request permission to ensure prompt appears
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream.getTracks().forEach(track => track.stop())
+    } catch (err) {
+      console.error("Microphone permission denied:", err)
+      const { toast } = await import("sonner")
+      toast.error("Microphone access is required for speech to text. Please enable it in your browser settings.")
+      return
+    }
+
+    // Start listening
+    const recognition = new SpeechRecognition()
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognition.lang = 'en-US'
+
+    recognition.onstart = () => {
+      setIsListening(true)
+    }
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((result: any) => result[0].transcript)
+        .join('')
+      
+      setInput(prev => (prev ? prev + " " : "") + transcript)
+    }
+
+    recognition.onerror = async (event: any) => {
+      console.error('Speech recognition error:', event.error)
+      if (event.error === 'not-allowed') {
+        const { toast } = await import("sonner")
+        toast.error("Microphone access denied. Please check your browser permissions.")
+      }
+      setIsListening(false)
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+    }
+
+    speechRecognitionRef.current = recognition
+    recognition.start()
+  }, [isListening])
+
   return (
     <div className="w-full h-full flex flex-col bg-card rounded-2xl overflow-hidden shadow-sm border border-border/40">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
-        <h2 className="font-semibold">Chat</h2>
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-synapse-500" />
+          <h2 className="font-semibold">Chat</h2>
+        </div>
         <div className="flex items-center gap-2">
           {onOpenSettings && (
             <Button
@@ -842,10 +914,28 @@ export function ChatPanel({
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Start typing..."
+            placeholder={isListening ? "Listening..." : "Start typing..."}
             className="flex-1 bg-transparent outline-none text-sm min-w-0"
           />
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Microphone button for STT */}
+            <button
+              type="button"
+              onClick={toggleSpeechRecognition}
+              className={cn(
+                "p-2 rounded-full transition-all",
+                isListening 
+                  ? "bg-red-500 text-white animate-pulse" 
+                  : "hover:bg-secondary-foreground/10 text-muted-foreground hover:text-foreground"
+              )}
+              title={isListening ? "Stop listening" : "Voice input"}
+            >
+              {isListening ? (
+                <MicOff className="w-4 h-4" />
+              ) : (
+                <Mic className="w-4 h-4" />
+              )}
+            </button>
           
             <span className="text-xs text-muted-foreground hidden sm:inline">
               {sourceCount} sources

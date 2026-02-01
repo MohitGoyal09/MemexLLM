@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import { X, Search, Globe, Sparkles, Upload, Link, HardDrive, FileText, ArrowRight, Loader2, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react"
+import { X, Search, Globe, Sparkles, Upload, Link, HardDrive, FileText, ArrowRight, Loader2, CheckCircle, AlertCircle, ArrowLeft, ClipboardPaste } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SynapseLogo } from "@/components/synapse-logo"
 
@@ -48,8 +48,10 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
   const [isUploading, setIsUploading] = useState(false)
   const [fileSizeError, setFileSizeError] = useState<string | null>(null)
   
-  const [view, setView] = useState<"default" | "website">("default")
+  const [view, setView] = useState<"default" | "website" | "text">("default")
   const [urlInput, setUrlInput] = useState("")
+  const [textInput, setTextInput] = useState("")
+  const [textTitle, setTextTitle] = useState("")
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -189,6 +191,47 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
     }
   }
 
+  const handleTextSubmit = async () => {
+    if (!textInput.trim()) return
+
+    const title = textTitle.trim() || `Pasted text ${new Date().toLocaleDateString()}`
+
+    if (!notebookId) {
+      // Fallback for demo/new notebooks
+      onAddSources([{
+        id: Date.now().toString(),
+        name: title,
+        type: "text",
+        status: "pending",
+      }])
+      onOpenChange(false)
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      // Create a text file from the pasted content
+      const blob = new Blob([textInput], { type: "text/plain" })
+      const file = new File([blob], `${title}.txt`, { type: "text/plain" })
+      
+      const response = await documentsApi.upload(notebookId, file)
+      onAddSources([{
+        id: response.document_id,
+        name: title,
+        type: "text",
+        status: response.processing_status as any,
+      }])
+      onOpenChange(false)
+    } catch (error) {
+      console.error("Failed to add text:", error)
+    } finally {
+      setIsUploading(false)
+      setTextInput("")
+      setTextTitle("")
+      setView("default")
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -205,7 +248,7 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
             <SynapseLogo className="w-8 h-8" aria-hidden="true" />
-            <span className="text-xl font-semibold">SynapseAI</span>
+            <span className="text-xl font-semibold">MemexLLM</span>
           </div>
           <button onClick={() => onOpenChange(false)} className="p-2 hover:bg-secondary rounded-lg transition-colors" aria-label="Close modal">
             <X className="w-5 h-5" aria-hidden="true" />
@@ -259,6 +302,63 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
                 <Button 
                   onClick={handleUrlSubmit} 
                   disabled={!urlInput || isUploading}
+                  className="rounded-full"
+                >
+                  {isUploading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Add source
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : view === "text" ? (
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <button 
+                onClick={() => setView("default")}
+                className="p-2 -ml-2 rounded-full hover:bg-secondary transition-colors"
+                aria-label="Back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <h2 className="text-xl font-semibold">Add Copied Text</h2>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Title (optional)
+                </label>
+                <input
+                  className="w-full p-3 rounded-lg border bg-secondary/50 focus:border-neutral-500 transition-colors outline-none text-sm"
+                  placeholder="Give your text a name..."
+                  value={textTitle}
+                  onChange={(e) => setTextTitle(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Paste your text
+                </label>
+                <textarea
+                  className="w-full h-48 p-3 rounded-lg border bg-secondary/50 focus:border-neutral-500 transition-colors outline-none text-sm resize-none"
+                  placeholder="Paste your text content here... (meeting notes, research excerpts, articles, etc.)"
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  autoFocus
+                />
+                <p className="text-[0.8rem] text-muted-foreground">
+                  {textInput.length} characters
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="ghost" onClick={() => setView("default")}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleTextSubmit} 
+                  disabled={!textInput.trim() || isUploading}
                   className="rounded-full"
                 >
                   {isUploading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -395,8 +495,8 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
               <HardDrive className="w-4 h-4" />
               Drive
             </Button>
-            <Button variant="secondary" className="gap-2 rounded-full">
-              <FileText className="w-4 h-4" />
+            <Button variant="secondary" className="gap-2 rounded-full" onClick={() => setView("text")}>
+              <ClipboardPaste className="w-4 h-4" />
               Copied text
             </Button>
           </div>

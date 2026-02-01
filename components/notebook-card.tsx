@@ -28,15 +28,8 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
   const [title, setTitle] = useState(notebook.title)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Brand-aligned gradients using design system tokens
-  const gradients = [
-    "bg-gradient-to-br from-[oklch(0.65_0.17_68/0.2)] via-[var(--neural-950)] to-[var(--neural-950)] border-[oklch(0.65_0.17_68/0.3)] hover:border-[oklch(0.65_0.17_68/0.5)] hover:shadow-primary",
-    "bg-gradient-to-br from-[oklch(0.55_0.11_185/0.2)] via-[var(--neural-950)] to-[var(--neural-950)] border-[oklch(0.55_0.11_185/0.3)] hover:border-[oklch(0.55_0.11_185/0.5)] hover:shadow-md",
-    "bg-gradient-to-br from-[oklch(0.55_0.14_145/0.2)] via-[var(--neural-950)] to-[var(--neural-950)] border-[oklch(0.55_0.14_145/0.3)] hover:border-[oklch(0.55_0.14_145/0.5)] hover:shadow-md", 
-    "bg-gradient-to-br from-[oklch(0.62_0.16_25/0.2)] via-[var(--neural-950)] to-[var(--neural-950)] border-[oklch(0.62_0.16_25/0.3)] hover:border-[oklch(0.62_0.16_25/0.5)] hover:shadow-md",
-  ]
-  const colorIndex = notebook.id.charCodeAt(0) % gradients.length
-  const cardStyle = gradients[colorIndex]
+  // Unified card style - NoobBook-like with amber border accent on hover
+  const cardStyle = "bg-card border-border hover:border-synapse-500/60 dark:bg-white/[0.03] dark:border-white/10 dark:hover:bg-white/[0.05] dark:hover:border-synapse-500/50 hover:shadow-xl"
 
   // Curated emojis for notebook covers
   const emojis = ["📓", "🤖", "🚀", "💡", "🔮", "🧬", "🧠", "📈", "🎨", "🔬", "💼", "📚", "📡", "🧩", "🔥", "✨"]
@@ -66,11 +59,11 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
   }
 
   return (
-    <article className={`group relative flex flex-col p-5 rounded-2xl border transition-all duration-300 cursor-pointer h-full min-h-[200px] shadow-sm hover:shadow-md hover:-translate-y-1 ${cardStyle}`} aria-labelledby={`notebook-title-${notebook.id}`}>
+    <article className={`group relative flex flex-col p-5 rounded-xl border transition-all duration-200 cursor-pointer h-full min-h-[200px] shadow-sm hover:-translate-y-0.5 ${cardStyle}`} aria-labelledby={`notebook-title-${notebook.id}`}>
 
       {/* Cover Icon Area */}
       <div className="flex items-start justify-between mb-6">
-        <div className="w-12 h-12 rounded-xl bg-background/60 backdrop-blur-sm border border-border/50 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300" aria-hidden="true">
+        <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:bg-surface-3 transition-all duration-200" aria-hidden="true">
           <span className="text-2xl">{Emoji}</span>
         </div>
         <DropdownMenu>
@@ -121,7 +114,7 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
                 )}
             </div>
         ) : (
-            <h3 id={`notebook-title-${notebook.id}`} className="text-xl font-bold text-foreground line-clamp-2 leading-tight tracking-tight group-hover:text-primary transition-colors duration-300">
+            <h3 id={`notebook-title-${notebook.id}`} className="text-lg font-semibold text-foreground line-clamp-2 leading-tight tracking-tight group-hover:text-synapse-400 transition-colors duration-200">
             {notebook.title}
             </h3>
         )}

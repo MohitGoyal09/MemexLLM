@@ -55,36 +55,44 @@ export const studioTools = [
     label: "Audio",
     fullLabel: "Audio Overview",
     beta: false,
-    bgColor: "bg-secondary",
-    borderColor: "border-primary/30",
-    iconColor: "text-primary",
+    // Purple theme for Audio
+    bgColor: "bg-purple-900 dark:bg-purple-900/80",
+    hoverBg: "hover:bg-purple-800 dark:hover:bg-purple-800/80",
+    borderColor: "border-purple-700/50",
+    iconColor: "text-purple-400",
   },
   {
     icon: Workflow,
     label: "Mind Map",
     fullLabel: "Mind Map",
     beta: false,
-    bgColor: "bg-secondary",
-    borderColor: "border-info/30",
-    iconColor: "text-info",
+    // Teal/Cyan theme for Mind Map
+    bgColor: "bg-teal-900 dark:bg-teal-900/80",
+    hoverBg: "hover:bg-teal-800 dark:hover:bg-teal-800/80",
+    borderColor: "border-teal-700/50",
+    iconColor: "text-teal-400",
   },
   {
     icon: GalleryVerticalEnd,
     label: "Flashcards",
     fullLabel: "Flashcards",
     beta: false,
-    bgColor: "bg-secondary",
-    borderColor: "border-info/30",
-    iconColor: "text-info",
+    // Blue theme for Flashcards
+    bgColor: "bg-blue-900 dark:bg-blue-900/80",
+    hoverBg: "hover:bg-blue-800 dark:hover:bg-blue-800/80",
+    borderColor: "border-blue-700/50",
+    iconColor: "text-blue-400",
   },
   {
     icon: BrainCircuit,
     label: "Quiz",
     fullLabel: "Quiz",
     beta: false,
-    bgColor: "bg-secondary",
-    borderColor: "border-success/30",
-    iconColor: "text-success",
+    // Green theme for Quiz
+    bgColor: "bg-emerald-900 dark:bg-emerald-900/80",
+    hoverBg: "hover:bg-emerald-800 dark:hover:bg-emerald-800/80",
+    borderColor: "border-emerald-700/50",
+    iconColor: "text-emerald-400",
   },
 ]
 
@@ -303,19 +311,20 @@ export function StudioPanel({
   }
 
   const getItemIconStyle = (type: GeneratedItem["type"]) => {
-    const styleMap = {
-      quiz: { bg: "bg-success/20", icon: "text-success" },
-      audio: { bg: "bg-primary/20", icon: "text-primary" },
-      flashcards: { bg: "bg-info/20", icon: "text-info" },
-      mindmap: { bg: "bg-info/20", icon: "text-info" },
-      report: { bg: "bg-success/20", icon: "text-success" },
-      video: { bg: "bg-info/20", icon: "text-info" },
-      infographic: { bg: "bg-warning/20", icon: "text-warning" },
-      slides: { bg: "bg-info/20", icon: "text-info" },
-      table: { bg: "bg-success/20", icon: "text-success" },
-      note: { bg: "bg-warning/20", icon: "text-warning" },
+    // Unique colors per type - matching the studio tool colors
+    const styleMap: Record<string, { bg: string; icon: string }> = {
+      audio: { bg: "bg-purple-500/15 dark:bg-purple-500/20", icon: "text-purple-600 dark:text-purple-400" },
+      mindmap: { bg: "bg-teal-500/15 dark:bg-teal-500/20", icon: "text-teal-600 dark:text-teal-400" },
+      flashcards: { bg: "bg-blue-500/15 dark:bg-blue-500/20", icon: "text-blue-600 dark:text-blue-400" },
+      quiz: { bg: "bg-emerald-500/15 dark:bg-emerald-500/20", icon: "text-emerald-600 dark:text-emerald-400" },
+      note: { bg: "bg-synapse-500/15 dark:bg-synapse-500/20", icon: "text-synapse-600 dark:text-synapse-500" },
+      report: { bg: "bg-orange-500/15 dark:bg-orange-500/20", icon: "text-orange-600 dark:text-orange-400" },
+      video: { bg: "bg-rose-500/15 dark:bg-rose-500/20", icon: "text-rose-600 dark:text-rose-400" },
+      infographic: { bg: "bg-indigo-500/15 dark:bg-indigo-500/20", icon: "text-indigo-600 dark:text-indigo-400" },
+      slides: { bg: "bg-amber-500/15 dark:bg-amber-500/20", icon: "text-amber-600 dark:text-amber-400" },
+      table: { bg: "bg-cyan-500/15 dark:bg-cyan-500/20", icon: "text-cyan-600 dark:text-cyan-400" },
     }
-    return styleMap[type] || { bg: "bg-muted", icon: "text-muted-foreground" }
+    return styleMap[type] || { bg: "bg-synapse-500/15 dark:bg-synapse-500/20", icon: "text-synapse-600 dark:text-synapse-500" }
   }
 
   const getStatusBadge = (status?: string) => {
@@ -426,28 +435,36 @@ export function StudioPanel({
     <div className="w-full h-full rounded-2xl overflow-hidden bg-card flex flex-col relative shadow-sm border border-border/40">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => {
-              setActiveView("studio")
-              setSelectedItem(null)
-              setNoteTitle("")
-              setNoteContent("")
-              onResetStudioWidth?.()
-            }} 
-            className={`font-semibold hover:text-primary transition-colors ${activeView !== "studio" ? "text-muted-foreground" : ""}`}
-          >
-            Studio
-          </button>
-          {activeView === "note" && (
-            <>
-              <span className="text-muted-foreground">{">"}</span>
-              <span className="text-sm">Note</span>
-            </>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-synapse-500" />
+            <button 
+              onClick={() => {
+                setActiveView("studio")
+                setSelectedItem(null)
+                setNoteTitle("")
+                setNoteContent("")
+                onResetStudioWidth?.()
+              }} 
+              className={`font-semibold hover:text-primary transition-colors ${activeView !== "studio" ? "text-muted-foreground" : ""}`}
+            >
+              Studio
+            </button>
+            {activeView === "note" && (
+              <>
+                <span className="text-muted-foreground">{">"}</span>
+                <span className="text-sm">Note</span>
+              </>
+            )}
+          </div>
+          {activeView === "studio" && (
+            <p className="text-xs text-muted-foreground mt-0.5 ml-7">
+              Generate content from your sources
+            </p>
           )}
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={onCollapse} className="p-1 hover:bg-secondary rounded transition-colors">
+          <button onClick={onCollapse} className="p-1.5 hover:bg-secondary rounded-lg transition-colors">
             <PanelRightClose className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
@@ -466,25 +483,25 @@ export function StudioPanel({
                     className={`
                       relative flex items-center gap-3 p-3 rounded-xl
                       ${tool.bgColor} border ${tool.borderColor}
-                      hover:brightness-110 active:scale-[0.98]
+                      ${tool.hoverBg} active:scale-[0.98]
                       transition-all duration-200 ease-out
                       text-left group overflow-hidden
-                      ${animatingTool === tool.label ? "animate-pulse scale-105 ring-2 ring-primary" : ""}
+                      text-white dark:text-neural-100
+                      ${animatingTool === tool.label ? "ring-2 ring-synapse-500 ring-offset-2 ring-offset-card" : ""}
                       ${generatingTool === tool.label ? "opacity-70" : ""}
                     `}
                   >
                     {animatingTool === tool.label && (
                       <div className="absolute inset-0 pointer-events-none">
-                        <Sparkles className="absolute top-1 right-1 w-3 h-3 text-warning animate-ping" />
-                        <Sparkles className="absolute bottom-1 left-1 w-3 h-3 text-warning animate-ping delay-100" />
+                        <Sparkles className="absolute top-1 right-1 w-3 h-3 text-synapse-400 animate-ping" />
+                        <Sparkles className="absolute bottom-1 left-1 w-3 h-3 text-synapse-400 animate-ping delay-100" />
                       </div>
                     )}
 
                     <tool.icon className={`w-5 h-5 ${tool.iconColor} flex-shrink-0`} />
-                    <span className="text-xs font-medium flex-1">{tool.label}</span>
-                    {/* <Pencil className="w-3.5 h-3.5 text-muted-foreground opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0" /> */}
+                    <span className="text-sm font-medium flex-1">{tool.label}</span>
                     {tool.beta && (
-                      <span className="absolute top-1.5 right-6 text-[9px] bg-primary/40 text-primary px-1 py-0.5 rounded font-medium">
+                      <span className="absolute top-1.5 right-2 text-[9px] bg-synapse-600 text-white px-1.5 py-0.5 rounded-full font-medium">
                         BETA
                       </span>
                     )}
@@ -536,7 +553,7 @@ export function StudioPanel({
             )}
 
             {/* Generated Items List */}
-            <div className="px-4 py-4 space-y-1">
+            <div className="px-4 py-4 space-y-2">
               {items.map((item) => {
                 const ItemIcon = getItemIcon(item.type)
                 const iconStyle = getItemIconStyle(item.type)
@@ -547,15 +564,17 @@ export function StudioPanel({
                     key={item.id}
                     onClick={() => handleItemClick(item)}
                     className={`
-                      flex items-center gap-3 p-2.5 rounded-lg cursor-pointer
-                      hover:bg-secondary/80 transition-all duration-300 group
-                      ${item.isNew ? "animate-in fade-in slide-in-from-top-2 bg-primary/5 border border-primary/20" : ""}
-                      ${isProcessing ? "opacity-70" : ""}
-                      ${item.status === "failed" ? "opacity-60" : ""}
+                      flex items-center gap-3 p-3 rounded-xl cursor-pointer
+                      bg-surface-1 dark:bg-surface-2 border border-border/50
+                      hover:bg-surface-2 dark:hover:bg-surface-3 hover:border-synapse-500/30
+                      transition-all duration-200 group shadow-sm hover:shadow-md
+                      ${item.isNew ? "animate-in fade-in slide-in-from-top-2 ring-2 ring-synapse-500/30" : ""}
+                      ${isProcessing ? "opacity-80" : ""}
+                      ${item.status === "failed" ? "opacity-60 border-destructive/30" : ""}
                     `}
                   >
                     <div
-                      className={`w-8 h-8 rounded-lg ${iconStyle.bg} flex items-center justify-center flex-shrink-0`}
+                      className={`w-9 h-9 rounded-lg ${iconStyle.bg} flex items-center justify-center flex-shrink-0 border border-synapse-500/10`}
                     >
                       {isProcessing ? (
                         <Loader2 className={`w-4 h-4 ${iconStyle.icon} animate-spin`} />
@@ -571,19 +590,14 @@ export function StudioPanel({
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {getStatusBadge(item.status)}
-                      {/* {item.hasInteractive && item.status === "completed" && (
-                        <span className="px-2 py-0.5 text-[10px] bg-primary/20 text-primary rounded-full font-medium">
-                          Interactive
-                        </span>
-                      )} */}
                       {item.type === "audio" && item.status === "completed" && (
-                        <button className="p-1.5 rounded-full bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Play className="w-3 h-3 text-primary fill-primary" />
+                        <button className="p-1.5 rounded-full bg-synapse-500/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Play className="w-3 h-3 text-synapse-500 fill-synapse-500" />
                         </button>
                       )}
                       <button 
                         onClick={(e) => handleDeleteItem(e, item.id)}
-                        className="p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/20 rounded"
+                        className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/20 rounded-lg"
                       >
                         <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                       </button>

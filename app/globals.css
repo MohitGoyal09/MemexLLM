@@ -56,6 +56,9 @@
   --color-surface-3: var(--surface-3);
   --color-surface-4: var(--surface-4);
 
+  /* Border emphasis */
+  --color-border-emphasis: var(--border-emphasis);
+
   /* Sidebar */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -102,6 +105,40 @@
   --color-neural-800: var(--neural-800);
   --color-neural-900: var(--neural-900);
   --color-neural-950: var(--neural-950);
+
+  --color-insight-50: var(--insight-50);
+  --color-insight-100: var(--insight-100);
+  --color-insight-200: var(--insight-200);
+  --color-insight-300: var(--insight-300);
+  --color-insight-400: var(--insight-400);
+  --color-insight-500: var(--insight-500);
+  --color-insight-600: var(--insight-600);
+  --color-insight-700: var(--insight-700);
+  --color-insight-800: var(--insight-800);
+  --color-insight-900: var(--insight-900);
+  --color-insight-950: var(--insight-950);
+
+  --color-success-50: var(--success-50);
+  --color-success-100: var(--success-100);
+  --color-success-200: var(--success-200);
+  --color-success-300: var(--success-300);
+  --color-success-400: var(--success-400);
+  --color-success-500: var(--success-500);
+  --color-success-600: var(--success-600);
+  --color-success-700: var(--success-700);
+  --color-success-800: var(--success-800);
+  --color-success-900: var(--success-900);
+
+  /* Shadow system - maps to brand.css shadows */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+  --shadow-inset: var(--shadow-inset);
+  --shadow-primary: var(--shadow-primary);
+  --shadow-primary-lg: var(--shadow-primary-lg);
 }
 
 @layer base {
@@ -116,7 +153,7 @@
   }
 }
 
-/* Custom scrollbar with brand warmth */
+/* Custom scrollbar with brand warmth - adapts to light/dark */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -127,12 +164,13 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--neural-700, oklch(0.35 0.008 50));
+  background: var(--muted-foreground);
   border-radius: 3px;
+  opacity: 0.5;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--synapse-700, oklch(0.48 0.13 63));
+  background: var(--synapse-600);
 }
 
 /* TipTap Editor List Styles */

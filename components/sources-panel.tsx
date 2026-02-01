@@ -20,6 +20,9 @@ import {
   RefreshCw,
   Trash2,
   MoreVertical,
+  File,
+  Link2,
+  Library,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -57,14 +60,14 @@ interface SourcesPanelProps {
 
 const getSourceIcon = (type: Source["type"]) => {
   const iconMap = {
-    pdf: { icon: FileText, bg: "bg-[var(--file-pdf)]/20", color: "text-[var(--file-pdf)]" },
-    doc: { icon: FileText, bg: "bg-[var(--file-doc)]/20", color: "text-[var(--file-doc)]" },
-    image: { icon: FileImage, bg: "bg-[var(--file-image)]/20", color: "text-[var(--file-image)]" },
-    video: { icon: FileVideo, bg: "bg-[var(--file-video)]/20", color: "text-[var(--file-video)]" },
-    audio: { icon: FileAudio, bg: "bg-[var(--file-audio)]/20", color: "text-[var(--file-audio)]" },
-    link: { icon: Globe, bg: "bg-[var(--file-link)]/20", color: "text-[var(--file-link)]" },
-    text: { icon: FileText, bg: "bg-[var(--file-text)]/20", color: "text-[var(--file-text)]" },
-    file: { icon: FileText, bg: "bg-muted/50", color: "text-muted-foreground" },
+    pdf: { icon: FileText, bg: "bg-red-500/15 dark:bg-red-500/20", color: "text-red-600 dark:text-red-400" },
+    doc: { icon: FileText, bg: "bg-blue-500/15 dark:bg-blue-500/20", color: "text-blue-600 dark:text-blue-400" },
+    image: { icon: FileImage, bg: "bg-emerald-500/15 dark:bg-emerald-500/20", color: "text-emerald-600 dark:text-emerald-400" },
+    video: { icon: FileVideo, bg: "bg-purple-500/15 dark:bg-purple-500/20", color: "text-purple-600 dark:text-purple-400" },
+    audio: { icon: FileAudio, bg: "bg-orange-500/15 dark:bg-orange-500/20", color: "text-orange-600 dark:text-orange-400" },
+    link: { icon: Link2, bg: "bg-cyan-500/15 dark:bg-cyan-500/20", color: "text-cyan-600 dark:text-cyan-400" },
+    text: { icon: FileText, bg: "bg-slate-500/15 dark:bg-slate-500/20", color: "text-slate-600 dark:text-slate-400" },
+    file: { icon: File, bg: "bg-gray-500/15 dark:bg-gray-500/20", color: "text-gray-600 dark:text-gray-400" },
   }
   return (iconMap as any)[type] || iconMap.text
 }
@@ -151,7 +154,10 @@ export function SourcesPanel({
     <div className="w-full h-full rounded-2xl overflow-hidden bg-card flex flex-col shadow-sm border border-border/40">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
-        <h2 className="font-semibold">Sources</h2>
+        <div className="flex items-center gap-2">
+          <Library className="w-5 h-5 text-synapse-500" />
+          <h2 className="font-semibold">Sources</h2>
+        </div>
         <div className="flex items-center gap-1">
           {onRefresh && (
             <button 
@@ -256,7 +262,7 @@ export function SourcesPanel({
         {/* Sources List */}
         <div className="px-4 py-2">
           {sources.length > 0 ? (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {sources.map((source) => {
                 const { icon: SourceIcon, bg, color } = getSourceIcon(source.type)
                 const isProcessing = source.status === "pending" || source.status === "processing"
@@ -270,10 +276,12 @@ export function SourcesPanel({
                       else sourceRefs.current.delete(source.id)
                     }}
                     className={cn(
-                      "w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-secondary transition-all text-left group",
+                      "w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left group",
+                      "bg-surface-1 dark:bg-surface-2 border border-border/50 shadow-sm",
+                      "hover:bg-surface-2 dark:hover:bg-surface-3 hover:shadow-md hover:border-synapse-500/30",
                       isProcessing && "opacity-70",
-                      isFailed && "opacity-50",
-                      highlightAnimation === source.id && "ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/10 animate-pulse"
+                      isFailed && "opacity-50 border-destructive/30",
+                      highlightAnimation === source.id && "ring-2 ring-synapse-500 ring-offset-2 ring-offset-background bg-synapse-500/10 animate-pulse"
                     )}
                   >
                     <button

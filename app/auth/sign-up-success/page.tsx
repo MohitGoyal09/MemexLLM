@@ -9,23 +9,17 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default function Page() {
+function SignUpSuccessContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const searchParams = useSearchParams();
-  // TODO: In a real app, you might want to pass the email securely or store it in context
-  // For now, we'll try to get it if the user just signed up (optional improvement)
-  const [email, setEmail] = useState<string | null>(null); 
+  const [email, setEmail] = useState<string | null>(null);
 
   const handleResend = async () => {
-    // We need the email to resend. If we don't have it (page refresh), redirect to login
-    // In a robust flow, we might store 'lastSignupEmail' in sessionStorage
     const emailToResend = email || prompt("Please enter your email to resend the link:");
 
     if (!emailToResend) return;
@@ -67,21 +61,21 @@ export default function Page() {
               <p className="text-sm text-neutral-400">
                 Click the link in the email to verify your account. If you don't see it, check your spam folder.
               </p>
-              
+
               {message && (
                 <p className="text-sm text-green-500 bg-green-500/10 p-2 rounded">
                   {message}
                 </p>
               )}
-              
+
               {error && (
                 <p className="text-sm text-red-500 bg-red-500/10 p-2 rounded">
                   {error}
                 </p>
               )}
 
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full"
                 onClick={handleResend}
                 disabled={isLoading}
@@ -100,5 +94,23 @@ export default function Page() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+        <div className="w-full max-w-sm">
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-center text-muted-foreground">Loading...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    }>
+      <SignUpSuccessContent />
+    </Suspense>
   );
 }
