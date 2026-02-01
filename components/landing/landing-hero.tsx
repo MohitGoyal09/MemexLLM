@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LuminaLogo } from "@/components/lumina-logo";
+import { LuminaLogo, LuminaLogoAnimated } from "@/components/lumina-logo";
 import {
   ArrowRight,
   Sparkles,
@@ -151,11 +151,18 @@ export function LandingHero() {
         >
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              {[...Array(4)].map((_, i) => (
+              {[
+                 { initials: "JD", color: "bg-blue-500" },
+                 { initials: "AS", color: "bg-emerald-500" },
+                 { initials: "MK", color: "bg-purple-500" },
+                 { initials: "R", color: "bg-amber-500" },
+              ].map((user, i) => (
                 <div
                   key={i}
-                  className="w-8 h-8 rounded-full bg-gradient-to-br from-synapse-400 to-synapse-600 border-2 border-surface-0"
-                />
+                  className={`w-8 h-8 rounded-full ${user.color} border-2 border-surface-0 flex items-center justify-center text-[10px] font-bold text-white shadow-sm`}
+                >
+                  {user.initials}
+                </div>
               ))}
             </div>
             <span className="font-medium text-foreground">10,000+</span> researchers
@@ -197,7 +204,7 @@ export function LandingHero() {
                   {/* Sidebar */}
                   <div className="col-span-3 rounded-xl bg-surface-1 border border-border p-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <LuminaLogo className="w-6 h-6" />
+                      <LuminaLogoAnimated className="w-6 h-6" />
                       <div className="h-3 w-20 bg-surface-3 rounded" />
                     </div>
                     <div className="space-y-2">
