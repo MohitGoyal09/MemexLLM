@@ -159,7 +159,7 @@ export default function HomePage() {
             </div>
 
             {/* Animated icon with glow-pulse */}
-            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/30 flex items-center justify-center mb-8 animate-lumina-pulse">
+            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/30 flex items-center justify-center mb-8 animate-pulse">
               <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-xl animate-pulse" />
               <Sparkles className="w-12 h-12 text-amber-400 relative z-10" />
             </div>

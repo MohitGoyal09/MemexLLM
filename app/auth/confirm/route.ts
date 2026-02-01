@@ -9,6 +9,13 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/home";
 
+  const code = searchParams.get("code");
+  const error_description = searchParams.get("error_description");
+
+  if (error_description) {
+    redirect(`/auth/login?error=${encodeURIComponent(error_description)}`);
+  }
+
   if (token_hash && type) {
     const supabase = await createClient();
 
@@ -17,10 +24,19 @@ export async function GET(request: NextRequest) {
       token_hash,
     });
     if (!error) {
-      // redirect user to specified redirect URL or home page
       redirect(next);
     } else {
-      // redirect the user to an error page with instructions
+      redirect(`/auth/login?error=${encodeURIComponent(error.message)}`);
+    }
+  }
+
+  // Support PKCE 'code' flow if redirected here by mistake or config
+  if (code) {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      redirect(next);
+    } else {
       redirect(`/auth/login?error=${encodeURIComponent(error.message)}`);
     }
   }

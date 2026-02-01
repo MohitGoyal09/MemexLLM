@@ -73,7 +73,7 @@ export default function LandingPage() {
               {/* Logo */}
               <div className="flex items-center gap-3 mb-8">
                 <LuminaLogo className="w-14 h-14 animate-glow-pulse" />
-                <span className="text-3xl font-display font-bold">Lumina</span>
+                <span className="text-3xl font-display font-bold">MemexLLM</span>
               </div>
 
               {/* Headline */}
@@ -163,7 +163,7 @@ export default function LandingPage() {
               Sound familiar?
             </h2>
             <p className="text-neutral-500 text-center mb-16 max-w-2xl mx-auto">
-              We built Lumina for researchers tired of fighting their tools
+              We built MemexLLM for researchers tired of fighting their tools
             </p>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -241,7 +241,7 @@ export default function LandingPage() {
         <section className="py-24 px-8 lg:px-16 border-t border-neutral-900">
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl lg:text-4xl font-display font-bold text-center mb-16">
-              Researchers, students, and curious minds love Lumina
+              Researchers, students, and curious minds love MemexLLM
             </h2>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -340,7 +340,7 @@ export default function LandingPage() {
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <LuminaLogo className="w-10 h-10" />
-                  <span className="text-2xl font-display font-bold">Lumina</span>
+                  <span className="text-2xl font-display font-bold">MemexLLM</span>
                 </div>
                 <p className="text-neutral-500 max-w-xs">
                   Transform information chaos into crystallized understanding.
@@ -379,7 +379,7 @@ export default function LandingPage() {
             {/* Bottom */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-neutral-900">
               <p className="text-sm text-neutral-600">
-                © 2024 Lumina. Open source under MIT license.
+                © 2026 MemexLLM. Open source under MIT license.
               </p>
               <div className="flex items-center gap-4">
                 <a href="#" className="text-neutral-500 hover:text-white transition-colors">

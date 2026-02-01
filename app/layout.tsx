@@ -39,14 +39,14 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "SynapseAI - Your AI Research Assistant",
-    template: "%s | SynapseAI",
+    default: "MemexLLM - Your AI Research Assistant",
+    template: "%s | MemexLLM",
   },
-  description: "Transform your documents into intelligent insights with SynapseAI. AI-powered research assistant that reads, understands, and synthesizes information for better questions and deeper understanding.",
+  description: "Transform your documents into intelligent insights with MemexLLM. AI-powered research assistant that reads, understands, and synthesizes information for better questions and deeper understanding.",
   keywords: ["AI", "research", "documents", "insights", "analysis", "knowledge", "AI assistant", "document analysis", "research tool", "knowledge synthesis"],
-  authors: [{ name: "SynapseAI" }],
-  creator: "SynapseAI",
-  publisher: "SynapseAI",
+  authors: [{ name: "MemexLLM" }],
+  creator: "MemexLLM",
+  publisher: "MemexLLM",
   robots: {
     index: true,
     follow: true,
@@ -61,16 +61,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "SynapseAI",
-    title: "SynapseAI - Your AI Research Assistant",
-    description: "Transform your documents into intelligent insights with SynapseAI",
+    siteName: "MemexLLM",
+    title: "MemexLLM - Your AI Research Assistant",
+    description: "Transform your documents into intelligent insights with MemexLLM",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SynapseAI - Your AI Research Assistant",
-    description: "Transform your documents into intelligent insights with SynapseAI",
+    title: "MemexLLM - Your AI Research Assistant",
+    description: "Transform your documents into intelligent insights with MemexLLM",
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://synapseai.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://memexllm.app"),
 }
 
 export const viewport: Viewport = {

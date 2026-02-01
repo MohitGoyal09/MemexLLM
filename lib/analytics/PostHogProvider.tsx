@@ -10,6 +10,10 @@ export function PHProvider({ children }: { children: ReactNode }) {
             api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
             capture_pageview: false, // Manually capture in PageView component
             capture_pageleave: true,
+            // Enable debug mode in development to see events in console
+            loaded: (posthog) => {
+                if (process.env.NODE_ENV === 'development') posthog.debug()
+            }
         })
     }
   }, [])

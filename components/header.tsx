@@ -55,10 +55,10 @@ export function Header() {
       <Link
         href="/home"
         className="flex items-center gap-3 group transition-transform duration-300 hover:scale-105"
-        aria-label="Lumina - Go to home"
+        aria-label="MemexLLM - Go to home"
       >
         <LuminaLogo className="w-8 h-8 group-hover:animate-glow-pulse transition-all" aria-hidden="true" />
-        <span className="text-xl font-display font-semibold text-foreground group-hover:text-primary transition-colors">Lumina</span>
+        <span className="text-xl font-display font-semibold text-foreground group-hover:text-primary transition-colors">MemexLLM</span>
       </Link>
 
       <nav className="flex items-center gap-3" aria-label="Main navigation">
@@ -81,6 +81,14 @@ export function Header() {
                 </p>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="cursor-pointer py-2"
+              onClick={() => router.push("/settings")}
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive cursor-pointer py-2"

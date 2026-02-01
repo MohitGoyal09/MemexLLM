@@ -26,6 +26,8 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResendLoading, setIsResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
 
@@ -52,8 +54,31 @@ export function LoginForm({
       const errorMessage = error instanceof Error ? error.message : "An error occurred";
       authLogger.logLoginFailure(email, errorMessage);
       setError(errorMessage);
+      setResendSuccess(false);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    const supabase = createClient();
+    setIsResendLoading(true);
+    setResendSuccess(false);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+      
+      if (error) throw error;
+      setResendSuccess(true);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to resend email";
+      setError(errorMessage);
+    } finally {
+      setIsResendLoading(false);
     }
   };
 
@@ -123,7 +148,30 @@ export function LoginForm({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md" role="alert" aria-live="polite">{error}</p>}
+              {error && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md" role="alert" aria-live="polite">
+                    {error}
+                  </p>
+                  {error.toLowerCase().includes("email not confirmed") && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleResendVerification}
+                      disabled={isResendLoading}
+                      className="w-full border-destructive text-destructive hover:bg-destructive/10"
+                    >
+                      {isResendLoading ? "Sending..." : "Resend Verification Email"}
+                    </Button>
+                  )}
+                </div>
+              )}
+              {resendSuccess && (
+                <p className="text-sm text-green-600 bg-green-50 px-3 py-2 rounded-md">
+                  Verification email sent! Please check your inbox.
+                </p>
+              )}
               <Button type="submit" className="w-full h-11 hover:shadow-primary transition-all" disabled={isLoading} aria-busy={isLoading}>
                 {isLoading ? "Logging in..." : "Login"}
               </Button>
