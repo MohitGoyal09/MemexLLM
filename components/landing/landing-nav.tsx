@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { LuminaLogo } from "@/components/lumina-logo";
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -16,6 +17,16 @@ const navLinks = [
 export function LandingNav() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,7 +48,7 @@ export function LandingNav() {
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <LuminaLogo className="w-9 h-9 transition-transform duration-300 group-hover:scale-105" />
+            <Logo className="w-24 h-24 transition-transform duration-300 group-hover:scale-105" />
             <span className="text-xl font-semibold text-foreground tracking-tight">
               MemexLLM
             </span>
@@ -58,16 +69,26 @@ export function LandingNav() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link href="/auth/login">
-              <Button variant="ghost" size="sm" className="font-medium">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/auth/sign-up">
-              <Button size="sm" className="font-semibold">
-                Get Started Free
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/home">
+                <Button size="sm" className="font-semibold">
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="ghost" size="sm" className="font-medium">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button size="sm" className="font-semibold">
+                    Get Started Free
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -99,16 +120,26 @@ export function LandingNav() {
                 </a>
               ))}
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
-                <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full font-medium">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/auth/sign-up" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button className="w-full font-semibold">
-                    Get Started Free
-                  </Button>
-                </Link>
+                {isAuthenticated ? (
+                  <Link href="/home" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full font-semibold">
+                      Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full font-medium">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/auth/sign-up" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button className="w-full font-semibold">
+                        Get Started Free
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

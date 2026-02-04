@@ -5,8 +5,9 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { X, Search, Globe, Sparkles, Upload, Link, HardDrive, FileText, ArrowRight, Loader2, CheckCircle, AlertCircle, ArrowLeft, ClipboardPaste } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { SynapseLogo } from "@/components/synapse-logo"
+import { Logo } from "@/components/logo"
 
+import { GoogleDriveSelector } from "@/components/google-drive"
 import { Source, SourceType } from "@/lib/types"
 import { documentsApi } from "@/lib/api"
 
@@ -48,7 +49,7 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
   const [isUploading, setIsUploading] = useState(false)
   const [fileSizeError, setFileSizeError] = useState<string | null>(null)
   
-  const [view, setView] = useState<"default" | "website" | "text">("default")
+  const [view, setView] = useState<"default" | "website" | "text" | "gdrive">("default")
   const [urlInput, setUrlInput] = useState("")
   const [textInput, setTextInput] = useState("")
   const [textTitle, setTextTitle] = useState("")
@@ -247,7 +248,7 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <SynapseLogo className="w-8 h-8" aria-hidden="true" />
+            <Logo className="w-12 h-12" />
             <span className="text-xl font-semibold">MemexLLM</span>
           </div>
           <button onClick={() => onOpenChange(false)} className="p-2 hover:bg-secondary rounded-lg transition-colors" aria-label="Close modal">
@@ -367,6 +368,16 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
               </div>
             </div>
           </div>
+        ) : view === "gdrive" ? (
+          <GoogleDriveSelector
+            open={true}
+            onOpenChange={(open) => !open && setView("default")}
+            notebookId={notebookId || ""}
+            onImportComplete={() => {
+              setView("default")
+              onOpenChange(false)
+            }}
+          />
         ) : (
           <div className="p-6">
           <div className="flex items-center justify-between mb-2">
@@ -377,7 +388,7 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
             </Button> */}
           </div>
           <p className="text-muted-foreground mb-6">
-            Sources let SynapseAI base its responses on the information that matters most to you.
+            Sources let MemexLLM base its responses on the information that matters most to you.
             <br />
             (Examples: marketing plans, course reading, research notes, meeting transcripts, sales documents, etc.)
           </p>
@@ -491,7 +502,7 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
               <Link className="w-4 h-4" />
               Websites
             </Button>
-            <Button variant="secondary" className="gap-2 rounded-full">
+            <Button variant="secondary" className="gap-2 rounded-full" onClick={() => setView("gdrive")}>
               <HardDrive className="w-4 h-4" />
               Drive
             </Button>

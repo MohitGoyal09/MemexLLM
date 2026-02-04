@@ -8,3 +8,4 @@ export { chatApi } from "./chat";
 export { generationApi, tasksApi } from "./generation";
 export { authApi, healthApi } from "./auth";
 export * as feedbackApi from "./feedback";
+export * as gdriveApi from "./gdrive";

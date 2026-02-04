@@ -1,5 +1,5 @@
 import { Globe, MoreVertical } from "lucide-react"
-import { SynapseLogo } from "./synapse-logo"
+import { Logo } from "@/components/logo"
 
 interface NotebookListItemProps {
   notebook: {

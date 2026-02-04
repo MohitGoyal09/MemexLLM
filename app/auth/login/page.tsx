@@ -1,5 +1,5 @@
 import { LoginForm } from "@/components/login-form";
-import { LuminaLogo } from "@/components/lumina-logo";
+import { Logo } from "@/components/logo";
 import Link from "next/link";
 
 export default function Page() {
@@ -12,7 +12,7 @@ export default function Page() {
 
       <div className="w-full max-w-sm z-10 flex flex-col gap-8">
         <Link href="/" className="flex items-center gap-2.5 mx-auto group">
-            <LuminaLogo className="w-10 h-10 group-hover:scale-105 transition-transform" />
+            <Logo className="w-10 h-10 group-hover:scale-105 transition-transform" />
             <span className="text-2xl font-bold text-foreground group-hover:text-synapse-500 transition-colors">MemexLLM</span>
         </Link>
         <LoginForm />

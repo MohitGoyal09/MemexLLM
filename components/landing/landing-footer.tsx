@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LuminaLogo } from "@/components/lumina-logo";
+import { Logo } from "@/components/logo";
 import { Github, Twitter, MessageCircle, Mail } from "lucide-react";
 
 const footerLinks = {
@@ -25,7 +25,7 @@ const footerLinks = {
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
+    { label: "Terms of Service", href: "/tos" },
     { label: "Security", href: "/security" },
     { label: "GDPR", href: "/gdpr" },
   ],
@@ -47,7 +47,7 @@ export function LandingFooter() {
           {/* Brand column */}
           <div className="col-span-2 md:col-span-3 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <LuminaLogo className="w-8 h-8" />
+              <Logo className="w-10 h-10" />
               <span className="text-lg font-semibold text-foreground">
                 MemexLLM
               </span>

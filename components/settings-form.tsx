@@ -16,6 +16,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
 
+import { useSearchParams } from "next/navigation";
+import { GoogleDriveStatus } from "@/components/google-drive/GoogleDriveConnectionStatus";
+import { handleGoogleDriveCallback } from "@/lib/api/gdrive";
+import { toast } from "sonner";
+
 export function SettingsForm({
   className,
   ...props
@@ -27,6 +32,7 @@ export function SettingsForm({
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -40,6 +46,53 @@ export function SettingsForm({
     };
     fetchUser();
   }, [router]);
+
+  const [connectParams, setConnectParams] = useState<{ code: string; state?: string } | null>(null);
+
+  // Detect OAuth callback params but DO NOT auto-fire to avoid Cookie race conditions
+  useEffect(() => {
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
+    const errorParam = searchParams.get("error");
+
+    if (errorParam) {
+      toast.error(`Google Drive connection failed: ${errorParam}`);
+      router.replace("/settings");
+      return;
+    }
+
+    if (code) {
+        setConnectParams({ code, state: state || undefined });
+    }
+  }, [searchParams, router]);
+
+  const handleCompleteConnection = async () => {
+      if (!connectParams) return;
+      
+      try {
+          const loadingToast = toast.loading("Finalizing connection...");
+          // Clean URL immediately to prevent re-triggering
+          router.replace("/settings");
+          
+          const result = await handleGoogleDriveCallback(connectParams.code, connectParams.state);
+          toast.dismiss(loadingToast);
+
+          if (result.success) {
+            toast.success("Successfully connected to Google Drive");
+            setSuccess(result.message);
+            setConnectParams(null);
+          } else {
+            toast.error(result.message || "Failed to connect");
+            setError(result.message);
+          }
+      } catch (err) {
+          toast.dismiss();
+          const msg = err instanceof Error ? err.message : "Connection failed";
+          console.error("Callback error:", err);
+          toast.error(msg);
+          setError(msg);
+      }
+  };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +134,39 @@ export function SettingsForm({
          <h1 className="text-3xl font-display font-bold">Settings</h1>
          <p className="text-muted-foreground">Manage your account settings and preferences.</p>
       </div>
+
+     {connectParams && (
+        <Card className="border-primary/50 bg-primary/5">
+            <CardHeader>
+                <CardTitle className="text-primary">Complete Google Drive Connection</CardTitle>
+                <CardDescription>
+                    You have successfully authenticated with Google. Click below to finalize the link.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button onClick={handleCompleteConnection} className="w-full">
+                    Complete Connection
+                </Button>
+            </CardContent>
+        </Card>
+     )}
+
+     <Card>
+        <CardHeader>
+          <CardTitle>Integrations</CardTitle>
+          <CardDescription>
+            Manage external service connections.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label>Google Drive</Label>
+              <GoogleDriveStatus />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

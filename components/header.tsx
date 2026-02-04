@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Settings, Grid3X3, User, Plus, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { LuminaLogo } from "@/components/lumina-logo"
+import { Logo } from "@/components/logo"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,7 +57,7 @@ export function Header() {
         className="flex items-center gap-3 group transition-transform duration-300 hover:scale-105"
         aria-label="MemexLLM - Go to home"
       >
-        <LuminaLogo className="w-8 h-8 group-hover:animate-glow-pulse transition-all" aria-hidden="true" />
+        <Logo className="w-16 h-16 group-hover:animate-glow-pulse transition-all" />
         <span className="text-xl font-semibold text-foreground group-hover:text-synapse-400 transition-colors duration-200">MemexLLM</span>
       </Link>
 

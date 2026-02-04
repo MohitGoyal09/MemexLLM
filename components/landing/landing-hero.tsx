@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LuminaLogo, LuminaLogoAnimated } from "@/components/lumina-logo";
+import { Logo } from "@/components/logo";
 import {
   ArrowRight,
   Sparkles,
@@ -204,7 +204,7 @@ export function LandingHero() {
                   {/* Sidebar */}
                   <div className="col-span-3 rounded-xl bg-surface-1 border border-border p-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <LuminaLogoAnimated className="w-6 h-6" />
+                      <Logo className="w-8 h-8" />
                       <div className="h-3 w-20 bg-surface-3 rounded" />
                     </div>
                     <div className="space-y-2">

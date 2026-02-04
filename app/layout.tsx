@@ -71,6 +71,11 @@ export const metadata: Metadata = {
     description: "Transform your documents into intelligent insights with MemexLLM",
   },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://memexllm.app"),
+  icons: {
+    icon: "/white-logo.svg",
+    shortcut: "/white-logo.svg",
+    apple: "/white-logo.svg",
+  },
 }
 
 export const viewport: Viewport = {

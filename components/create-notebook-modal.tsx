@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { X, Upload, Sparkles, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { SynapseLogo } from "@/components/synapse-logo"
+import { Logo } from "@/components/logo"
 import { useRouter } from "next/navigation"
 import { notebooksApi } from "@/lib/api"
 
@@ -53,7 +53,7 @@ export function CreateNotebookModal({ open, onOpenChange }: CreateNotebookModalP
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <SynapseLogo className="w-8 h-8" aria-hidden="true" />
+            <Logo className="w-10 h-10" />
             <span id="create-notebook-title" className="text-xl font-semibold">Create New Notebook</span>
           </div>
           <button

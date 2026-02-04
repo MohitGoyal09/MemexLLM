@@ -1,5 +1,5 @@
 import { Globe, Book, Bot, MoreVertical, Trash2, Pencil, Loader2 } from "lucide-react"
-import { SynapseLogo } from "./synapse-logo"
+import { Logo } from "@/components/logo"
 import {
   DropdownMenu,
   DropdownMenuContent,

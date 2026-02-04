@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Plus, Share2, Settings, Grid3X3, User, TrendingUp, Globe, Loader2, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { SynapseLogo } from "@/components/synapse-logo"
+import { Logo } from "@/components/logo"
 import {
   DropdownMenu,
   DropdownMenuContent,
