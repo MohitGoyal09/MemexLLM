@@ -23,6 +23,8 @@ Configuration is managed through environment variables. Next.js automatically lo
 | `NEXT_PUBLIC_APP_URL` | Frontend app URL | `http://localhost:3000` |
 | `NEXT_PUBLIC_SENTRY_DSN` | Sentry error tracking DSN | - |
 | `NEXT_PUBLIC_POSTHOG_KEY` | PostHog analytics key | - |
+| `NEXT_PUBLIC_POSTHOG_HOST` | PostHog host URL | `https://us.i.posthog.com` |
+| `NEXT_PUBLIC_LANGFUSE_HOST` | Langfuse host URL | `https://cloud.langfuse.com` |
 | `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | Google Analytics ID | - |
 
 ## Configuration Files
@@ -188,7 +190,9 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # Optional: Analytics
 NEXT_PUBLIC_SENTRY_DSN=
-NEXT_PUBLIC_POSTHOG_KEY=
+NEXT_PUBLIC_POSTHOG_KEY=phc_...
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+NEXT_PUBLIC_LANGFUSE_HOST=https://cloud.langfuse.com
 NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=
 ```
 

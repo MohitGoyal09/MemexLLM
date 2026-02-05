@@ -670,12 +670,12 @@ export function ChatPanel({
   }, [])
 
   // Speech-to-Text handler
-  const toggleSpeechRecognition = useCallback(async () => {
+  const toggleSpeechRecognition = useCallback(() => {
     // Check if browser supports Web Speech API
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     
     if (!SpeechRecognition) {
-      console.warn("Speech recognition not supported in this browser")
+      import("sonner").then(mod => mod.toast.error("Speech recognition is not supported in this browser"))
       return
     }
 
@@ -686,50 +686,66 @@ export function ChatPanel({
       return
     }
 
-    // Explicitly request permission to ensure prompt appears
+    // Start listening directly - let browser handle permissions natively with the "grey bubble"
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      stream.getTracks().forEach(track => track.stop())
-    } catch (err) {
-      console.error("Microphone permission denied:", err)
-      const { toast } = await import("sonner")
-      toast.error("Microphone access is required for speech to text. Please enable it in your browser settings.")
-      return
-    }
+      const recognition = new SpeechRecognition()
+      recognition.continuous = false
+      recognition.interimResults = true // Enable interim results for better feedback
+      recognition.lang = 'en-US'
 
-    // Start listening
-    const recognition = new SpeechRecognition()
-    recognition.continuous = false
-    recognition.interimResults = false
-    recognition.lang = 'en-US'
-
-    recognition.onstart = () => {
-      setIsListening(true)
-    }
-
-    recognition.onresult = (event: any) => {
-      const transcript = Array.from(event.results)
-        .map((result: any) => result[0].transcript)
-        .join('')
-      
-      setInput(prev => (prev ? prev + " " : "") + transcript)
-    }
-
-    recognition.onerror = async (event: any) => {
-      console.error('Speech recognition error:', event.error)
-      if (event.error === 'not-allowed') {
-        const { toast } = await import("sonner")
-        toast.error("Microphone access denied. Please check your browser permissions.")
+      recognition.onstart = () => {
+        setIsListening(true)
       }
+
+      recognition.onresult = (event: any) => {
+        // Get the latest result
+        const results = Array.from(event.results)
+        const transcript = results
+          .map((result: any) => result[0].transcript)
+          .join('')
+        
+        // If it's final, append it. If interim, we could show it but for now just appending creates dupes if not careful.
+        // Simple approach: just use the final one or replace input? 
+        // Better: replace current listening segment. But simpler for now:
+        // Just take the latest transcript if isFinal
+        
+        // Actually simplest is just to set input to transcript if we want streaming update?
+        // But we want to append to existing text.
+        // Let's stick to previous behavior but safer.
+        
+        const latestResult = results[results.length - 1] as any;
+        if (latestResult.isFinal) {
+             setInput(prev => (prev ? prev.trim() + " " : "") + latestResult[0].transcript)
+        }
+      }
+
+      recognition.onerror = async (event: any) => {
+        if (event.error === 'no-speech') {
+             // Ignore no-speech error, just stop
+             setIsListening(false)
+             return
+        }
+        
+        console.error('Speech recognition error:', event.error)
+        
+        if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          const { toast } = await import("sonner")
+          toast.error("Microphone access blocked. Click the lock icon in your address bar to allow.")
+        } else {
+             setIsListening(false)
+        }
+      }
+
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+
+      speechRecognitionRef.current = recognition
+      recognition.start()
+    } catch (e) {
+      console.error("Failed to start speech recognition", e)
       setIsListening(false)
     }
-
-    recognition.onend = () => {
-      setIsListening(false)
-    }
-
-    speechRecognitionRef.current = recognition
-    recognition.start()
   }, [isListening])
 
   return (

@@ -51,7 +51,9 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 # Optional
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
-NEXT_PUBLIC_POSTHOG_KEY=your-posthog-key
+NEXT_PUBLIC_POSTHOG_KEY=phc_...
+NEXT_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+NEXT_PUBLIC_LANGFUSE_HOST=https://cloud.langfuse.com
 ```
 
 ### Development
@@ -105,10 +107,12 @@ frontend/
 
 - **Authentication**: Supabase Auth with SSR support
 - **Document Management**: Upload and manage research documents
-- **AI Chat**: Contextual Q&A with source citations
+- **Google Drive Integration**: Import files directly from Google Drive
+- **AI Chat**: Contextual Q&A with source citations and smart prompts
 - **Content Generation**: Podcasts, quizzes, flashcards, mindmaps
 - **Real-time**: SSE streaming for chat responses
 - **Responsive**: Mobile-first design
+- **Analytics**: User behavior tracking with PostHog
 - **Dark Mode**: System-aware theming
 
 ## Scripts
