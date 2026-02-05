@@ -376,6 +376,8 @@ export function AddSourcesModal({ open, onOpenChange, onAddSources, notebookId }
             onImportComplete={() => {
               setView("default")
               onOpenChange(false)
+              // Pass empty array to signal parent to refresh from server
+              onAddSources([])
             }}
           />
         ) : (

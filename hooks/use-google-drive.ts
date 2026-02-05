@@ -230,7 +230,7 @@ function setError(err: string | null) {
 /**
  * Hook to import files from Google Drive
  */
-export function useGoogleDriveImport(notebookId: string | undefined) {
+export function useGoogleDriveImport(notebookId: string | undefined, onImportComplete?: () => void) {
   const [importProgress, setImportProgress] = useState<GoogleDriveImportProgress[]>([])
   const [isImporting, setIsImporting] = useState(false)
 
@@ -258,7 +258,8 @@ export function useGoogleDriveImport(notebookId: string | undefined) {
               p.fileId === file.id ? { ...p, status: "completed", progress: 100 } : p
             )
           )
-          toast.success(`Imported "${file.name}" successfully`)
+          toast.success(`Import started for "${file.name}"`)
+          onImportComplete?.() // Notify parent to refresh list
         } else {
           throw new Error(result.message)
         }
@@ -284,11 +285,61 @@ export function useGoogleDriveImport(notebookId: string | undefined) {
 
   const importMultipleFiles = useCallback(
     async (files: GoogleDriveFile[]) => {
+       // 1. Add all to progress immediately
+       const newProgressItems: GoogleDriveImportProgress[] = files.map(file => ({
+           fileId: file.id,
+           fileName: file.name,
+           status: "importing", // or 'pending' if we had that state, but 'importing' shows spinner
+           progress: 0
+       }));
+       
+       setImportProgress((prev) => [...prev, ...newProgressItems]);
+       setIsImporting(true);
+
       for (const file of files) {
-        await importFile(file)
+        // Skip adding to progress inside importFile since we did it here?
+        // Actually importFile adds it again. We need to refactor or handle duplicates.
+        // Let's modify importFile to check if exists? 
+        // Or better: call a modified version or just call the API here.
+        
+        // Refactor: We will use the existing importFile but we need to ensure it doesn't duplicate.
+        // importFile logic: setImportProgress(prev => [...prev, item])
+        
+        // Let's just manually call the API here to avoid `importFile` state duplication issues
+        try {
+            // Update status (already set to importing, but maybe good to ensure)
+            // Perform request
+            const result = await importGoogleDriveFile(file.id, notebookId!)
+            
+             if (result.success) {
+                setImportProgress((prev) =>
+                    prev.map((p) =>
+                    p.fileId === file.id ? { ...p, status: "completed", progress: 100 } : p
+                    )
+                )
+                toast.success(`Import queued for "${file.name}"`)
+                onImportComplete?.()
+            } else {
+                throw new Error(result.message)
+            }
+        } catch (err) {
+             setImportProgress((prev) =>
+                prev.map((p) =>
+                    p.fileId === file.id
+                    ? {
+                        ...p,
+                        status: "failed",
+                        error: err instanceof Error ? err.message : "Import failed",
+                        }
+                    : p
+                )
+            )
+            toast.error(`Failed to import "${file.name}"`)
+        }
       }
+      setIsImporting(false);
     },
-    [importFile]
+    [notebookId, onImportComplete]
   )
 
   const clearImportProgress = useCallback(() => {

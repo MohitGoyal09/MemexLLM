@@ -2,8 +2,8 @@
  * Google Drive file browser component
  */
 
-import { useState, useCallback } from "react"
-import { ChevronRight, RefreshCw, Search, Grid, List, Loader2 } from "lucide-react"
+import { useState, useCallback, useEffect } from "react"
+import { ChevronRight, RefreshCw, Search, Grid, List, Loader2, HardDrive } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -53,6 +53,12 @@ export function GoogleDriveBrowser({
 
   const displayFiles = isSearchMode ? results : files
   const hasMore = isSearchMode ? nextPageToken : nextPageToken
+
+  // Initial load
+  useEffect(() => {
+    loadFiles(currentFolder?.id || null)
+  }, [loadFiles])
+
 
   const handleRefresh = useCallback(async () => {
     if (isSearchMode) {
@@ -109,11 +115,11 @@ export function GoogleDriveBrowser({
         <div className="flex items-center gap-1 text-sm overflow-x-auto">
           <button
             onClick={navigateToRoot}
-            className="flex items-center gap-1 px-2 py-1 rounded hover:bg-secondary transition-colors whitespace-nowrap"
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-secondary transition-colors whitespace-nowrap text-sm font-medium"
             title="Root folder"
           >
-            <span className="text-lg">📁</span>
-            <span className="font-medium">My Drive</span>
+            <HardDrive className="w-4 h-4 text-muted-foreground" />
+            <span>My Drive</span>
           </button>
           {breadcrumbs.map((folder) => (
             <div key={folder.id} className="flex items-center gap-1 whitespace-nowrap">

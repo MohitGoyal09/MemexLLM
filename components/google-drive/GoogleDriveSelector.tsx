@@ -1,8 +1,6 @@
-/**
- * Google Drive file selector modal
- */
-
 import { useState, useCallback, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { X, HardDrive, Loader2, Check, AlertCircle, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -27,14 +25,31 @@ export function GoogleDriveSelector({
   const [selectedFiles, setSelectedFiles] = useState<GoogleDriveFile[]>([])
   const [importedCount, setImportedCount] = useState(0)
 
+  const router = useRouter()
   const { status, isLoading: statusLoading, refreshStatus } = useGoogleDriveStatus()
   const { importProgress, isImporting, importMultipleFiles, clearImportProgress } =
-    useGoogleDriveImport(notebookId)
+    useGoogleDriveImport(notebookId, onImportComplete)
 
+  // Handlers
   const handleConnect = useCallback(async () => {
-    setStep("select")
-    await refreshStatus()
-  }, [refreshStatus])
+    try {
+        // Redirect directly to Google OAuth
+        const { getGoogleDriveAuthUrl } = await import("@/lib/api/gdrive")
+        
+        // Pass current URL as state so we can return here
+        const returnUrl = window.location.pathname + window.location.search
+        const { auth_url } = await getGoogleDriveAuthUrl(returnUrl)
+        
+        if (auth_url) {
+            window.location.href = auth_url
+        } else {
+            toast.error("Failed to get authorization URL")
+        }
+    } catch (error) {
+        toast.error("Failed to initialize connection")
+        console.error(error)
+    }
+  }, [])
 
   const handleSelectFile = useCallback((file: GoogleDriveFile) => {
     setSelectedFiles((prev) => {
@@ -50,11 +65,8 @@ export function GoogleDriveSelector({
     if (selectedFiles.length === 0) return
 
     setStep("import")
-    // Keep count before clearing selection
     const count = selectedFiles.length
-    
     await importMultipleFiles(selectedFiles)
-    
     setImportedCount(count)
     setSelectedFiles([])
   }, [selectedFiles, importMultipleFiles])
@@ -67,23 +79,24 @@ export function GoogleDriveSelector({
     onOpenChange(false)
   }, [clearImportProgress, onOpenChange])
 
-  // Auto-close on successful import of ALL files
+  // Auto-close on successful import
   useEffect(() => {
     if (step === "import" && importProgress.length > 0) {
-        // Check if all are completed (no failures, no extracting/importing state)
         const allCompleted = importProgress.every(p => p.status === "completed");
-        
         if (allCompleted) {
-             // Small delay to let user see the green checks
              const timer = setTimeout(() => {
-                 onImportComplete?.(); // Trigger refresh in parent
-                 handleClose();        // Close modal
+                 onImportComplete?.(); 
+                 handleClose();        
              }, 1500);
              return () => clearTimeout(timer);
         }
     }
   }, [step, importProgress, handleClose, onImportComplete]);
 
+  // Initial Check (OPTIONAL: Auto-advance if connected, but keep UI if not?)
+  // User wanted "Good UI", so let's keeping the Status screen.
+  // We won't auto-redirect, we'll let the user see the state.
+  
   if (!open) return null
 
   const isConnected = status?.connected
@@ -199,13 +212,15 @@ export function GoogleDriveSelector({
                   >
                     {/* Status Icon */}
                     <div className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center border",
-                        item.status === "completed" ? "bg-white border-success/20 dark:bg-success/10" : "bg-background border-border"
+                        "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                        item.status === "completed" ? "bg-success/10 text-success" : 
+                        item.status === "failed" ? "bg-destructive/10 text-destructive" :
+                        "bg-background border border-border"
                     )}>
                       {item.status === "completed" ? (
-                        <Check className="w-5 h-5 text-success" />
+                        <Check className="w-5 h-5" />
                       ) : item.status === "failed" ? (
-                         <X className="w-5 h-5 text-destructive" />
+                         <X className="w-5 h-5" />
                       ) : (
                         <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                       )}
@@ -213,25 +228,27 @@ export function GoogleDriveSelector({
                     
                     {/* File Info */}
                     <div className="flex-1 min-w-0 flex items-center gap-3">
-                        <div className="p-2 bg-muted/50 rounded-md">
-                            <FileText className="w-4 h-4 text-muted-foreground" />
+                        <div className="p-2 bg-muted/50 rounded-lg shrink-0">
+                            <FileText className="w-5 h-5 text-muted-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{item.fileName}</p>
-                            {item.error && (
+                            {item.error ? (
                                 <p className="text-xs text-destructive mt-0.5">{item.error}</p>
+                            ) : (
+                                <p className="text-xs text-muted-foreground mt-0.5 capitalize">{item.status}...</p>
                             )}
                         </div>
                     </div>
 
                     {/* Status Text Badge */}
                     {item.status === "completed" && (
-                      <span className="text-xs font-medium text-success px-2 py-1 bg-success/10 rounded-full">
+                      <span className="text-xs font-medium text-success px-2.5 py-1 bg-success/10 rounded-full shrink-0">
                         Imported
                       </span>
                     )}
                      {item.status === "failed" && (
-                      <span className="text-xs font-medium text-destructive px-2 py-1 bg-destructive/10 rounded-full">
+                      <span className="text-xs font-medium text-destructive px-2.5 py-1 bg-destructive/10 rounded-full shrink-0">
                         Failed
                       </span>
                     )}
@@ -254,12 +271,12 @@ export function GoogleDriveSelector({
 
         {/* Footer */}
         {step === "select" && (
-          <div className="flex items-center justify-between p-4 border-t border-border bg-muted/30">
+          <div className="flex items-center justify-between p-4 border-t border-border bg-muted/30 rounded-b-2xl">
             <span className="text-sm text-muted-foreground">
               {selectedFiles.length} file(s) selected
             </span>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={handleClose}>
+              <Button variant="outline" onClick={handleClose} className="rounded-full">
                 Cancel
               </Button>
               <Button

@@ -230,10 +230,15 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
   }, [notebookId, sources.map(s => `${s.id}:${s.status}`).join(',')]) // Stable dependency key
 
   const handleAddSource = useCallback((newSources: Source[]) => {
-    setSources((prev) => [...prev, ...newSources])
-    setSelectedSources((prev) => [...prev, ...newSources.map((s) => s.id)])
+    // If no sources provided, it might be a signal to refresh (e.g. derived from backend import)
+    if (newSources.length === 0) {
+        refreshSources()
+    } else {
+        setSources((prev) => [...prev, ...newSources])
+        setSelectedSources((prev) => [...prev, ...newSources.map((s) => s.id)])
+    }
     setShowSourcesModal(false)
-  }, [])
+  }, [refreshSources])
 
   const toggleSourceSelection = useCallback((id: string) => {
     setSelectedSources((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]))

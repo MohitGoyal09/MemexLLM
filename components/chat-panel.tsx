@@ -567,6 +567,7 @@ export function ChatPanel({
   } | null>(null)
   const [messageFeedback, setMessageFeedback] = useState<Record<string, FeedbackRating | null>>({})
   const [submittingFeedback, setSubmittingFeedback] = useState<Record<string, boolean>>({})
+  const [isEnhancing, setIsEnhancing] = useState(false)
 
   // Handle feedback submission for a message
   const handleFeedback = useCallback(async (messageId: string, rating: FeedbackRating) => {
@@ -918,6 +919,47 @@ export function ChatPanel({
             className="flex-1 bg-transparent outline-none text-sm min-w-0"
           />
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Prompt Enhancer Button (New) */}
+            <button
+               type="button"
+               disabled={isEnhancing || !input.trim()}
+               onClick={async () => {
+                   if (!input.trim() || !notebookId) return;
+                   setIsEnhancing(true);
+                   try {
+                       const { apiClient } = await import("@/lib/api/client");
+                       const { toast } = await import("sonner");
+                       
+                       const response = await apiClient<{ enhanced_message: string }>(
+                           `/chat/${notebookId}/enhance_prompt`,
+                           {
+                               method: "POST",
+                               body: JSON.stringify({ message: input })
+                           }
+                       );
+                       
+                       setInput(response.enhanced_message);
+                       toast.success("Prompt enhanced!");
+                   } catch (error) {
+                       console.error("Failed to enhance prompt", error);
+                       import("sonner").then(mod => mod.toast.error("Failed to enhance prompt"));
+                   } finally {
+                       setIsEnhancing(false);
+                   }
+               }}
+               className={cn(
+                   "p-2 hover:bg-secondary-foreground/10 rounded-full transition-colors text-muted-foreground hover:text-foreground",
+                   isEnhancing && "animate-pulse cursor-not-allowed opacity-70"
+               )}
+               title="Enhance prompt"
+            >
+               {isEnhancing ? (
+                   <Loader2 className="w-4 h-4 animate-spin" />
+               ) : (
+                   <Sparkles className="w-4 h-4" />
+               )}
+            </button>
+
             {/* Microphone button for STT */}
             <button
               type="button"

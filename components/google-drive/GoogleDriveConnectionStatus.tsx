@@ -49,8 +49,9 @@ export function GoogleDriveStatus({
     const success = await disconnect()
     if (success) {
       onDisconnect?.()
+      await refreshStatus()
     }
-  }, [disconnect, onDisconnect])
+  }, [disconnect, onDisconnect, refreshStatus])
 
   const handleRefresh = useCallback(async () => {
     await refreshStatus()

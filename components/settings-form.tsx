@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
+import { Loader2 } from "lucide-react";
 
 import { useSearchParams } from "next/navigation";
 import { GoogleDriveStatus } from "@/components/google-drive/GoogleDriveConnectionStatus";
@@ -48,51 +49,73 @@ export function SettingsForm({
   }, [router]);
 
   const [connectParams, setConnectParams] = useState<{ code: string; state?: string } | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isProcessingCallback, setIsProcessingCallback] = useState(false);
+  const processedRef = useRef(false);
 
-  // Detect OAuth callback params but DO NOT auto-fire to avoid Cookie race conditions
+  // Auto-process OAuth callback
   useEffect(() => {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const errorParam = searchParams.get("error");
-
-    if (errorParam) {
-      toast.error(`Google Drive connection failed: ${errorParam}`);
-      router.replace("/settings");
-      return;
+    
+    // Safety check: if we already processed this or no code, skip
+    if (!code || processedRef.current) {
+        if (errorParam && !processedRef.current) {
+             processedRef.current = true;
+             toast.error(`Google Drive connection failed: ${errorParam}`);
+             router.replace("/settings");
+        }
+        return;
     }
 
-    if (code) {
-        setConnectParams({ code, state: state || undefined });
-    }
+    const processCallback = async () => {
+        processedRef.current = true;
+        setIsProcessingCallback(true);
+        const loadingToast = toast.loading("Finalizing connection...");
+        
+        try {
+            // Clean URL immediately (visually) but keep params in memory
+            // router.replace("/settings"); // Might cause unmount? better wait
+
+            const result = await handleGoogleDriveCallback(code, state || undefined);
+            toast.dismiss(loadingToast);
+
+            if (result.success) {
+                toast.success("Successfully connected to Google Drive");
+                
+                // Redirect back to source if provided in state
+                if (state && state.startsWith("/")) {
+                    // router.push is better than windown.location for SPA nav
+                    router.push(state);
+                } else {
+                    router.replace("/settings");
+                    setSuccess(result.message);
+                    setRefreshKey((prev) => prev + 1);
+                    setConnectParams(null); // Clear UI
+                }
+            } else {
+                toast.error(result.message || "Failed to connect");
+                setError(result.message);
+                router.replace("/settings"); // Clear params on error
+            }
+        } catch (err) {
+            toast.dismiss(loadingToast);
+            const msg = err instanceof Error ? err.message : "Connection failed";
+            console.error("Callback error:", err);
+            toast.error(msg);
+            setError(msg);
+            router.replace("/settings");
+        } finally {
+            setIsProcessingCallback(false);
+        }
+    };
+
+    processCallback();
   }, [searchParams, router]);
 
-  const handleCompleteConnection = async () => {
-      if (!connectParams) return;
-      
-      try {
-          const loadingToast = toast.loading("Finalizing connection...");
-          // Clean URL immediately to prevent re-triggering
-          router.replace("/settings");
-          
-          const result = await handleGoogleDriveCallback(connectParams.code, connectParams.state);
-          toast.dismiss(loadingToast);
-
-          if (result.success) {
-            toast.success("Successfully connected to Google Drive");
-            setSuccess(result.message);
-            setConnectParams(null);
-          } else {
-            toast.error(result.message || "Failed to connect");
-            setError(result.message);
-          }
-      } catch (err) {
-          toast.dismiss();
-          const msg = err instanceof Error ? err.message : "Connection failed";
-          console.error("Callback error:", err);
-          toast.error(msg);
-          setError(msg);
-      }
-  };
+  // Manual handler removed as we auto-process
+  // const handleCompleteConnection = ... 
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,19 +158,17 @@ export function SettingsForm({
          <p className="text-muted-foreground">Manage your account settings and preferences.</p>
       </div>
 
-     {connectParams && (
+     {isProcessingCallback && (
         <Card className="border-primary/50 bg-primary/5">
             <CardHeader>
-                <CardTitle className="text-primary">Complete Google Drive Connection</CardTitle>
+                <CardTitle className="text-primary flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Connecting...
+                </CardTitle>
                 <CardDescription>
-                    You have successfully authenticated with Google. Click below to finalize the link.
+                    Finalizing your connection with Google Drive...
                 </CardDescription>
             </CardHeader>
-            <CardContent>
-                <Button onClick={handleCompleteConnection} className="w-full">
-                    Complete Connection
-                </Button>
-            </CardContent>
         </Card>
      )}
 
@@ -162,7 +183,7 @@ export function SettingsForm({
           <div className="space-y-4">
             <div className="grid gap-2">
               <Label>Google Drive</Label>
-              <GoogleDriveStatus />
+              <GoogleDriveStatus key={refreshKey} />
             </div>
           </div>
         </CardContent>
@@ -229,10 +250,7 @@ export function SettingsForm({
                   <Label>Email Address</Label>
                   <p className="text-sm text-muted-foreground bg-muted p-2 rounded border">{user?.email}</p>
               </div>
-              <div className="grid gap-1">
-                  <Label>User ID</Label>
-                   <p className="text-xs text-muted-foreground font-mono bg-muted p-2 rounded border">{user?.id}</p>
-              </div>
+            
           </CardContent>
       </Card>
     </div>
