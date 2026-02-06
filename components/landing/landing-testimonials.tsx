@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion, useInView } from "framer-motion";
 import { Quote, Star, GraduationCap, BookOpen, Briefcase, Microscope, FileText, Mic } from "lucide-react";
+import {
+  fadeUp,
+  staggerContainer,
+  staggerContainerSlow,
+  cardItem,
+} from "@/lib/motion";
 
 const testimonials = [
   {
@@ -80,38 +87,13 @@ const stats = [
 ];
 
 export function LandingTestimonials() {
-  const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
-  const [visibleStats, setVisibleStats] = useState(false);
+  const statsRef = useRef(null);
+  const statsInView = useInView(statsRef, { once: true, margin: "-80px" });
   const [animatedStats, setAnimatedStats] = useState<{ [key: number]: string }>({});
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = entry.target.getAttribute("data-index");
-            if (index !== null) {
-              setVisibleCards((prev) => new Set([...prev, parseInt(index)]));
-            }
-            if (entry.target.hasAttribute("data-stats")) {
-              setVisibleStats(true);
-            }
-          }
-        });
-      },
-      { threshold: 0.2 }
-    );
-
-    document.querySelectorAll("[data-testimonial]").forEach((el) => observer.observe(el));
-    const statsEl = document.querySelector("[data-stats]");
-    if (statsEl) observer.observe(statsEl);
-
-    return () => observer.disconnect();
-  }, []);
 
   // Animate stat numbers
   useEffect(() => {
-    if (!visibleStats) return;
+    if (!statsInView) return;
 
     stats.forEach((stat, index) => {
       const numericValue = parseFloat(stat.value.replace(/[^0-9.]/g, ""));
@@ -123,14 +105,14 @@ export function LandingTestimonials() {
       const animate = () => {
         current += increment;
         if (current >= numericValue) {
-          setAnimatedStats((prev) => ({ 
-            ...prev, 
-            [index]: isDecimal ? numericValue.toFixed(1) : Math.floor(numericValue).toLocaleString() 
+          setAnimatedStats((prev) => ({
+            ...prev,
+            [index]: isDecimal ? numericValue.toFixed(1) : Math.floor(numericValue).toLocaleString()
           }));
         } else {
-          setAnimatedStats((prev) => ({ 
-            ...prev, 
-            [index]: isDecimal ? current.toFixed(1) : Math.floor(current).toLocaleString() 
+          setAnimatedStats((prev) => ({
+            ...prev,
+            [index]: isDecimal ? current.toFixed(1) : Math.floor(current).toLocaleString()
           }));
           requestAnimationFrame(animate);
         }
@@ -138,7 +120,7 @@ export function LandingTestimonials() {
 
       setTimeout(() => animate(), index * 100);
     });
-  }, [visibleStats]);
+  }, [statsInView]);
 
   return (
     <section
@@ -157,34 +139,50 @@ export function LandingTestimonials() {
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         {/* Section header */}
-        <div className="text-center mb-16 lg:mb-20">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-synapse-500/10 text-synapse-600 text-sm font-medium mb-4 animate-bounce-in">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="text-center mb-16 lg:mb-20"
+        >
+          <motion.div
+            variants={fadeUp}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-synapse-500/10 text-synapse-600 text-sm font-medium mb-4"
+          >
             {[...Array(5)].map((_, i) => (
               <Star key={i} className="w-3.5 h-3.5 fill-current" />
             ))}
-          </div>
-          <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4">
+          </motion.div>
+          <motion.h2
+            variants={fadeUp}
+            className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4"
+          >
             Trusted by Researchers at Top Universities
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of PhD students, professors, and research teams 
+          </motion.h2>
+          <motion.p
+            variants={fadeUp}
+            className="text-lg text-muted-foreground max-w-2xl mx-auto"
+          >
+            Join thousands of PhD students, professors, and research teams
             who've transformed how they work with documents.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Testimonials grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, index) => (
-            <div
+        <motion.div
+          variants={staggerContainerSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {testimonials.map((testimonial) => (
+            <motion.div
               key={testimonial.author}
-              data-testimonial
-              data-index={index}
-              className={`group relative p-6 lg:p-8 rounded-2xl bg-surface-1 border border-border hover:border-synapse-500/20 transition-all duration-500 hover-lift ${
-                visibleCards.has(index) 
-                  ? 'animate-slide-up-bounce' 
-                  : 'opacity-0 translate-y-8'
-              }`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              variants={cardItem}
+              whileHover={{ y: -4, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+              className="group relative p-6 lg:p-8 rounded-2xl bg-surface-1 border border-border hover:border-synapse-500/20 transition-colors duration-300"
             >
               {/* Highlight badge */}
               <div className="absolute -top-3 left-6">
@@ -221,34 +219,37 @@ export function LandingTestimonials() {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Stats row - with animated counters */}
-        <div 
-          data-stats
+        <motion.div
+          ref={statsRef}
+          variants={staggerContainerSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
           className="mt-16 lg:mt-20 grid grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {stats.map((stat, index) => (
-            <div
+            <motion.div
               key={stat.label}
-              className={`relative text-center p-6 rounded-xl bg-surface-1 border border-border overflow-hidden group hover-lift ${
-                visibleStats ? 'animate-pop-in' : 'opacity-0'
-              }`}
-              style={{ animationDelay: `${index * 100}ms` }}
+              variants={cardItem}
+              whileHover={{ y: -4, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+              className="relative text-center p-6 rounded-xl bg-surface-1 border border-border overflow-hidden group"
             >
               {/* Hover gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-synapse-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              
+
               <p className="relative text-3xl lg:text-4xl font-bold text-synapse-500 mb-1">
-                {visibleStats ? (animatedStats[index] || "0") : "0"}
+                {statsInView ? (animatedStats[index] || "0") : "0"}
                 <span className="text-2xl">{stat.suffix}</span>
               </p>
               <p className="relative text-sm text-muted-foreground">{stat.label}</p>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

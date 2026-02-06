@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Logo } from "@/components/logo";
 import { Github, Twitter, MessageCircle, Mail, ArrowRight, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  fadeUp,
+  popIn,
+  staggerContainer,
+  staggerContainerFast,
+} from "@/lib/motion";
 
 const footerLinks = {
   product: [
@@ -40,6 +47,25 @@ const socialLinks = [
   { icon: Mail, href: "mailto:hello@memexllm.com", label: "Email", followers: null },
 ];
 
+const footerColumnVariant = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+const footerColumnsContainer = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+};
+
 export function LandingFooter() {
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -56,7 +82,13 @@ export function LandingFooter() {
     <footer className="bg-surface-1 border-t border-border">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Newsletter section */}
-        <div className="py-12 border-b border-border">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-40px" }}
+          className="py-12 border-b border-border"
+        >
           <div className="max-w-2xl mx-auto text-center">
             <h3 className="text-xl font-semibold text-foreground mb-2">
               Stay Updated on Research AI
@@ -86,12 +118,18 @@ export function LandingFooter() {
               </form>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Main footer content */}
-        <div className="py-12 lg:py-16 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+        <motion.div
+          variants={footerColumnsContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-40px" }}
+          className="py-12 lg:py-16 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8"
+        >
           {/* Brand column */}
-          <div className="col-span-2 md:col-span-3 lg:col-span-2">
+          <motion.div variants={footerColumnVariant} className="col-span-2 md:col-span-3 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4 group">
               <Logo className="w-10 h-10 spring-transition group-hover:scale-110" />
               <span className="text-lg font-semibold text-foreground">
@@ -99,19 +137,27 @@ export function LandingFooter() {
               </span>
             </Link>
             <p className="text-muted-foreground text-sm mb-6 max-w-xs">
-              Transform information chaos into crystallized understanding. 
+              Transform information chaos into crystallized understanding.
               Open source AI-powered research assistant built for curious minds.
             </p>
 
             {/* Social links with follower counts */}
-            <div className="flex items-center gap-3">
+            <motion.div
+              variants={staggerContainerFast}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-20px" }}
+              className="flex items-center gap-3"
+            >
               {socialLinks.map((social) => (
-                <a
+                <motion.a
                   key={social.label}
+                  variants={popIn}
+                  whileHover={{ y: -2, scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative w-10 h-10 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-synapse-500/30 hover:bg-synapse-500/5 transition-all duration-300 spring-transition"
+                  className="group relative w-10 h-10 rounded-xl bg-surface-2 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-synapse-500/30 hover:bg-synapse-500/5 transition-colors duration-300"
                   aria-label={social.label}
                 >
                   <social.icon className="w-4 h-4" />
@@ -120,13 +166,13 @@ export function LandingFooter() {
                       {social.followers}
                     </span>
                   )}
-                </a>
+                </motion.a>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Product links */}
-          <div>
+          <motion.div variants={footerColumnVariant}>
             <h4 className="font-semibold text-foreground mb-4">Product</h4>
             <ul className="space-y-3">
               {footerLinks.product.map((link) => (
@@ -141,10 +187,10 @@ export function LandingFooter() {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Company links */}
-          <div>
+          <motion.div variants={footerColumnVariant}>
             <h4 className="font-semibold text-foreground mb-4">Company</h4>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
@@ -159,10 +205,10 @@ export function LandingFooter() {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Resources links */}
-          <div>
+          <motion.div variants={footerColumnVariant}>
             <h4 className="font-semibold text-foreground mb-4">Resources</h4>
             <ul className="space-y-3">
               {footerLinks.resources.map((link) => (
@@ -177,10 +223,10 @@ export function LandingFooter() {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Legal links */}
-          <div>
+          <motion.div variants={footerColumnVariant}>
             <h4 className="font-semibold text-foreground mb-4">Legal</h4>
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
@@ -195,11 +241,17 @@ export function LandingFooter() {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Bottom bar */}
-        <div className="py-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-20px" }}
+          className="py-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4"
+        >
           <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} MemexLLM. Open source under MIT license.
           </p>
@@ -208,7 +260,7 @@ export function LandingFooter() {
             <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse-scale" />
             <span>for researchers everywhere</span>
           </div>
-        </div>
+        </motion.div>
       </div>
     </footer>
   );

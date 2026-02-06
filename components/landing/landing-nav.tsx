@@ -6,6 +6,7 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -13,6 +14,45 @@ const navLinks = [
   { label: "Pricing", href: "#pricing" },
   { label: "Testimonials", href: "#testimonials" },
 ];
+
+const mobileMenuVariants = {
+  hidden: { opacity: 0, height: 0 },
+  visible: {
+    opacity: 1,
+    height: "auto" as const,
+    transition: {
+      duration: 0.3,
+      ease: [0.22, 1, 0.36, 1] as const,
+      when: "beforeChildren" as const,
+      staggerChildren: 0.05,
+    },
+  },
+  exit: {
+    opacity: 0,
+    height: 0,
+    transition: {
+      duration: 0.25,
+      ease: [0.22, 1, 0.36, 1] as const,
+      when: "afterChildren" as const,
+      staggerChildren: 0.03,
+      staggerDirection: -1,
+    },
+  },
+};
+
+const mobileNavItemVariants = {
+  hidden: { opacity: 0, x: -16 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const },
+  },
+  exit: {
+    opacity: 0,
+    x: -16,
+    transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
 
 export function LandingNav() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -77,14 +117,18 @@ export function LandingNav() {
                   key={link.href}
                   href={link.href}
                   className={`relative px-4 py-2 text-sm font-medium transition-colors duration-200 rounded-lg spring-transition ${
-                    isActive 
-                      ? 'text-synapse-500' 
+                    isActive
+                      ? 'text-synapse-500'
                       : 'text-muted-foreground hover:text-foreground'
                   } hover:bg-surface-2`}
                 >
                   {link.label}
                   {isActive && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-synapse-500 animate-pop-in" />
+                    <motion.span
+                      layoutId="activeSection"
+                      className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-synapse-500"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
                   )}
                 </a>
               );
@@ -131,46 +175,57 @@ export function LandingNav() {
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-border animate-fade-up">
-            <div className="flex flex-col gap-1">
-              {navLinks.map((link, i) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors animate-stagger-fade-up"
-                  style={{ animationDelay: `${i * 50}ms` }}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              className="lg:hidden py-4 border-t border-border overflow-hidden"
+              variants={mobileMenuVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <div className="flex flex-col gap-1">
+                {navLinks.map((link) => (
+                  <motion.a
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
+                    variants={mobileNavItemVariants}
+                  >
+                    {link.label}
+                  </motion.a>
+                ))}
+                <motion.div
+                  className="flex flex-col gap-2 mt-4 pt-4 border-t border-border"
+                  variants={mobileNavItemVariants}
                 >
-                  {link.label}
-                </a>
-              ))}
-              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
-                {isAuthenticated ? (
-                  <Link href="/home" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button className="w-full font-semibold">
-                      Dashboard
-                    </Button>
-                  </Link>
-                ) : (
-                  <>
-                    <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full font-medium">
-                        Sign In
+                  {isAuthenticated ? (
+                    <Link href="/home" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button className="w-full font-semibold">
+                        Dashboard
                       </Button>
                     </Link>
-                    <Link href="/auth/sign-up" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button className="w-full font-semibold gap-2">
-                        <Sparkles className="w-4 h-4" />
-                        Start Free
-                      </Button>
-                    </Link>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full font-medium">
+                          Sign In
+                        </Button>
+                      </Link>
+                      <Link href="/auth/sign-up" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button className="w-full font-semibold gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          Start Free
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                </motion.div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
     </header>
   );

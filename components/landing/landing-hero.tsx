@@ -15,12 +15,23 @@ import {
   ChevronDown,
   CheckCircle2,
 } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  fadeUp,
+  fadeUpSpring,
+  scaleIn,
+  popIn,
+  staggerContainer,
+  staggerContainerSlow,
+  cardItem,
+  defaultViewport,
+} from "@/lib/motion";
 
 const floatingIcons = [
-  { Icon: FileText, delay: "0s", position: "top-[15%] left-[8%]", rotate: "-6deg" },
-  { Icon: Brain, delay: "0.5s", position: "top-[25%] right-[12%]", rotate: "6deg" },
-  { Icon: Zap, delay: "1s", position: "bottom-[30%] left-[5%]", rotate: "-3deg" },
-  { Icon: BookOpen, delay: "1.5s", position: "bottom-[20%] right-[8%]", rotate: "3deg" },
+  { Icon: FileText, delay: 0, position: "top-[15%] left-[8%]", rotate: "-6deg" },
+  { Icon: Brain, delay: 0.5, position: "top-[25%] right-[12%]", rotate: "6deg" },
+  { Icon: Zap, delay: 1, position: "bottom-[30%] left-[5%]", rotate: "-3deg" },
+  { Icon: BookOpen, delay: 1.5, position: "bottom-[20%] right-[8%]", rotate: "3deg" },
 ];
 
 const socialProofUsers = [
@@ -34,7 +45,7 @@ const socialProofUsers = [
 const researchPhrases = [
   "literature reviews",
   "thesis research",
-  "paper analysis", 
+  "paper analysis",
   "study sessions",
   "grant proposals",
 ];
@@ -44,7 +55,10 @@ export function LandingHero() {
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+
+  // Parallax for hero visual
+  const { scrollYProgress } = useScroll();
+  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -40]);
 
   // Typewriter effect
   useEffect(() => {
@@ -72,7 +86,6 @@ export function LandingHero() {
   }, [displayText, isDeleting, currentPhraseIndex]);
 
   useEffect(() => {
-    setIsVisible(true);
     const handleMouseMove = (e: MouseEvent) => {
       setMousePos({ x: e.clientX, y: e.clientY });
     };
@@ -121,37 +134,50 @@ export function LandingHero() {
         }}
       />
 
-      {/* Floating icons with enhanced animations */}
+      {/* Floating icons with framer-motion animations */}
       {floatingIcons.map(({ Icon, delay, position, rotate }, index) => (
-        <div
+        <motion.div
           key={index}
-          className={`absolute ${position} hidden lg:flex items-center justify-center w-14 h-14 rounded-2xl bg-surface-1 border border-border shadow-lg hover-lift animate-bounce-gentle`}
-          style={{ 
-            animationDelay: delay,
-            transform: `rotate(${rotate})`,
+          className={`absolute ${position} hidden lg:flex items-center justify-center w-14 h-14 rounded-2xl bg-surface-1 border border-border shadow-lg hover-lift`}
+          style={{
+            rotate,
+          }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1, y: [0, -8, 0] }}
+          transition={{
+            opacity: { duration: 0.5, delay: delay + 0.3 },
+            scale: { duration: 0.5, delay: delay + 0.3, type: "spring", stiffness: 300, damping: 20 },
+            y: { repeat: Infinity, duration: 2.5, ease: "easeInOut", delay: delay + 0.8 },
           }}
         >
           <Icon className="w-6 h-6 text-synapse-500" />
-        </div>
+        </motion.div>
       ))}
 
       {/* Content */}
-      <div className="relative z-20 max-w-5xl mx-auto px-6 lg:px-8 text-center">
+      <motion.div
+        className="relative z-20 max-w-5xl mx-auto px-6 lg:px-8 text-center"
+        variants={staggerContainerSlow}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-40px" }}
+      >
         {/* Badge - bouncy entrance */}
-        <div 
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 border border-border text-sm text-muted-foreground mb-8 ${isVisible ? 'animate-bounce-in' : 'opacity-0'}`}
+        <motion.div
+          variants={popIn}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-2 border border-border text-sm text-muted-foreground mb-8"
         >
           <Sparkles className="w-4 h-4 text-synapse-500 animate-pulse-scale" />
           <span>AI-powered research assistant</span>
           <span className="px-2 py-0.5 rounded-full bg-synapse-500/10 text-synapse-600 text-xs font-medium">
             Open Source
           </span>
-        </div>
+        </motion.div>
 
         {/* Headline - PAS Framework: Problem addressed in subheadline */}
-        <h1
-          className={`text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight text-foreground mb-6 ${isVisible ? 'animate-slide-up-bounce' : 'opacity-0'}`}
-          style={{ animationDelay: "150ms" }}
+        <motion.h1
+          variants={fadeUpSpring}
+          className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight text-foreground mb-6"
         >
           Stop Drowning in PDFs.{" "}
           <br className="hidden sm:block" />
@@ -164,15 +190,15 @@ export function LandingHero() {
               style={{ transform: "skewX(-6deg)" }}
             />
           </span>
-        </h1>
+        </motion.h1>
 
         {/* Subheadline - Agitate the problem, then solve */}
-        <div
-          className={`text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed ${isVisible ? 'animate-fade-up' : 'opacity-0'}`}
-          style={{ animationDelay: "300ms" }}
+        <motion.div
+          variants={fadeUp}
+          className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 leading-relaxed"
         >
           <p className="mb-2">
-            Researchers waste <span className="text-foreground font-semibold">40+ hours</span> manually reading papers. 
+            Researchers waste <span className="text-foreground font-semibold">40+ hours</span> manually reading papers.
           </p>
           <p>
             MemexLLM reads, connects, and synthesizes your documents—so you can focus on{" "}
@@ -181,12 +207,12 @@ export function LandingHero() {
               <span className="animate-cursor-blink text-synapse-500">|</span>
             </span>
           </p>
-        </div>
+        </motion.div>
 
         {/* Quick benefits - visual checklist */}
-        <div
-          className={`flex flex-wrap justify-center gap-4 mb-8 ${isVisible ? 'animate-fade-up' : 'opacity-0'}`}
-          style={{ animationDelay: "400ms" }}
+        <motion.div
+          variants={fadeUp}
+          className="flex flex-wrap justify-center gap-4 mb-8"
         >
           {[
             "Upload any document",
@@ -201,36 +227,48 @@ export function LandingHero() {
               <span>{benefit}</span>
             </div>
           ))}
-        </div>
+        </motion.div>
 
         {/* CTA Buttons - benefit-focused */}
-        <div
-          className={`flex flex-col sm:flex-row items-center justify-center gap-4 mb-10 ${isVisible ? 'animate-slide-up-bounce' : 'opacity-0'}`}
-          style={{ animationDelay: "500ms" }}
+        <motion.div
+          variants={fadeUpSpring}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
         >
-          <Link href="/auth/sign-up">
-            <Button
-              size="lg"
-              className="h-14 px-10 text-base font-semibold rounded-full shadow-lg shadow-synapse-500/25 hover:shadow-xl hover:shadow-synapse-500/35 transition-all duration-300 gap-2 spring-transition hover:scale-105"
-            >
-              Start My Free Research
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-          <Button
-            variant="outline"
-            size="lg"
-            className="h-14 px-8 text-base font-medium rounded-full gap-2 hover-lift"
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
-            <Play className="w-4 h-4" />
-            See 2-Min Demo
-          </Button>
-        </div>
+            <Link href="/auth/sign-up">
+              <Button
+                size="lg"
+                className="h-14 px-10 text-base font-semibold rounded-full shadow-lg shadow-synapse-500/25 hover:shadow-xl hover:shadow-synapse-500/35 transition-all duration-300 gap-2"
+              >
+                Start My Free Research
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 px-8 text-base font-medium rounded-full gap-2 hover-lift"
+            >
+              <Play className="w-4 h-4" />
+              See 2-Min Demo
+            </Button>
+          </motion.div>
+        </motion.div>
 
         {/* Trust signals - enhanced with real context */}
-        <div
-          className={`flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground ${isVisible ? 'animate-fade-up' : 'opacity-0'}`}
-          style={{ animationDelay: "600ms" }}
+        <motion.div
+          variants={fadeUp}
+          className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground"
         >
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
@@ -253,12 +291,13 @@ export function LandingHero() {
             <Sparkles className="w-3.5 h-3.5" />
             100% Open Source
           </span>
-        </div>
+        </motion.div>
 
-        {/* Hero Visual - Enhanced mockup */}
-        <div
-          className={`relative mt-16 lg:mt-20 ${isVisible ? 'animate-slide-up-bounce' : 'opacity-0'}`}
-          style={{ animationDelay: "700ms" }}
+        {/* Hero Visual - Enhanced mockup with parallax */}
+        <motion.div
+          variants={scaleIn}
+          style={{ y: heroY }}
+          className="relative mt-16 lg:mt-20"
         >
           <div className="relative mx-auto max-w-4xl">
             {/* Glow behind - enhanced */}
@@ -291,9 +330,9 @@ export function LandingHero() {
                     </div>
                     <div className="space-y-2">
                       {[...Array(5)].map((_, i) => (
-                        <div 
-                          key={i} 
-                          className={`h-8 rounded-lg transition-all duration-300 ${i === 0 ? 'bg-synapse-500/10 border border-synapse-500/30' : 'bg-surface-2 hover:bg-surface-3'}`} 
+                        <div
+                          key={i}
+                          className={`h-8 rounded-lg transition-all duration-300 ${i === 0 ? 'bg-synapse-500/10 border border-synapse-500/30' : 'bg-surface-2 hover:bg-surface-3'}`}
                         />
                       ))}
                     </div>
@@ -340,13 +379,16 @@ export function LandingHero() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Scroll indicator */}
-        <div className="mt-12 flex justify-center animate-scroll-hint">
+        <motion.div
+          variants={fadeUp}
+          className="mt-12 flex justify-center animate-scroll-hint"
+        >
           <ChevronDown className="w-6 h-6 text-muted-foreground" />
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }

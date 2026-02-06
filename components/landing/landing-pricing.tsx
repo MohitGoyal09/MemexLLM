@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles, ArrowRight, Github, Server, Cloud, Zap, Users, Shield } from "lucide-react";
+import {
+  fadeUp,
+  fadeUpSpring,
+  popIn,
+  staggerContainer,
+  staggerContainerSlow,
+  cardItem,
+} from "@/lib/motion";
 
 const tiers = [
   {
@@ -55,25 +63,26 @@ const comparisonFeatures = [
   { label: "Self-hosting option", elsewhere: "Rare", us: "Free" },
 ];
 
+const featureItemVariant = {
+  hidden: { opacity: 0, x: -10 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
+
+const featureStagger = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.06,
+      delayChildren: 0.3,
+    },
+  },
+};
+
 export function LandingPricing() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.2 }
-    );
-
-    const section = document.getElementById("pricing");
-    if (section) observer.observe(section);
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section
       id="pricing"
@@ -91,40 +100,67 @@ export function LandingPricing() {
 
       <div className="relative max-w-6xl mx-auto px-6 lg:px-8">
         {/* Section header */}
-        <div className="text-center mb-12">
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-synapse-500/10 text-synapse-600 text-sm font-medium mb-4 ${isVisible ? 'animate-bounce-in' : 'opacity-0'}`}>
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="text-center mb-12"
+        >
+          <motion.div
+            variants={fadeUp}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-synapse-500/10 text-synapse-600 text-sm font-medium mb-4"
+          >
             <Sparkles className="w-3.5 h-3.5" />
             Simple Pricing
-          </div>
-          <h2 className={`text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4 ${isVisible ? 'animate-slide-up-bounce' : 'opacity-0'}`}>
+          </motion.div>
+          <motion.h2
+            variants={fadeUpSpring}
+            className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4"
+          >
             Research Tools Without the Research Budget
-          </h2>
-          <p className={`text-lg text-muted-foreground max-w-2xl mx-auto ${isVisible ? 'animate-fade-up' : 'opacity-0'}`} style={{ animationDelay: "100ms" }}>
-            Get enterprise-grade research tools at student-friendly prices. 
+          </motion.h2>
+          <motion.p
+            variants={fadeUp}
+            className="text-lg text-muted-foreground max-w-2xl mx-auto"
+          >
+            Get enterprise-grade research tools at student-friendly prices.
             Or self-host for free—we believe knowledge should be accessible.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Value comparison - what others charge */}
-        <div className={`mb-12 p-6 rounded-2xl bg-surface-2 border border-border max-w-3xl mx-auto ${isVisible ? 'animate-fade-up' : 'opacity-0'}`} style={{ animationDelay: "200ms" }}>
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="mb-12 p-6 rounded-2xl bg-surface-2 border border-border max-w-3xl mx-auto"
+        >
           <p className="text-sm text-muted-foreground text-center mb-4">
             What you&apos;d pay elsewhere for these features:
           </p>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            {comparisonFeatures.map((feature, i) => (
-              <div 
-                key={feature.label} 
-                className={`text-center p-3 rounded-lg bg-surface-1 ${isVisible ? 'animate-pop-in' : 'opacity-0'}`}
-                style={{ animationDelay: `${300 + i * 100}ms` }}
+          <motion.div
+            variants={staggerContainerSlow}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4"
+          >
+            {comparisonFeatures.map((feature) => (
+              <motion.div
+                key={feature.label}
+                variants={popIn}
+                className="text-center p-3 rounded-lg bg-surface-1"
               >
                 <p className="text-lg font-semibold text-muted-foreground line-through decoration-red-500/50">
                   {feature.elsewhere}
                 </p>
                 <p className="text-xs text-muted-foreground mb-1">{feature.label}</p>
                 <p className="text-xs font-medium text-synapse-500">{feature.us}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
           <div className="text-center pt-4 border-t border-border">
             <p className="text-sm text-muted-foreground">
               Total value: <span className="line-through">$10,000+/year</span>
@@ -133,27 +169,40 @@ export function LandingPricing() {
               Yours for $0 – $240/year
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Pricing cards */}
-        <div className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {tiers.map((tier, index) => (
-            <div
+        <motion.div
+          variants={staggerContainerSlow}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto"
+        >
+          {tiers.map((tier) => (
+            <motion.div
               key={tier.name}
-              className={`relative p-8 rounded-2xl border transition-all duration-500 hover-lift ${
+              variants={cardItem}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 300, damping: 25 } }}
+              className={`relative p-8 rounded-2xl border transition-colors duration-300 ${
                 tier.popular
                   ? "bg-surface-0 border-synapse-500/50 shadow-xl shadow-synapse-500/10"
                   : "bg-surface-0 border-border hover:border-synapse-500/30"
-              } ${isVisible ? 'animate-slide-up-bounce' : 'opacity-0'}`}
-              style={{ animationDelay: `${400 + index * 150}ms` }}
+              }`}
             >
               {/* Popular badge */}
               {tier.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 animate-bounce-in" style={{ animationDelay: "600ms" }}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0, y: -10 }}
+                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.4 }}
+                  className="absolute -top-3 left-1/2 -translate-x-1/2"
+                >
                   <span className="px-4 py-1 rounded-full bg-synapse-500 text-white text-xs font-semibold shadow-lg">
                     {tier.badge}
                   </span>
-                </div>
+                </motion.div>
               )}
 
               {/* Header */}
@@ -187,20 +236,26 @@ export function LandingPricing() {
               </div>
 
               {/* Features */}
-              <ul className="space-y-3 mb-8">
-                {tier.features.map((feature, i) => (
-                  <li 
-                    key={feature.text} 
-                    className={`flex items-start gap-3 ${isVisible ? 'animate-stagger-fade-up' : 'opacity-0'}`}
-                    style={{ animationDelay: `${500 + index * 150 + i * 50}ms` }}
+              <motion.ul
+                variants={featureStagger}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-40px" }}
+                className="space-y-3 mb-8"
+              >
+                {tier.features.map((feature) => (
+                  <motion.li
+                    key={feature.text}
+                    variants={featureItemVariant}
+                    className="flex items-start gap-3"
                   >
                     <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${feature.highlight ? 'text-synapse-500' : 'text-muted-foreground'}`} />
                     <span className={feature.highlight ? 'text-foreground font-medium' : 'text-muted-foreground'}>
                       {feature.text}
                     </span>
-                  </li>
+                  </motion.li>
                 ))}
-              </ul>
+              </motion.ul>
 
               {/* CTA */}
               {tier.name === "Self-Hosted" ? (
@@ -218,12 +273,18 @@ export function LandingPricing() {
                   </Button>
                 </Link>
               )}
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Trust signals */}
-        <div className={`mt-12 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground ${isVisible ? 'animate-fade-up' : 'opacity-0'}`} style={{ animationDelay: "700ms" }}>
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          className="mt-12 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground"
+        >
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-synapse-500" />
             <span>SOC 2 Compliant</span>
@@ -236,10 +297,16 @@ export function LandingPricing() {
             <Users className="w-4 h-4 text-synapse-500" />
             <span>10,000+ Happy Researchers</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* FAQ teaser */}
-        <div className={`text-center mt-8 ${isVisible ? 'animate-fade-up' : 'opacity-0'}`} style={{ animationDelay: "800ms" }}>
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-40px" }}
+          className="text-center mt-8"
+        >
           <p className="text-muted-foreground">
             Questions?{" "}
             <a
@@ -256,7 +323,7 @@ export function LandingPricing() {
               contact us
             </a>
           </p>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

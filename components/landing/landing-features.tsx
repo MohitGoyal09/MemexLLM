@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import {
   FileUp,
   MessageSquare,
@@ -14,6 +13,16 @@ import {
   Zap,
   ArrowRight,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  fadeUp,
+  popIn,
+  staggerContainer,
+  staggerContainerFast,
+  cardItem,
+  hoverLift,
+  defaultViewport,
+} from "@/lib/motion";
 
 const features = [
   {
@@ -80,32 +89,9 @@ const capabilities = [
 ];
 
 export function LandingFeatures() {
-  const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = parseInt(entry.target.getAttribute("data-index") || "0");
-            setVisibleCards((prev) => new Set([...prev, index]));
-          }
-        });
-      },
-      { threshold: 0.2, rootMargin: "50px" }
-    );
-
-    const cards = document.querySelectorAll("[data-feature-card]");
-    cards.forEach((card) => observer.observe(card));
-
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <section
       id="features"
-      ref={sectionRef}
       className="relative py-24 lg:py-32 bg-surface-0 overflow-hidden"
     >
       {/* Background accent */}
@@ -121,50 +107,70 @@ export function LandingFeatures() {
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         {/* Section header */}
-        <div className="text-center mb-16 lg:mb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-synapse-500/10 text-synapse-600 text-sm font-medium mb-4 animate-bounce-in">
+        <motion.div
+          className="text-center mb-16 lg:mb-20"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={defaultViewport}
+        >
+          <motion.div
+            variants={fadeUp}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-synapse-500/10 text-synapse-600 text-sm font-medium mb-4"
+          >
             <Sparkles className="w-3.5 h-3.5 animate-pulse-scale" />
             Powerful Features
-          </div>
-          <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4">
+          </motion.div>
+          <motion.h2
+            variants={fadeUp}
+            className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4"
+          >
             Your Research Superpowers
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Tools designed by researchers, for researchers. Because your time is too valuable 
+          </motion.h2>
+          <motion.p
+            variants={fadeUp}
+            className="text-lg text-muted-foreground max-w-2xl mx-auto"
+          >
+            Tools designed by researchers, for researchers. Because your time is too valuable
             for manual document hunting.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Capabilities row - floating pills with bounce */}
-        <div className="flex flex-wrap justify-center gap-3 mb-16">
-          {capabilities.map(({ icon: Icon, label }, i) => (
-            <div
+        <motion.div
+          className="flex flex-wrap justify-center gap-3 mb-16"
+          variants={staggerContainerFast}
+          initial="hidden"
+          whileInView="visible"
+          viewport={defaultViewport}
+        >
+          {capabilities.map(({ icon: Icon, label }) => (
+            <motion.div
               key={label}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-1 border border-border text-sm font-medium text-muted-foreground hover:border-synapse-500/30 hover:text-foreground transition-all duration-300 cursor-default hover-lift animate-pop-in"
-              style={{ animationDelay: `${i * 100}ms` }}
+              variants={popIn}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-1 border border-border text-sm font-medium text-muted-foreground hover:border-synapse-500/30 hover:text-foreground transition-all duration-300 cursor-default"
+              whileHover={hoverLift}
             >
               <Icon className="w-4 h-4 text-synapse-500" />
               {label}
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Features grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <div
+        <motion.div
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+        >
+          {features.map((feature) => (
+            <motion.div
               key={feature.title}
-              data-feature-card
-              data-index={index}
-              className={`group relative p-6 lg:p-8 rounded-2xl bg-surface-1 border border-border hover:border-synapse-500/30 transition-all duration-500 cursor-pointer ${
-                visibleCards.has(index) 
-                  ? 'animate-slide-up-bounce opacity-100' 
-                  : 'opacity-0 translate-y-8'
-              }`}
-              style={{ 
-                animationDelay: `${index * 100}ms`,
-                transitionDelay: `${index * 50}ms` 
-              }}
+              variants={cardItem}
+              whileHover={{ y: -6, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+              className="group relative p-6 lg:p-8 rounded-2xl bg-surface-1 border border-border hover:border-synapse-500/30 transition-colors duration-300 cursor-pointer"
             >
               {/* Gradient hover effect */}
               <div
@@ -198,12 +204,18 @@ export function LandingFeatures() {
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
+        <motion.div
+          className="text-center mt-16"
+          initial="hidden"
+          whileInView="visible"
+          viewport={defaultViewport}
+          variants={fadeUp}
+        >
           <p className="text-muted-foreground">
             And many more features to accelerate your research.{" "}
             <a
@@ -214,7 +226,7 @@ export function LandingFeatures() {
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </a>
           </p>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
