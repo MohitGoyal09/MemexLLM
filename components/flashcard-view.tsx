@@ -84,7 +84,7 @@ export function FlashcardView({ title, sourceCount, flashcards, contentId, onBac
           <div
             onClick={() => !isFlipped && setIsFlipped(true)}
             className={`
-              relative w-full min-h-[200px] cursor-pointer
+              grid w-full min-h-[200px] cursor-pointer
               transition-transform duration-500 transform-style-3d
               ${isFlipped ? "rotate-y-180" : ""}
             `}
@@ -96,7 +96,7 @@ export function FlashcardView({ title, sourceCount, flashcards, contentId, onBac
             {/* Front */}
             <div
               className={`
-                absolute inset-0
+                col-start-1 row-start-1
                 bg-gradient-to-br from-slate-700 to-slate-800 
                 rounded-2xl p-6 flex flex-col justify-between
                 border border-slate-600/50 shadow-xl
@@ -129,7 +129,7 @@ export function FlashcardView({ title, sourceCount, flashcards, contentId, onBac
             {/* Back */}
             <div
               className={`
-                absolute inset-0
+                col-start-1 row-start-1
                 bg-gradient-to-br from-slate-700 to-slate-800 
                 rounded-2xl p-6 flex flex-col justify-between
                 border border-slate-600/50 shadow-xl

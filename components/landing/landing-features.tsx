@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import {
   FileUp,
   MessageSquare,
@@ -11,50 +12,63 @@ import {
   Search,
   Link2,
   Zap,
+  ArrowRight,
 } from "lucide-react";
 
 const features = [
   {
     icon: FileUp,
-    title: "Multi-Source Upload",
+    title: "Drop Any Source",
     description:
-      "PDFs, websites, YouTube videos, audio files - upload any source and watch AI synthesize them all.",
+      "PDFs, articles, YouTube videos, audio lectures—upload anything. We handle 50+ formats so you never have to convert again.",
     gradient: "from-synapse-500/20 to-synapse-600/10",
+    stat: "50+",
+    statLabel: "formats",
   },
   {
     icon: MessageSquare,
-    title: "Conversational AI",
+    title: "Chat With Your Papers",
     description:
-      "Ask questions naturally and get cited answers from your documents. Like ChatGPT, but grounded in your sources.",
+      "Ask questions like you're talking to an expert. Get cited answers with exact page numbers—no more ctrl+F hunting.",
     gradient: "from-cognition-500/20 to-cognition-600/10",
+    stat: "< 3s",
+    statLabel: "response",
   },
   {
     icon: Brain,
-    title: "Deep Understanding",
+    title: "See Hidden Connections",
     description:
-      "Our AI doesn't just search keywords - it understands context, themes, and connections across your entire library.",
+      "Our AI doesn't just search keywords—it understands context and reveals patterns across your entire research library.",
     gradient: "from-synapse-500/20 to-cognition-500/10",
+    stat: "10x",
+    statLabel: "faster insights",
   },
   {
     icon: AudioWaveform,
-    title: "Audio Generation",
+    title: "Learn On-The-Go",
     description:
-      "Transform your research into engaging podcast-style audio summaries. Perfect for learning on the go.",
+      "Turn dense papers into podcast-style summaries. Perfect for commutes, gym sessions, or when your eyes need a break.",
     gradient: "from-insight-500/20 to-insight-600/10",
+    stat: "🎧",
+    statLabel: "audio mode",
   },
   {
     icon: Workflow,
-    title: "Mind Maps",
+    title: "Map Your Knowledge",
     description:
-      "Visualize connections between concepts. See how ideas relate and discover patterns you'd never find manually.",
+      "Visualize how concepts connect across sources. Discover relationships you'd never find reading linearly.",
     gradient: "from-cognition-500/20 to-synapse-500/10",
+    stat: "∞",
+    statLabel: "connections",
   },
   {
     icon: GalleryVerticalEnd,
-    title: "Flashcards & Quizzes",
+    title: "Ace Your Exams",
     description:
-      "Automatically generate study materials from your sources. Reinforce learning with spaced repetition.",
+      "Auto-generate flashcards and quizzes from your readings. Spaced repetition built-in for long-term retention.",
     gradient: "from-success-500/20 to-success-600/10",
+    stat: "2x",
+    statLabel: "retention",
   },
 ];
 
@@ -66,9 +80,32 @@ const capabilities = [
 ];
 
 export function LandingFeatures() {
+  const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = parseInt(entry.target.getAttribute("data-index") || "0");
+            setVisibleCards((prev) => new Set([...prev, index]));
+          }
+        });
+      },
+      { threshold: 0.2, rootMargin: "50px" }
+    );
+
+    const cards = document.querySelectorAll("[data-feature-card]");
+    cards.forEach((card) => observer.observe(card));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
       id="features"
+      ref={sectionRef}
       className="relative py-24 lg:py-32 bg-surface-0 overflow-hidden"
     >
       {/* Background accent */}
@@ -85,25 +122,26 @@ export function LandingFeatures() {
       <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
         {/* Section header */}
         <div className="text-center mb-16 lg:mb-20">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-synapse-500/10 text-synapse-600 text-sm font-medium mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            Features
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-synapse-500/10 text-synapse-600 text-sm font-medium mb-4 animate-bounce-in">
+            <Sparkles className="w-3.5 h-3.5 animate-pulse-scale" />
+            Powerful Features
           </div>
           <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4">
-            Everything You Need for Research
+            Your Research Superpowers
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Powerful AI tools designed for researchers, students, and curious minds
-            who want to understand more, faster.
+            Tools designed by researchers, for researchers. Because your time is too valuable 
+            for manual document hunting.
           </p>
         </div>
 
-        {/* Capabilities row */}
+        {/* Capabilities row - floating pills with bounce */}
         <div className="flex flex-wrap justify-center gap-3 mb-16">
-          {capabilities.map(({ icon: Icon, label }) => (
+          {capabilities.map(({ icon: Icon, label }, i) => (
             <div
               key={label}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-1 border border-border text-sm font-medium text-muted-foreground"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-1 border border-border text-sm font-medium text-muted-foreground hover:border-synapse-500/30 hover:text-foreground transition-all duration-300 cursor-default hover-lift animate-pop-in"
+              style={{ animationDelay: `${i * 100}ms` }}
             >
               <Icon className="w-4 h-4 text-synapse-500" />
               {label}
@@ -116,8 +154,17 @@ export function LandingFeatures() {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="group relative p-6 lg:p-8 rounded-2xl bg-surface-1 border border-border hover:border-synapse-500/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-              style={{ animationDelay: `${index * 100}ms` }}
+              data-feature-card
+              data-index={index}
+              className={`group relative p-6 lg:p-8 rounded-2xl bg-surface-1 border border-border hover:border-synapse-500/30 transition-all duration-500 cursor-pointer ${
+                visibleCards.has(index) 
+                  ? 'animate-slide-up-bounce opacity-100' 
+                  : 'opacity-0 translate-y-8'
+              }`}
+              style={{ 
+                animationDelay: `${index * 100}ms`,
+                transitionDelay: `${index * 50}ms` 
+              }}
             >
               {/* Gradient hover effect */}
               <div
@@ -125,18 +172,31 @@ export function LandingFeatures() {
               />
 
               <div className="relative">
-                {/* Icon */}
-                <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center mb-5 group-hover:scale-110 group-hover:border-synapse-500/30 transition-all duration-300">
-                  <feature.icon className="w-6 h-6 text-synapse-500" />
+                {/* Icon with bounce on hover */}
+                <div className="flex items-start justify-between mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center group-hover:scale-110 group-hover:border-synapse-500/30 group-hover:bg-synapse-500/10 transition-all duration-300 spring-transition">
+                    <feature.icon className="w-6 h-6 text-synapse-500 group-hover:animate-wiggle" />
+                  </div>
+                  {/* Stat badge */}
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-synapse-500">{feature.stat}</p>
+                    <p className="text-xs text-muted-foreground">{feature.statLabel}</p>
+                  </div>
                 </div>
 
                 {/* Content */}
-                <h3 className="text-lg font-semibold text-foreground mb-2">
+                <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-synapse-600 transition-colors">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed mb-4">
                   {feature.description}
                 </p>
+
+                {/* Learn more link - appears on hover */}
+                <div className="flex items-center gap-1 text-sm text-synapse-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span>Learn more</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
             </div>
           ))}
@@ -145,12 +205,13 @@ export function LandingFeatures() {
         {/* Bottom CTA */}
         <div className="text-center mt-16">
           <p className="text-muted-foreground">
-            And many more features.{" "}
+            And many more features to accelerate your research.{" "}
             <a
               href="#pricing"
-              className="text-synapse-500 font-medium hover:underline"
+              className="text-synapse-500 font-medium hover:underline inline-flex items-center gap-1 group"
             >
-              Start exploring for free
+              Start exploring free
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </a>
           </p>
         </div>

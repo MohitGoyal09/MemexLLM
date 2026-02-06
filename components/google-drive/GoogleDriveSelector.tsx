@@ -35,11 +35,12 @@ export function GoogleDriveSelector({
     try {
         // Redirect directly to Google OAuth
         const { getGoogleDriveAuthUrl } = await import("@/lib/api/gdrive")
-        
-        // Pass current URL as state so we can return here
-        const returnUrl = window.location.pathname + window.location.search
-        const { auth_url } = await getGoogleDriveAuthUrl(returnUrl)
-        
+        const { createOAuthState } = await import("@/lib/oauth-state")
+
+        // Generate CSRF state token with return URL encoded
+        const state = createOAuthState()
+        const { auth_url } = await getGoogleDriveAuthUrl(state)
+
         if (auth_url) {
             window.location.href = auth_url
         } else {

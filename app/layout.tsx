@@ -9,6 +9,7 @@ import { Suspense } from "react"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/ui/theme-provider"
+import { SessionRefreshProvider } from "@/components/session-refresh-provider"
 
 // Primary sans-serif font for body text and UI
 // Font fallback chain ensures text visibility during load
@@ -126,9 +127,11 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <PostHogPageView />
             </Suspense>
-            <main id="main-content">
-              {children}
-            </main>
+            <SessionRefreshProvider>
+              <main id="main-content">
+                {children}
+              </main>
+            </SessionRefreshProvider>
             <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ""} />
           </PHProvider>
           <Toaster />

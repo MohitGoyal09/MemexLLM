@@ -88,10 +88,10 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
     // Show result immediately after answering
     if (hasAnswered) {
       if (index === currentQuestion.correctAnswer) {
-        return "border-success bg-success/10"
+        return "border-green-500 bg-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.2)]"
       }
       if (index === selectedAnswer && index !== currentQuestion.correctAnswer) {
-        return "border-destructive bg-destructive/10"
+        return "border-red-500 bg-red-500/20"
       }
     }
     if (selectedAnswer === index && !hasAnswered) {
@@ -130,7 +130,7 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
           
           <div className="w-full max-w-xs h-3 bg-muted rounded-full overflow-hidden mb-6">
             <div
-              className={`h-full transition-all duration-500 ${percentage >= 70 ? 'bg-success' : percentage >= 40 ? 'bg-warning' : 'bg-destructive'}`}
+              className={`h-full transition-all duration-500 ${percentage >= 70 ? 'bg-green-500' : percentage >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
               style={{ width: `${percentage}%` }}
             />
           </div>
@@ -196,9 +196,9 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground font-medium">{String.fromCharCode(65 + index)}.</span>
                 <span className="flex-1">{option}</span>
-                {hasAnswered && index === currentQuestion.correctAnswer && <Check className="w-5 h-5 text-success" />}
+                {hasAnswered && index === currentQuestion.correctAnswer && <Check className="w-5 h-5 text-green-500" />}
                 {hasAnswered && index === selectedAnswer && index !== currentQuestion.correctAnswer && (
-                  <X className="w-5 h-5 text-destructive" />
+                  <X className="w-5 h-5 text-red-500" />
                 )}
               </div>
             </button>
@@ -207,9 +207,9 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
 
         {/* Feedback message after answering */}
         {hasAnswered && (
-          <div className={`mt-4 p-3 rounded-lg ${selectedAnswer === currentQuestion.correctAnswer ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
+          <div className={`mt-4 p-3 rounded-lg ${selectedAnswer === currentQuestion.correctAnswer ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
             {selectedAnswer === currentQuestion.correctAnswer
-              ? "✓ Correct!"
+              ? <span className="flex items-center gap-2"><Check className="w-5 h-5" /> Correct!</span>
               : `✗ Incorrect. The correct answer is ${String.fromCharCode(65 + currentQuestion.correctAnswer)}.`
             }
           </div>
@@ -219,7 +219,7 @@ export function QuizView({ title, sourceCount, questions, contentId, onBack }: Q
         <div className="mt-6 flex justify-center">
           <div className="h-1 bg-muted rounded-full w-full max-w-xs overflow-hidden">
             <div
-              className="h-full bg-primary transition-all duration-300"
+              className={`h-full transition-all duration-500 ${score / questions.length >= 0.7 ? 'bg-green-500' : score / questions.length >= 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`}
               style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
             />
           </div>

@@ -46,7 +46,7 @@ export async function updateSession(request: NextRequest) {
   const path = url.pathname
 
   // Add your protected routes here
-  const protectedPaths = ['/home', '/notebook'] 
+  const protectedPaths = ['/home', '/notebook', '/settings']
   const isProtected = protectedPaths.some(p => path.startsWith(p))
   
   // Add your auth routes here

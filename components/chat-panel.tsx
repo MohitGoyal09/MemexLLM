@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import rehypeSanitize from "rehype-sanitize"
 import {
   SlidersHorizontal,
   MoreVertical,
@@ -62,6 +63,27 @@ interface ChatPanelProps {
   onViewSource?: (documentId: string, pageNumber?: number | null) => void
   lastChatTurn?: LastChatTurn | null
   onNoteSaved?: () => void
+}
+
+// Web Speech API type definitions
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onstart: ((this: SpeechRecognitionInstance, ev: Event) => void) | null;
+  onresult: ((this: SpeechRecognitionInstance, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognitionInstance, ev: SpeechRecognitionErrorEvent) => void) | null;
+  onend: ((this: SpeechRecognitionInstance, ev: Event) => void) | null;
 }
 
 // ============================================================================
@@ -448,7 +470,8 @@ function AssistantMessage({
       <div className="prose prose-sm dark:prose-invert max-w-none">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
-          components={MarkdownComponents as any}
+          rehypePlugins={[rehypeSanitize]}
+          components={MarkdownComponents as React.ComponentProps<typeof ReactMarkdown>["components"]}
         >
           {processedContent}
         </ReactMarkdown>
@@ -560,7 +583,7 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [input, setInput] = useState("")
   const [isListening, setIsListening] = useState(false)
-  const speechRecognitionRef = useRef<any>(null)
+  const speechRecognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const [mobileCitation, setMobileCitation] = useState<{
     citation: Citation
     index: number
@@ -597,9 +620,9 @@ export function ChatPanel({
       const { generationApi } = await import("@/lib/api/generation")
       const { toast } = await import("sonner")
       const { marked } = await import("marked")
-      
+      const { sanitizeHtml } = await import("@/lib/sanitize")
       // Convert markdown to HTML for the rich text editor
-      const htmlContent = await marked.parse(content)
+      const htmlContent = sanitizeHtml(await marked.parse(content))
       const title = `Chat Response - ${new Date().toLocaleDateString()}`
       
       await generationApi.createContent(
@@ -697,11 +720,11 @@ export function ChatPanel({
         setIsListening(true)
       }
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         // Get the latest result
         const results = Array.from(event.results)
         const transcript = results
-          .map((result: any) => result[0].transcript)
+          .map((result: SpeechRecognitionResult) => result[0].transcript)
           .join('')
         
         // If it's final, append it. If interim, we could show it but for now just appending creates dupes if not careful.
@@ -713,13 +736,13 @@ export function ChatPanel({
         // But we want to append to existing text.
         // Let's stick to previous behavior but safer.
         
-        const latestResult = results[results.length - 1] as any;
+        const latestResult = results[results.length - 1] as SpeechRecognitionResult;
         if (latestResult.isFinal) {
              setInput(prev => (prev ? prev.trim() + " " : "") + latestResult[0].transcript)
         }
       }
 
-      recognition.onerror = async (event: any) => {
+      recognition.onerror = async (event: SpeechRecognitionErrorEvent) => {
         if (event.error === 'no-speech') {
              // Ignore no-speech error, just stop
              setIsListening(false)

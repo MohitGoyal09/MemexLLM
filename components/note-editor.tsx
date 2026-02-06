@@ -39,6 +39,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 // Types
 interface NoteEditorProps {
@@ -225,7 +226,7 @@ export function NoteEditor({
     },
     onUpdate: ({ editor }) => {
       setHasUnsavedChanges(true);
-      scheduleAutoSave(title, editor.getHTML());
+      scheduleAutoSave(title, sanitizeHtml(editor.getHTML()));
     },
   });
 
@@ -280,7 +281,7 @@ export function NoteEditor({
     setTitle(newTitle);
     setHasUnsavedChanges(true);
     if (editor) {
-      scheduleAutoSave(newTitle, editor.getHTML());
+      scheduleAutoSave(newTitle, sanitizeHtml(editor.getHTML()));
     }
   };
 
@@ -293,8 +294,8 @@ export function NoteEditor({
       clearTimeout(autoSaveTimerRef.current);
     }
 
-    await onSave(title, editor.getHTML());
-    lastSavedContentRef.current = { title, content: editor.getHTML() };
+    await onSave(title, sanitizeHtml(editor.getHTML()));
+    lastSavedContentRef.current = { title, content: sanitizeHtml(editor.getHTML()) };
     setHasUnsavedChanges(false);
   };
 
