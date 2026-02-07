@@ -169,39 +169,37 @@ export function LandingFeatures() {
             <motion.div
               key={feature.title}
               variants={cardItem}
-              whileHover={{ y: -6, transition: { type: "spring", stiffness: 400, damping: 25 } }}
-              className="group relative p-6 lg:p-8 rounded-2xl bg-surface-1 border border-border hover:border-synapse-500/30 transition-colors duration-300 cursor-pointer"
+              className="h-full"
             >
-              {/* Gradient hover effect */}
               <div
-                className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-              />
-
-              <div className="relative">
-                {/* Icon with bounce on hover */}
-                <div className="flex items-start justify-between mb-5">
-                  <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center group-hover:scale-110 group-hover:border-synapse-500/30 group-hover:bg-synapse-500/10 transition-all duration-300 spring-transition">
-                    <feature.icon className="w-6 h-6 text-synapse-500 group-hover:animate-wiggle" />
+                className="group relative flex h-full flex-col justify-between overflow-hidden rounded-xl bg-surface-1 p-6 lg:p-8 border border-border hover:border-foreground/10 transition-colors duration-300"
+              >
+                <div className="relative z-10 transition-transform duration-300 group-hover:-translate-y-1">
+                  {/* Icon with bounce on hover */}
+                  <div className="flex items-start justify-between mb-5">
+                    <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border flex items-center justify-center group-hover:scale-110 group-hover:border-synapse-500/30 group-hover:bg-synapse-500/10 transition-all duration-300 spring-transition">
+                      <feature.icon className="w-6 h-6 text-synapse-500 group-hover:animate-wiggle" />
+                    </div>
+                    {/* Stat badge */}
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-synapse-500">{feature.stat}</p>
+                      <p className="text-xs text-muted-foreground">{feature.statLabel}</p>
+                    </div>
                   </div>
-                  {/* Stat badge */}
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-synapse-500">{feature.stat}</p>
-                    <p className="text-xs text-muted-foreground">{feature.statLabel}</p>
+
+                  {/* Content */}
+                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-synapse-600 transition-colors">
+                    {feature.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed mb-4">
+                    {feature.description}
+                  </p>
+
+                  {/* Learn more link - appears on hover */}
+                  <div className="flex items-center gap-1 text-sm text-synapse-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0">
+                    <span>Learn more</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
-                </div>
-
-                {/* Content */}
-                <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-synapse-600 transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  {feature.description}
-                </p>
-
-                {/* Learn more link - appears on hover */}
-                <div className="flex items-center gap-1 text-sm text-synapse-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span>Learn more</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </motion.div>

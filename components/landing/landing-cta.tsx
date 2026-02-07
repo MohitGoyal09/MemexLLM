@@ -7,10 +7,12 @@ import { ArrowRight, Sparkles, Clock, Shield, Zap, Users } from "lucide-react";
 import {
   fadeUp,
   fadeUpSpring,
-  popIn,
-  staggerContainer,
   staggerContainerFast,
+  staggerContainer,
+  popIn,
 } from "@/lib/motion";
+import { AvatarCircles } from "@/components/magicui/avatar-circles";
+import ShimmerButton from "@/components/magicui/shimmer-button";
 
 const benefitsList = [
   { icon: Clock, text: "Setup in 2 minutes" },
@@ -20,12 +22,30 @@ const benefitsList = [
 ];
 
 const avatars = [
-  { initials: "SK", color: "bg-blue-500" },
-  { initials: "MT", color: "bg-emerald-500" },
-  { initials: "ER", color: "bg-amber-500" },
-  { initials: "DL", color: "bg-rose-500" },
-  { initials: "MS", color: "bg-purple-500" },
-  { initials: "JW", color: "bg-teal-500" },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/16860528",
+    profileUrl: "https://github.com/dillionverma",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/20110627",
+    profileUrl: "https://github.com/tomonarifeehan",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/106103625",
+    profileUrl: "https://github.com/BankkRoll",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/59228569",
+    profileUrl: "https://github.com/safethecode",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/59442788",
+    profileUrl: "https://github.com/sanjay-mali",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/89768406",
+    profileUrl: "https://github.com/itsarghyadas",
+  },
 ];
 
 export function LandingCTA() {
@@ -79,17 +99,9 @@ export function LandingCTA() {
           viewport={{ once: true, margin: "-80px" }}
           className="flex justify-center mb-8"
         >
-          <div className="flex -space-x-3">
-            {avatars.map((user, i) => (
-              <motion.div
-                key={i}
-                variants={popIn}
-                className={`w-12 h-12 rounded-full ${user.color} border-3 border-surface-0 shadow-lg flex items-center justify-center text-white text-sm font-bold spring-transition hover:scale-110 hover:z-10`}
-              >
-                {user.initials}
-              </motion.div>
-            ))}
-          </div>
+          <motion.div variants={popIn}>
+            <AvatarCircles numPeople={99} avatarUrls={avatars} />
+          </motion.div>
         </motion.div>
 
         {/* Headline - action-oriented */}
@@ -145,28 +157,17 @@ export function LandingCTA() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8"
         >
           <div className="relative">
-            {/* Pulsing glow behind the button */}
-            <motion.div
-              className="absolute inset-0 rounded-full bg-synapse-500/20 blur-xl"
-              animate={{
-                scale: [1, 1.05, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
             <Link href="/auth/sign-up">
-              <Button
-                size="lg"
-                className="relative h-16 px-12 text-lg font-semibold rounded-full shadow-xl shadow-synapse-500/30 hover:shadow-2xl hover:shadow-synapse-500/40 transition-all duration-300 gap-3 spring-transition hover:scale-105"
+              <ShimmerButton
+                className="relative h-16 px-12 text-lg font-semibold shadow-xl shadow-synapse-500/30 hover:shadow-2xl hover:shadow-synapse-500/40 transition-all duration-300 gap-3 spring-transition hover:scale-105"
+                background="oklch(0.65 0.17 68)"
+                shimmerColor="#ffffff"
+                shimmerDuration="2s"
               >
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-5 h-5 mr-2" />
                 Start My Free Research
-                <ArrowRight className="w-5 h-5" />
-              </Button>
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </ShimmerButton>
             </Link>
           </div>
         </motion.div>

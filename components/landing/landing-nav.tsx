@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { MagicThemeToggle } from "@/components/magicui/theme-toggle";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -102,8 +103,8 @@ export function LandingNav() {
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <Logo className="w-10 h-10 transition-transform duration-300 group-hover:scale-110 spring-transition" />
-            <span className="text-xl font-semibold text-foreground tracking-tight">
+            <Logo className="w-12 h-12 transition-transform duration-300 group-hover:scale-110 spring-transition" />
+            <span className="text-2xl font-bold text-foreground tracking-tight">
               MemexLLM
             </span>
           </Link>
@@ -137,6 +138,7 @@ export function LandingNav() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
+            <MagicThemeToggle />
             {isAuthenticated ? (
               <Link href="/home">
                 <Button size="sm" className="font-semibold spring-transition hover:scale-105">
@@ -196,6 +198,12 @@ export function LandingNav() {
                     {link.label}
                   </motion.a>
                 ))}
+                <div className="px-4 py-2">
+                   <div className="flex items-center justify-between">
+                     <span className="text-sm font-medium text-muted-foreground">Theme</span>
+                     <MagicThemeToggle />
+                   </div>
+                </div>
                 <motion.div
                   className="flex flex-col gap-2 mt-4 pt-4 border-t border-border"
                   variants={mobileNavItemVariants}

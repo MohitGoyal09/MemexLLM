@@ -17,8 +17,7 @@ const testimonials = [
     author: "Sarah K.",
     role: "PhD Candidate, Neuroscience",
     institution: "Stanford University",
-    avatar: "SK",
-    color: "bg-blue-500",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=faces",
     icon: GraduationCap,
     highlight: "Saved 40+ hours on lit review",
   },
@@ -28,8 +27,7 @@ const testimonials = [
     author: "Marcus T.",
     role: "Medical Student, 3rd Year",
     institution: "Johns Hopkins",
-    avatar: "MT",
-    color: "bg-emerald-500",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=faces",
     icon: Microscope,
     highlight: "Exam scores up 15%",
   },
@@ -39,8 +37,7 @@ const testimonials = [
     author: "Elena R.",
     role: "Master's Candidate, Sociology",
     institution: "UC Berkeley",
-    avatar: "ER",
-    color: "bg-amber-500",
+    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=faces",
     icon: FileText,
     highlight: "Analyzed 200+ transcripts",
   },
@@ -50,8 +47,7 @@ const testimonials = [
     author: "David L.",
     role: "Postdoctoral Researcher",
     institution: "MIT",
-    avatar: "DL",
-    color: "bg-rose-500",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=faces",
     icon: Mic,
     highlight: "2hrs of research during commute",
   },
@@ -61,8 +57,7 @@ const testimonials = [
     author: "Prof. Maria S.",
     role: "Professor of Economics",
     institution: "MIT",
-    avatar: "MS",
-    color: "bg-purple-500",
+    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=faces",
     icon: BookOpen,
     highlight: "Stays current with 100+ papers/mo",
   },
@@ -72,8 +67,7 @@ const testimonials = [
     author: "Dr. James W.",
     role: "Research Director",
     institution: "Biotech Startup",
-    avatar: "JW",
-    color: "bg-teal-500",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=faces",
     icon: Briefcase,
     highlight: "Full data privacy",
   },
@@ -201,9 +195,11 @@ export function LandingTestimonials() {
 
               {/* Author */}
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-full ${testimonial.color} flex items-center justify-center text-white text-sm font-bold shadow-lg spring-transition group-hover:scale-110`}>
-                  {testimonial.avatar}
-                </div>
+                <img
+                  src={testimonial.image}
+                  alt={testimonial.author}
+                  className="w-12 h-12 rounded-full object-cover shadow-sm group-hover:scale-110 spring-transition"
+                />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <p className="font-semibold text-foreground">

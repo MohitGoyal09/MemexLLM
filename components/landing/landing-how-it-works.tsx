@@ -8,19 +8,23 @@ import {
   Wand2,
   Search,
   BookOpen,
+  FileText,
+  Brain,
+  Copy,
+  Headphones,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   fadeUp,
-  fadeUpSpring,
-  scaleIn,
   staggerContainer,
   defaultViewport,
 } from "@/lib/motion";
+import { BentoGrid } from "@/components/magicui/bento-grid";
+import { cn } from "@/lib/utils";
 
 /* ── Visual Mockup Components ──────────────────────────────────── */
 
-function UploadVisual() {
+function UploadVisual({ className }: { className?: string }) {
   const files = [
     { name: "thesis-draft.pdf", size: "2.4 MB", progress: 100 },
     { name: "interview-notes.docx", size: "856 KB", progress: 100 },
@@ -28,13 +32,13 @@ function UploadVisual() {
   ];
 
   return (
-    <div className="rounded-xl bg-surface-2 p-4 sm:p-5 space-y-2.5">
+    <div className={cn("flex flex-col space-y-2.5 p-4 sm:p-5", className)}>
       {files.map((file, i) => (
         <div
           key={file.name}
-          className="flex items-center gap-3 rounded-lg bg-surface-1 border border-border/50 p-3"
+          className="flex items-center gap-3 rounded-lg bg-surface-1/50 border border-border/50 p-2.5 backdrop-blur-sm"
         >
-          <div className="shrink-0 w-10 h-10 rounded-lg bg-synapse-500/10 flex items-center justify-center">
+          <div className="shrink-0 w-8 h-8 rounded-lg bg-synapse-500/10 flex items-center justify-center">
             <FileUp className="w-4 h-4 text-synapse-500" />
           </div>
           <div className="flex-1 min-w-0">
@@ -42,7 +46,7 @@ function UploadVisual() {
               <span className="text-sm font-medium text-foreground truncate">
                 {file.name}
               </span>
-              <span className="text-xs text-muted-foreground shrink-0">
+              <span className="text-[10px] text-muted-foreground shrink-0">
                 {file.size}
               </span>
             </div>
@@ -54,7 +58,7 @@ function UploadVisual() {
             </div>
           </div>
           {file.progress === 100 && (
-            <span className="shrink-0 text-xs font-medium text-emerald-500">
+            <span className="shrink-0 text-[10px] font-medium text-emerald-500">
               Done
             </span>
           )}
@@ -64,130 +68,139 @@ function UploadVisual() {
   );
 }
 
-function KnowledgeGraphVisual() {
+function KnowledgeGraphVisual({ className }: { className?: string }) {
   const nodes = [
-    { label: "PDF", x: 18, y: 22 },
-    { label: "Web", x: 82, y: 18 },
-    { label: "Doc", x: 14, y: 78 },
-    { label: "Audio", x: 84, y: 76 },
-    { label: "Notes", x: 50, y: 92 },
+    { label: "PDF", x: 20, y: 25, color: "bg-blue-500" },
+    { label: "Web", x: 80, y: 20, color: "bg-purple-500" },
+    { label: "Doc", x: 25, y: 75, color: "bg-amber-500" },
+    { label: "Audio", x: 80, y: 80, color: "bg-emerald-500" },
   ];
 
   return (
-    <div className="rounded-xl bg-surface-2 p-4 sm:p-5">
-      <div className="relative h-56">
-        {/* Subtle radial glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full bg-cognition-500/10 blur-2xl" />
+    <div className={cn("relative h-full w-full flex items-center justify-center p-6", className)}>
+      <div className="relative h-full w-full aspect-square max-w-[300px] max-h-[300px]">
+        {/* Central Hub */}
+        <div className="absolute inset-0 flex items-center justify-center">
+            {/* Pulsing rings */}
+            <div className="absolute w-32 h-32 rounded-full bg-synapse-500/5 animate-ping [animation-duration:3s]" />
+            <div className="absolute w-24 h-24 rounded-full bg-synapse-500/10" />
+            
+            {/* Core Node */}
+            <div className="relative z-10 w-16 h-16 rounded-2xl bg-gradient-to-br from-synapse-500 to-synapse-600 flex items-center justify-center shadow-xl shadow-synapse-500/20">
+              <Sparkles className="w-8 h-8 text-white" />
+            </div>
+        </div>
 
-        {/* SVG connection lines */}
-        <svg
-          className="absolute inset-0 w-full h-full"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {nodes.map((node) => (
+        {/* Connecting Lines */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          {nodes.map((node, i) => (
             <line
-              key={node.label}
+              key={i}
               x1="50%"
               y1="50%"
               x2={`${node.x}%`}
               y2={`${node.y}%`}
-              stroke="oklch(0.7 0.12 175 / 0.2)"
-              strokeWidth="1"
-              strokeDasharray="4 4"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeDasharray="6 6"
+              className="text-synapse-500/20"
             />
           ))}
         </svg>
 
-        {/* Central AI node */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-2xl bg-gradient-to-br from-cognition-400 to-cognition-600 flex items-center justify-center shadow-lg shadow-cognition-500/25">
-          <Sparkles className="w-6 h-6 text-white" />
-        </div>
-
-        {/* Orbiting document nodes */}
-        {nodes.map((node) => (
-          <div
+        {/* Satellite Nodes */}
+        {nodes.map((node, i) => (
+          <motion.div
             key={node.label}
-            className="absolute w-11 h-11 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-surface-1 border border-cognition-500/20 flex items-center justify-center shadow-sm"
-            style={{ top: `${node.y}%`, left: `${node.x}%` }}
+            className="absolute rounded-xl bg-surface-1 border border-border shadow-sm px-3 py-2 flex items-center gap-2"
+            style={{ left: `${node.x}%`, top: `${node.y}%`, x: "-50%", y: "-50%" }}
+            animate={{ 
+              y: ["-50%", "-60%", "-50%"] 
+            }}
+            transition={{ 
+              duration: 4, 
+              repeat: Infinity, 
+              ease: "easeInOut",
+              delay: i * 1 
+            }}
           >
-            <span className="text-[10px] font-bold text-cognition-500 uppercase tracking-wider">
-              {node.label}
-            </span>
-          </div>
+            <div className={`w-2 h-2 rounded-full ${node.color}`} />
+            <span className="text-xs font-semibold text-foreground">{node.label}</span>
+          </motion.div>
         ))}
       </div>
     </div>
   );
 }
 
-function ChatVisual() {
+function ChatVisual({ className }: { className?: string }) {
   return (
-    <div className="rounded-xl bg-surface-2 p-4 sm:p-5 space-y-3">
+    <div className={cn("flex flex-col h-full justify-center space-y-4 p-8", className)}>
       {/* User message */}
       <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-2xl rounded-br-md bg-synapse-500 px-4 py-2.5 text-sm text-white shadow-md shadow-synapse-500/15">
+        <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-synapse-500 px-5 py-3 text-sm text-white shadow-lg shadow-synapse-500/20">
           What are the main limitations?
         </div>
       </div>
       {/* AI response */}
-      <div className="max-w-[92%] rounded-2xl rounded-bl-md bg-surface-1 border border-border/50 px-4 py-3">
+      <div className="max-w-[90%] rounded-2xl rounded-bl-sm bg-surface-1 border border-border/50 px-5 py-4 shadow-sm">
         <p className="text-sm text-foreground leading-relaxed">
-          Based on your 3 papers, the key limitations are:
+          Based on <span className="text-synapse-500 font-medium">paper1.pdf</span>, the key limitations are:
         </p>
-        <ul className="mt-2 space-y-1.5 text-[13px] text-muted-foreground">
-          <li className="flex items-start gap-2">
-            <span className="text-synapse-500 font-medium shrink-0">1.</span>
-            Small sample size (n=45)
+        <ul className="mt-3 space-y-2 text-[13px] text-muted-foreground">
+          <li className="flex items-start gap-2.5">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-synapse-500/10 text-[10px] font-bold text-synapse-500">1</span>
+            Small sample size (n=45) in the control group.
           </li>
-          <li className="flex items-start gap-2">
-            <span className="text-synapse-500 font-medium shrink-0">2.</span>
-            Self-reported data may introduce bias
+          <li className="flex items-start gap-2.5">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-synapse-500/10 text-[10px] font-bold text-synapse-500">2</span>
+            Self-reported data may introduce recall bias.
           </li>
         </ul>
-        <div className="mt-2.5 pt-2 border-t border-border/40">
-          <span className="text-xs font-medium text-synapse-500">
-            Source: paper1.pdf, p.12-14
-          </span>
-        </div>
       </div>
     </div>
   );
 }
 
-function OutputVisual() {
+function OutputVisual({ className }: { className?: string }) {
   const outputs = [
     {
       label: "Summary",
-      desc: "Key takeaways",
-      accent: "bg-blue-500/10 border-blue-500/20 text-blue-400",
+      icon: FileText,
+      color: "bg-blue-500/10 text-blue-600 border-blue-200/50",
     },
     {
       label: "Mind Map",
-      desc: "Visual connections",
-      accent: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+      icon: Brain,
+      color: "bg-purple-500/10 text-purple-600 border-purple-200/50",
     },
     {
       label: "Flashcards",
-      desc: "Test your memory",
-      accent: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+      icon: Copy,
+      color: "bg-amber-500/10 text-amber-600 border-amber-200/50",
     },
     {
       label: "Audio",
-      desc: "Listen & learn",
-      accent: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+      icon: Headphones,
+      color: "bg-emerald-500/10 text-emerald-600 border-emerald-200/50",
     },
   ];
 
   return (
-    <div className="rounded-xl bg-surface-2 p-4 sm:p-5">
-      <div className="grid grid-cols-2 gap-3">
+    <div className={cn("h-full w-full p-4 flex flex-col justify-center", className)}>
+      <div className="grid grid-cols-2 gap-2.5 w-full">
         {outputs.map((item) => (
           <div
             key={item.label}
-            className={`rounded-lg border p-3.5 transition-transform hover:scale-[1.02] ${item.accent}`}
+            className={cn(
+              "flex flex-col items-center justify-center gap-2 rounded-xl border p-3 text-center transition-all hover:scale-105",
+              "bg-surface-1 border-border/50 hover:bg-surface-2 hover:border-border",
+            )}
           >
-            <p className="text-sm font-semibold">{item.label}</p>
-            <p className="text-[11px] mt-0.5 opacity-60">{item.desc}</p>
+            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", item.color)}>
+              <item.icon className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-medium text-muted-foreground">{item.label}</span>
           </div>
         ))}
       </div>
@@ -197,41 +210,38 @@ function OutputVisual() {
 
 /* ── Step Data ─────────────────────────────────────────────────── */
 
-const visuals = [
-  <UploadVisual key="upload" />,
-  <KnowledgeGraphVisual key="graph" />,
-  <ChatVisual key="chat" />,
-  <OutputVisual key="output" />,
-];
-
-const steps = [
+const features = [
   {
-    number: "01",
-    icon: Upload,
-    title: "Drop Your Documents",
-    description:
-      "Drag PDFs, paste URLs, or connect your Google Drive. We support 50+ formats — from research papers to recordings.",
+    Icon: Upload,
+    name: "01. Drop Your Documents",
+    description: "Drag PDFs, paste URLs, or connect your Google Drive. 50+ formats supported.",
+    href: "/",
+    cta: "Start Uploading",
+    className: "col-span-3 lg:col-span-1",
   },
   {
-    number: "02",
-    icon: Wand2,
-    title: "AI Reads & Connects",
-    description:
-      "Our AI digests every document, understands context, and builds a knowledge graph of connections.",
+    Icon: Wand2,
+    name: "02. AI Reads & Connects",
+    description: "Our AI digests every document, understands context, and builds a knowledge graph of connections.",
+    href: "/",
+    cta: "See Context",
+    className: "col-span-3 lg:col-span-2",
   },
   {
-    number: "03",
-    icon: Search,
-    title: "Ask Anything",
-    description:
-      "Chat naturally with your documents. Get instant, cited answers with exact page references.",
+    Icon: Search,
+    name: "03. Ask Anything",
+    description: "Chat naturally with your documents. Get instant, cited answers with exact page references.",
+    href: "/",
+    cta: "Start Chatting",
+    className: "col-span-3 lg:col-span-2",
   },
   {
-    number: "04",
-    icon: BookOpen,
-    title: "Learn & Remember",
-    description:
-      "Generate summaries, mind maps, flashcards, and audio overviews from your research.",
+    Icon: BookOpen,
+    name: "04. Learn & Remember",
+    description: "Generate summaries, mind maps, and flashcards instantly.",
+    href: "/",
+    cta: "Start Learning",
+    className: "col-span-3 lg:col-span-1",
   },
 ];
 
@@ -286,71 +296,56 @@ export function LandingHowItWorks() {
           </motion.p>
         </motion.div>
 
-        {/* Step flow indicator */}
-        <motion.div
-          className="flex items-center justify-center mb-12 lg:mb-16"
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {steps.map((step, i) => (
-            <div key={step.number} className="flex items-center">
-              <div className="w-10 h-10 rounded-full bg-synapse-500/10 border border-synapse-500/30 flex items-center justify-center">
-                <span className="text-sm font-bold text-synapse-500">
-                  {step.number}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
-                <div className="w-10 sm:w-16 lg:w-24 h-px bg-gradient-to-r from-synapse-500/40 to-synapse-500/10 mx-1" />
+        {/* Custom Bento Grid Layout */}
+        <BentoGrid className="lg:grid-rows-2">
+          {features.map((feature, idx) => (
+            <div
+              key={idx}
+              className={cn(
+                "group relative overflow-hidden rounded-3xl border bg-surface-1/50 backdrop-blur-sm transition-shadow hover:shadow-xl hover:shadow-synapse-500/5",
+                feature.className,
+                // Layout switching based on size
+                feature.className.includes("col-span-2") 
+                  ? "flex flex-col lg:flex-row" // Wide cards: Stack on mobile, Side-by-side on desktop
+                  : "flex flex-col"             // Narrow cards: Always stack
               )}
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Steps grid — 2 columns on desktop for breathing room */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-          {steps.map((step, index) => (
-            <motion.div
-              key={step.number}
-              className="group rounded-2xl border border-border/50 p-6 lg:p-8 transition-colors hover:border-synapse-500/20"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-60px" }}
-              variants={fadeUpSpring}
-              transition={{ delay: index * 0.1 }}
             >
-              {/* Step header */}
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-3xl font-bold text-synapse-500/20 select-none">
-                  {step.number}
-                </span>
-                <div className="w-10 h-10 rounded-xl bg-synapse-500 flex items-center justify-center shadow-md shadow-synapse-500/25">
-                  <step.icon className="w-5 h-5 text-white" />
+              {/* Content Section */}
+              <div className={cn(
+                "flex flex-col justify-center p-6 lg:p-8 z-10",
+                feature.className.includes("col-span-2") ? "lg:w-1/2" : "w-full"
+              )}>
+                <div className="w-12 h-12 rounded-xl bg-synapse-500/10 flex items-center justify-center mb-4 text-synapse-500">
+                  <feature.Icon className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">
+                  {feature.name}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+
+              {/* Visual Section */}
+              <div 
+                className={cn(
+                  "relative bg-surface-2/50",
+                  feature.className.includes("col-span-2") 
+                    ? "lg:w-1/2 border-t lg:border-t-0 lg:border-l border-border/50 min-h-[200px]" 
+                    : "flex-1 border-t border-border/50 min-h-[150px]"
+                )}
+              >
+                {/* Render the visual component directly, not as a background prop */}
+                <div className="absolute inset-0 w-full h-full">
+                  {idx === 0 && <UploadVisual className="h-full w-full p-6" />}
+                  {idx === 1 && <KnowledgeGraphVisual className="h-full w-full" />}
+                  {idx === 2 && <ChatVisual className="h-full w-full p-6" />}
+                  {idx === 3 && <OutputVisual className="h-full w-full p-4 flex items-center" />}
                 </div>
               </div>
-
-              {/* Step content */}
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                {step.title}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed mb-5">
-                {step.description}
-              </p>
-
-              {/* Visual mockup */}
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: "-40px" }}
-                variants={scaleIn}
-                transition={{ delay: index * 0.1 + 0.15 }}
-              >
-                {visuals[index]}
-              </motion.div>
-            </motion.div>
+            </div>
           ))}
-        </div>
+        </BentoGrid>
       </div>
     </section>
   );

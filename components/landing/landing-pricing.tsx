@@ -12,6 +12,7 @@ import {
   staggerContainerSlow,
   cardItem,
 } from "@/lib/motion";
+import ShimmerButton from "@/components/magicui/shimmer-button";
 
 const tiers = [
   {
@@ -266,11 +267,16 @@ export function LandingPricing() {
                   </Button>
                 </a>
               ) : (
-                <Link href={tier.href}>
-                  <Button variant={tier.ctaVariant} className="w-full gap-2 h-12 spring-transition hover:scale-[1.02] shadow-lg shadow-synapse-500/20">
+                <Link href={tier.href} className="w-full">
+                  <ShimmerButton
+                    className="w-full h-12 text-base font-semibold shadow-lg shadow-synapse-500/20 hover:shadow-xl hover:shadow-synapse-500/30 transition-all duration-300 gap-2"
+                    background="oklch(0.65 0.17 68)"
+                    shimmerColor="#ffffff"
+                    shimmerDuration="2s"
+                  >
                     {tier.cta}
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </ShimmerButton>
                 </Link>
               )}
             </motion.div>

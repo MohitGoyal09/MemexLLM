@@ -26,6 +26,11 @@ import {
   cardItem,
   defaultViewport,
 } from "@/lib/motion";
+import { AvatarCircles } from "@/components/magicui/avatar-circles";
+import { TypingAnimation } from "@/components/magicui/typing-animation";
+import { FlipWords } from "@/components/ui/flip-words";
+import ShimmerButton from "@/components/magicui/shimmer-button";
+import HeroVideoDialog from "@/components/magicui/hero-video-dialog";
 
 const floatingIcons = [
   { Icon: FileText, delay: 0, position: "top-[15%] left-[8%]", rotate: "-6deg" },
@@ -34,11 +39,31 @@ const floatingIcons = [
   { Icon: BookOpen, delay: 1.5, position: "bottom-[20%] right-[8%]", rotate: "3deg" },
 ];
 
-const socialProofUsers = [
-  { initials: "SK", color: "bg-blue-500", name: "Sarah K." },
-  { initials: "MT", color: "bg-emerald-500", name: "Marcus T." },
-  { initials: "ER", color: "bg-amber-500", name: "Elena R." },
-  { initials: "DL", color: "bg-rose-500", name: "David L." },
+const avatars = [
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/16860528",
+    profileUrl: "https://github.com/dillionverma",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/20110627",
+    profileUrl: "https://github.com/tomonarifeehan",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/106103625",
+    profileUrl: "https://github.com/BankkRoll",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/59228569",
+    profileUrl: "https://github.com/safethecode",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/59442788",
+    profileUrl: "https://github.com/sanjay-mali",
+  },
+  {
+    imageUrl: "https://avatars.githubusercontent.com/u/89768406",
+    profileUrl: "https://github.com/itsarghyadas",
+  },
 ];
 
 // Typewriter effect for dynamic text
@@ -52,38 +77,9 @@ const researchPhrases = [
 
 export function LandingHero() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [displayText, setDisplayText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-
   // Parallax for hero visual
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -40]);
-
-  // Typewriter effect
-  useEffect(() => {
-    const currentPhrase = researchPhrases[currentPhraseIndex];
-    const speed = isDeleting ? 50 : 100;
-
-    const timeout = setTimeout(() => {
-      if (!isDeleting) {
-        if (displayText.length < currentPhrase.length) {
-          setDisplayText(currentPhrase.slice(0, displayText.length + 1));
-        } else {
-          setTimeout(() => setIsDeleting(true), 2000);
-        }
-      } else {
-        if (displayText.length > 0) {
-          setDisplayText(displayText.slice(0, -1));
-        } else {
-          setIsDeleting(false);
-          setCurrentPhraseIndex((prev) => (prev + 1) % researchPhrases.length);
-        }
-      }
-    }, speed);
-
-    return () => clearTimeout(timeout);
-  }, [displayText, isDeleting, currentPhraseIndex]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -182,9 +178,11 @@ export function LandingHero() {
           Stop Drowning in PDFs.{" "}
           <br className="hidden sm:block" />
           <span className="relative inline-block">
-            <span className="relative z-10 text-synapse-500">
-              Start Understanding.
-            </span>
+            <TypingAnimation 
+              text="Start Understanding." 
+              className="relative z-10 text-synapse-500 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight" 
+              duration={100}
+            />
             <span
               className="absolute -bottom-2 left-0 right-0 h-3 bg-synapse-500/20 rounded-full -z-0"
               style={{ transform: "skewX(-6deg)" }}
@@ -202,9 +200,12 @@ export function LandingHero() {
           </p>
           <p>
             MemexLLM reads, connects, and synthesizes your documents—so you can focus on{" "}
-            <span className="text-synapse-500 font-medium">
-              {displayText}
-              <span className="animate-cursor-blink text-synapse-500">|</span>
+            <span className="inline-block align-bottom px-1">
+              <FlipWords 
+                words={researchPhrases} 
+                className="text-synapse-500 font-medium !px-0 leading-none"
+                duration={3000}
+              />
             </span>
           </p>
         </motion.div>
@@ -240,13 +241,15 @@ export function LandingHero() {
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
             <Link href="/auth/sign-up">
-              <Button
-                size="lg"
-                className="h-14 px-10 text-base font-semibold rounded-full shadow-lg shadow-synapse-500/25 hover:shadow-xl hover:shadow-synapse-500/35 transition-all duration-300 gap-2"
+              <ShimmerButton
+                className="h-14 px-10 text-base font-semibold shadow-lg shadow-synapse-500/25 hover:shadow-xl hover:shadow-synapse-500/35 transition-all duration-300 gap-2"
+                background="oklch(0.65 0.17 68)"
+                shimmerColor="#ffffff"
+                shimmerDuration="2s"
               >
                 Start My Free Research
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </ShimmerButton>
             </Link>
           </motion.div>
           <motion.div
@@ -254,14 +257,27 @@ export function LandingHero() {
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
           >
-            <Button
-              variant="outline"
-              size="lg"
-              className="h-14 px-8 text-base font-medium rounded-full gap-2 hover-lift"
+            <HeroVideoDialog
+              className="block"
+              animationStyle="from-center"
+              videoSrc="https://www.youtube.com/embed/LXb3EKWsInQ"
+              thumbnailSrc=""
+              thumbnailAlt="Hero Video"
             >
-              <Play className="w-4 h-4" />
-              See 2-Min Demo
-            </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-14 px-8 text-base font-medium rounded-full gap-2 hover-lift pointer-events-none" // pointer-events-none because specific click helps, but actually button onClick might conflict. 
+                // Wait, HeroVideoDialog has onClick on the wrapper div. Button also has onClick behavior if not disabled.
+                // It's better to make the button 'asChild' or just styled div, or preventDefault.
+                // Shadcn Button renders a button.
+                // The wrapper div has onClick. The button inside will bubble up efficiently.
+                // Let's remove pointer-events-none and let it bubble.
+              >
+                <Play className="w-4 h-4" />
+                See 2-Min Demo
+              </Button>
+            </HeroVideoDialog>
           </motion.div>
         </motion.div>
 
@@ -271,17 +287,7 @@ export function LandingHero() {
           className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground"
         >
           <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {socialProofUsers.map((user, i) => (
-                <div
-                  key={i}
-                  className={`w-8 h-8 rounded-full ${user.color} border-2 border-surface-0 flex items-center justify-center text-[10px] font-bold text-white shadow-sm spring-transition hover:scale-110 hover:z-10 cursor-pointer`}
-                  title={user.name}
-                >
-                  {user.initials}
-                </div>
-              ))}
-            </div>
+            <AvatarCircles numPeople={99} avatarUrls={avatars} />
             <span><span className="font-semibold text-foreground">10,000+</span> researchers</span>
           </div>
           <span className="hidden sm:inline text-border">•</span>
