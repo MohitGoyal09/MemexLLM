@@ -8,6 +8,10 @@ The frontend is built with **Next.js 14** using the App Router pattern. It follo
 
 ## Architecture Diagram
 
+![MemexLLM Frontend Architecture](/architecture.png)
+
+### High-Level Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      User Interface                          │
