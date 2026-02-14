@@ -5,8 +5,14 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { Play, Pause, ThumbsUp, ThumbsDown, X, MoreVertical } from "lucide-react"
+import { Play, Pause, ThumbsUp, ThumbsDown, X, MoreVertical, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { submitFeedback } from "@/lib/api/feedback"
 import type { FeedbackRating } from "@/lib/api/types"
 import { cn } from "@/lib/utils"
@@ -178,9 +184,33 @@ export function AudioPlayerView({ title, duration, url, contentId, onClose }: Au
               feedbackStatus === "thumbs_down" && "fill-current text-destructive"
             )} />
           </Button>
-          <Button variant="ghost" size="icon" className="w-7 h-7">
-            <MoreVertical className="w-4 h-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="w-7 h-7">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={() => {
+                  if (url) {
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.download = `${title.replace(/[^a-z0-9]/gi, '_')}.mp3`
+                    link.target = '_blank'
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                  }
+                }}
+                disabled={!url}
+                className="cursor-pointer"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download audio
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="ghost" size="icon" className="w-7 h-7" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>

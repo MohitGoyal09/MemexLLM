@@ -583,7 +583,15 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [input, setInput] = useState("")
   const [isListening, setIsListening] = useState(false)
+  const [speechSupported, setSpeechSupported] = useState(true)
   const speechRecognitionRef = useRef<SpeechRecognitionInstance | null>(null)
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      setSpeechSupported(false)
+    }
+  }, [])
   const [mobileCitation, setMobileCitation] = useState<{
     citation: Citation
     index: number
@@ -695,10 +703,16 @@ export function ChatPanel({
   // Speech-to-Text handler
   const toggleSpeechRecognition = useCallback(() => {
     // Check if browser supports Web Speech API
+    if (!speechSupported) {
+      import("sonner").then(mod => mod.toast.error("Speech recognition is not supported in this browser. Use Chrome, Edge, or Safari."))
+      return
+    }
+
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     
     if (!SpeechRecognition) {
-      import("sonner").then(mod => mod.toast.error("Speech recognition is not supported in this browser"))
+      setSpeechSupported(false)
+      import("sonner").then(mod => mod.toast.error("Speech recognition is not supported in this browser. Use Chrome, Edge, or Safari."))
       return
     }
 
@@ -769,7 +783,7 @@ export function ChatPanel({
       console.error("Failed to start speech recognition", e)
       setIsListening(false)
     }
-  }, [isListening])
+  }, [isListening, speechSupported])
 
   return (
     <div className="w-full h-full flex flex-col bg-card rounded-2xl overflow-hidden shadow-sm border border-border/40">
@@ -1003,13 +1017,15 @@ export function ChatPanel({
             <button
               type="button"
               onClick={toggleSpeechRecognition}
+              disabled={!speechSupported}
               className={cn(
                 "p-2 rounded-full transition-all",
+                !speechSupported && "opacity-50 cursor-not-allowed",
                 isListening 
                   ? "bg-red-500 text-white animate-pulse" 
                   : "hover:bg-secondary-foreground/10 text-muted-foreground hover:text-foreground"
               )}
-              title={isListening ? "Stop listening" : "Voice input"}
+              title={!speechSupported ? "Speech recognition not supported in this browser" : isListening ? "Stop listening" : "Voice input"}
             >
               {isListening ? (
                 <MicOff className="w-4 h-4" />

@@ -1,5 +1,3 @@
-"use client";
-
 import {
   LandingNav,
   LandingHero,
@@ -10,11 +8,15 @@ import {
   LandingCTA,
   LandingFooter,
 } from "@/components/landing";
+import { createClient } from "@/lib/supabase/server";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="min-h-screen bg-surface-0 text-foreground">
-      <LandingNav />
+      <LandingNav user={user} />
       <main>
         <LandingHero />
         <LandingFeatures />

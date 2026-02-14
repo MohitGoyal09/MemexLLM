@@ -5,9 +5,9 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Sparkles } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { MagicThemeToggle } from "@/components/magicui/theme-toggle";
+import { User } from "@supabase/supabase-js";
 
 const navLinks = [
   { label: "Features", href: "#features" },
@@ -55,20 +55,11 @@ const mobileNavItemVariants = {
   },
 };
 
-export function LandingNav() {
+export function LandingNav({ user }: { user: User | null }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = !!user;
   const [activeSection, setActiveSection] = useState("");
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
-    };
-    checkAuth();
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
