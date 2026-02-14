@@ -1,11 +1,13 @@
-"use client";
-
 import { LandingNav, LandingFooter } from "@/components/landing";
+import { createClient } from "@/lib/supabase/server";
 
-export default function TermsOfService() {
+export default async function TermsOfService() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <div className="min-h-screen bg-surface-0 flex flex-col">
-      <LandingNav />
+      <LandingNav user={user} />
       <main className="flex-1 container mx-auto px-4 py-16 md:py-24 max-w-4xl">
         <div className="prose dark:prose-invert prose-slate max-w-none">
           <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>

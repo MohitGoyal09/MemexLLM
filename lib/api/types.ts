@@ -6,6 +6,15 @@ export interface User {
   created_at: string;
 }
 
+// === Pagination ===
+export interface CursorPage<T> {
+  items: T[];
+  next_cursor: string | null;
+  previous_cursor: string | null;
+  total_count: number;
+  has_more: boolean;
+}
+
 // === Notebooks ===
 export interface NotebookRAGSettings {
   chunk_size?: number;

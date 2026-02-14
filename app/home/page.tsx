@@ -40,7 +40,7 @@ export default function HomePage() {
       try {
         setLoading(true)
         const data = await notebooksApi.list()
-        setNotebooks(data)
+        setNotebooks(Array.isArray(data) ? data : [])
         setError(null)
       } catch (err) {
         console.error("Failed to fetch notebooks:", err)
@@ -55,7 +55,7 @@ export default function HomePage() {
     }
 
     fetchNotebooks()
-  }, [router])
+  }, [])
 
   const [isCreating, setIsCreating] = useState(false)
 
@@ -72,7 +72,8 @@ export default function HomePage() {
   }
 
   // Transform notebooks for display
-  const allNotebooks = notebooks.map(transformNotebook)
+  const safeNotebooks = Array.isArray(notebooks) ? notebooks : []
+  const allNotebooks = safeNotebooks.map(transformNotebook)
 
   // Get 3 most recent notebooks
   const recentNotebooks = allNotebooks.slice(0, 3)

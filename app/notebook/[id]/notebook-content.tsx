@@ -148,13 +148,14 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
 
         // Fetch documents
         const documents = await documentsApi.list(notebookId)
-        const sourcesFromDocs = documents.map(documentToSource)
+        const safeDocuments = Array.isArray(documents) ? documents : []
+        const sourcesFromDocs = safeDocuments.map(documentToSource)
         setSources(sourcesFromDocs)
         setSelectedSources(sourcesFromDocs.map((s) => s.id))
 
         // Fetch chat history
         const history = await chatApi.getHistory(notebookId)
-        setMessages(history.map(apiMessageToMessage))
+        setMessages(Array.isArray(history) ? history.map(apiMessageToMessage) : [])
 
         setError(null)
       } catch (err) {
@@ -170,12 +171,13 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
     }
 
     fetchData()
-  }, [notebookId, router])
+  }, [notebookId])
 
   const refreshSources = useCallback(async () => {
     try {
       const documents = await documentsApi.list(notebookId)
-      const sourcesFromDocs = documents.map(documentToSource)
+      const safeDocuments = Array.isArray(documents) ? documents : []
+      const sourcesFromDocs = safeDocuments.map(documentToSource)
       setSources(sourcesFromDocs)
     } catch (err) {
       console.error("Failed to refresh sources:", err)
@@ -208,7 +210,8 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
     const pollInterval = setInterval(async () => {
       try {
         const documents = await documentsApi.list(notebookId)
-        const updatedSources = documents.map(documentToSource)
+        const safeDocuments = Array.isArray(documents) ? documents : []
+        const updatedSources = safeDocuments.map(documentToSource)
         
         // Only update state if there's a change (compare IDs and statuses)
         setSources((prev) => {

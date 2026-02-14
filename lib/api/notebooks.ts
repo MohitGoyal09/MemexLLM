@@ -1,11 +1,14 @@
 import { apiClient } from "./client";
-import type { Notebook, CreateNotebookRequest, UpdateNotebookRequest } from "./types";
+import type { Notebook, CreateNotebookRequest, UpdateNotebookRequest, CursorPage } from "./types";
 
 export const notebooksApi = {
   /**
    * List all notebooks for the authenticated user
    */
-  list: () => apiClient<Notebook[]>("/notebooks"),
+  list: async () => {
+    const response = await apiClient<CursorPage<Notebook>>("/notebooks");
+    return response.items;
+  },
 
   /**
    * Get a specific notebook by ID

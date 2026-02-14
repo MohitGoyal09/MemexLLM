@@ -1,12 +1,14 @@
 import { apiClient, apiUpload } from "./client";
-import type { Document, UploadDocumentResponse, DocumentUrlResponse, ProcessUrlResponse } from "./types";
+import type { Document, UploadDocumentResponse, DocumentUrlResponse, ProcessUrlResponse, CursorPage } from "./types";
 
 export const documentsApi = {
   /**
    * List all documents in a notebook
    */
-  list: (notebookId: string) =>
-    apiClient<Document[]>(`/documents/notebook/${notebookId}`),
+  list: async (notebookId: string) => {
+    const response = await apiClient<CursorPage<Document>>(`/documents/notebook/${notebookId}`);
+    return response.items;
+  },
 
   /**
    * Upload a document to a notebook

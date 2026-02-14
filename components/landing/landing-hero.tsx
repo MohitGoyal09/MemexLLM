@@ -199,7 +199,7 @@ export function LandingHero() {
             Researchers waste <span className="text-foreground font-semibold">40+ hours</span> manually reading papers.
           </p>
           <p>
-            MemexLLM reads, connects, and synthesizes your documents—so you can focus on{" "}
+            MemexLLM reads, connects, and synthesizes your documents - so you can focus on{" "}
             <span className="inline-block align-bottom px-1">
               <FlipWords 
                 words={researchPhrases} 

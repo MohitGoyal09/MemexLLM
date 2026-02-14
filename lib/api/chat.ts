@@ -1,13 +1,14 @@
 import { apiClient, getApiBaseUrl, getStreamingHeaders } from "./client";
-import type { ChatMessage, ChatResponse, Citation, SuggestionsResponse, ConversationSuggestionsResponse } from "./types";
+import type { ChatMessage, ChatResponse, Citation, SuggestionsResponse, ConversationSuggestionsResponse, CursorPage } from "./types";
 
 export const chatApi = {
   /**
    * Get chat history for a notebook
    */
-  getHistory: (notebookId: string, limit = 50) => {
+  getHistory: async (notebookId: string, limit = 50) => {
     const params = new URLSearchParams({ limit: String(limit) });
-    return apiClient<ChatMessage[]>(`/chat/${notebookId}/history?${params}`);
+    const response = await apiClient<CursorPage<ChatMessage>>(`/chat/${notebookId}/history?${params}`);
+    return response.items;
   },
 
   /**
