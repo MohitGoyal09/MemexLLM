@@ -17,6 +17,7 @@ import { createClient } from "@/lib/supabase/client"
 import { authLogger } from "@/lib/auth-logger"
 import { useRouter } from "next/navigation"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import { BookOpen } from "lucide-react"
 
 export function Header() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
@@ -62,6 +63,13 @@ export function Header() {
       </Link>
 
       <nav className="flex items-center gap-3" aria-label="Main navigation">
+        <Link
+          href="/docs"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+        >
+          <BookOpen className="w-4 h-4" />
+          <span className="hidden sm:inline">Docs</span>
+        </Link>
         <ThemeSwitcher />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

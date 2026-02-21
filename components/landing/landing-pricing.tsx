@@ -31,7 +31,7 @@ const tiers = [
     ],
     cta: "Star on GitHub",
     ctaVariant: "outline" as const,
-    href: "https://github.com",
+    href: "https://github.com/MohitGoyal09/MemexLLM",
     popular: false,
     badge: null,
   },

@@ -41,9 +41,8 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { icon: Github, href: "https://github.com", label: "GitHub", followers: "2.3k" },
-  { icon: Twitter, href: "https://twitter.com", label: "Twitter", followers: "1.5k" },
-  { icon: MessageCircle, href: "https://discord.com", label: "Discord", followers: "850" },
+  { icon: Github, href: "https://github.com/MohitGoyal09/MemexLLM", label: "GitHub", followers: "2.3k" },
+  { icon: Twitter, href: "https://x.com/bytemohit", label: "Twitter", followers: "1.5k" },
   { icon: Mail, href: "mailto:hello@memexllm.com", label: "Email", followers: null },
 ];
 

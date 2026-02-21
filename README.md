@@ -1,10 +1,11 @@
 # MemexLLM Frontend
 
 <div align="center">
+  <img src="public/white-logo.svg" alt="MemexLLM Logo" width="200">
 
-**Modern React Frontend for AI-Powered Document Intelligence**
+  **Modern React Frontend for AI-Powered Document Intelligence**
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -28,7 +29,7 @@ Built for production with server-side rendering, real-time streaming, and enterp
 ## 🏛️ Architecture
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/MohitGoyal09/MemexLLM/main/public/architecture.png" alt="MemexLLM Frontend Architecture" width="900">
+  <img src="public/architecture.png" alt="MemexLLM Frontend Architecture" width="900">
 </p>
 
 The frontend follows a **layered architecture** with clear separation of concerns:
