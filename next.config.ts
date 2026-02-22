@@ -43,6 +43,7 @@ const securityHeaders = [
       "connect-src 'self' http://localhost:8000 https://backend.memexllm.xyz https://worker.memexllm.xyz https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://*.sentry.io https://*.posthog.com https://us.i.posthog.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
       "font-src 'self' data:",
       "media-src 'self' blob: https://*.supabase.co https://*.supabase.in",  // Critical for audio playback
+      "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

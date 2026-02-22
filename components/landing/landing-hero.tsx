@@ -260,22 +260,17 @@ export function LandingHero() {
             <HeroVideoDialog
               className="block"
               animationStyle="from-center"
-              videoSrc="https://www.youtube.com/embed/LXb3EKWsInQ"
-              thumbnailSrc=""
-              thumbnailAlt="Hero Video"
+              videoSrc="https://www.youtube.com/embed/urV9X5WSzQI?autoplay=1"
+              thumbnailSrc="https://img.youtube.com/vi/urV9X5WSzQI/hqdefault.jpg"
+              thumbnailAlt="MemexLLM Demo Video"
             >
               <Button
                 variant="outline"
                 size="lg"
-                className="h-14 px-8 text-base font-medium rounded-full gap-2 hover-lift pointer-events-none" // pointer-events-none because specific click helps, but actually button onClick might conflict. 
-                // Wait, HeroVideoDialog has onClick on the wrapper div. Button also has onClick behavior if not disabled.
-                // It's better to make the button 'asChild' or just styled div, or preventDefault.
-                // Shadcn Button renders a button.
-                // The wrapper div has onClick. The button inside will bubble up efficiently.
-                // Let's remove pointer-events-none and let it bubble.
+                className="h-14 px-8 text-base font-medium rounded-full gap-2 hover-lift"
               >
                 <Play className="w-4 h-4" />
-                See 2-Min Demo
+                See Demo Video
               </Button>
             </HeroVideoDialog>
           </motion.div>
