@@ -36,7 +36,7 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Next.js requires 'unsafe-inline' and 'unsafe-eval' for script execution
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https: https://www.googletagmanager.com",
       // Allow connections to self, backend API (localhost in dev), and production domains
