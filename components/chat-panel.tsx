@@ -629,8 +629,9 @@ export function ChatPanel({
       const { toast } = await import("sonner")
       const { marked } = await import("marked")
       const { sanitizeHtml } = await import("@/lib/sanitize")
-      // Convert markdown to HTML for the rich text editor
-      const htmlContent = sanitizeHtml(await marked.parse(content))
+      // Preprocess markdown (fix headers, bullets, etc.) then convert to HTML
+      const preprocessed = preprocessMarkdownContent(content)
+      const htmlContent = sanitizeHtml(await marked.parse(preprocessed))
       const title = `Chat Response - ${new Date().toLocaleDateString()}`
       
       await generationApi.createContent(
