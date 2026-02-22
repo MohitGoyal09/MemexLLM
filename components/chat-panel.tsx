@@ -727,34 +727,30 @@ export function ChatPanel({
     // Start listening directly - let browser handle permissions natively with the "grey bubble"
     try {
       const recognition = new SpeechRecognition()
-      recognition.continuous = false
-      recognition.interimResults = true // Enable interim results for better feedback
+      recognition.continuous = true // Let user speak continuously until they manually stop or submit
+      recognition.interimResults = true // Enable interim results for live feedback in input
       recognition.lang = 'en-US'
+
+      let baseText = ""
 
       recognition.onstart = () => {
         setIsListening(true)
+        // Capture exactly what was in the input box before they started speaking
+        setInput(prev => {
+          baseText = prev ? prev.trim() + " " : ""
+          return prev
+        })
       }
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        // Get the latest result
+        // Collect everything spoken in this exact recording session (both final and interim)
         const results = Array.from(event.results)
-        const transcript = results
+        const sessionTranscript = results
           .map((result: SpeechRecognitionResult) => result[0].transcript)
           .join('')
         
-        // If it's final, append it. If interim, we could show it but for now just appending creates dupes if not careful.
-        // Simple approach: just use the final one or replace input? 
-        // Better: replace current listening segment. But simpler for now:
-        // Just take the latest transcript if isFinal
-        
-        // Actually simplest is just to set input to transcript if we want streaming update?
-        // But we want to append to existing text.
-        // Let's stick to previous behavior but safer.
-        
-        const latestResult = results[results.length - 1] as SpeechRecognitionResult;
-        if (latestResult.isFinal) {
-             setInput(prev => (prev ? prev.trim() + " " : "") + latestResult[0].transcript)
-        }
+        // Update input live with previous text + what they are speaking right now
+        setInput(baseText + sessionTranscript)
       }
 
       recognition.onerror = async (event: SpeechRecognitionErrorEvent) => {

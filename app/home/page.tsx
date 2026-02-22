@@ -83,6 +83,11 @@ export default function HomePage() {
     setNotebooks(prev => prev.map(n => n.id === id ? { ...n, title: newTitle } : n))
   }
 
+  // Handle notebook deletion
+  const handleNotebookDelete = (id: string) => {
+    setNotebooks(prev => prev.filter(n => n.id !== id))
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-foreground">
@@ -164,7 +169,7 @@ export default function HomePage() {
                 className="animate-diagonal-slide-in hover:-translate-y-1 transition-all duration-300"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <NotebookCard notebook={notebook} onUpdate={handleNotebookUpdate} />
+                <NotebookCard notebook={notebook} onUpdate={handleNotebookUpdate} onDelete={handleNotebookDelete} />
               </Link>
             ))}
           </div>

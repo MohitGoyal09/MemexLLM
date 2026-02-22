@@ -21,12 +21,14 @@ interface NotebookCardProps {
   }
   variant?: "featured" | "recent"
   onUpdate?: (id: string, newTitle: string) => void
+  onDelete?: (id: string) => void
 }
 
-export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps) {
+export function NotebookCard({ notebook, variant, onUpdate, onDelete }: NotebookCardProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(notebook.title)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Unified card style - NoobBook-like with amber border accent on hover
   const cardStyle = "bg-card border-border hover:border-synapse-500/60 dark:bg-white/[0.03] dark:border-white/10 dark:hover:bg-white/[0.05] dark:hover:border-synapse-500/50 hover:shadow-xl"
@@ -58,8 +60,30 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
     }
   }
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!window.confirm("Are you sure you want to delete this notebook? This action cannot be undone.")) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      await notebooksApi.delete(notebook.id)
+      onDelete?.(notebook.id)
+    } catch (error) {
+      console.error("Failed to delete notebook", error)
+      setIsDeleting(false)
+      try {
+        const { toast } = await import("sonner")
+        toast.error("Failed to delete notebook")
+      } catch (_) {}
+    }
+  }
+
   return (
-    <article className={`group relative flex flex-col p-5 rounded-xl border transition-all duration-200 cursor-pointer h-full min-h-[200px] shadow-sm hover:-translate-y-0.5 ${cardStyle}`} aria-labelledby={`notebook-title-${notebook.id}`}>
+    <article className={`group relative flex flex-col p-5 rounded-xl border transition-all duration-200 cursor-pointer h-full min-h-[200px] shadow-sm hover:-translate-y-0.5 ${cardStyle} ${isDeleting ? "opacity-50 pointer-events-none" : ""}`} aria-labelledby={`notebook-title-${notebook.id}`}>
 
       {/* Cover Icon Area */}
       <div className="flex items-start justify-between mb-6">
@@ -85,9 +109,9 @@ export function NotebookCard({ notebook, variant, onUpdate }: NotebookCardProps)
               <Pencil className="w-4 h-4 mr-2 text-muted-foreground" />
               Edit title
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive focus:text-destructive py-2.5 cursor-pointer" onClick={(e) => { e.preventDefault(); /* handle delete */ }}>
+            <DropdownMenuItem className="text-destructive focus:text-destructive py-2.5 cursor-pointer" onClick={handleDelete}>
               <Trash2 className="w-4 h-4 mr-2" />
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
