@@ -153,6 +153,11 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
         setSources(sourcesFromDocs)
         setSelectedSources(sourcesFromDocs.map((s) => s.id))
 
+        // Auto-open Add Sources modal when notebook has no sources
+        if (sourcesFromDocs.length === 0) {
+          setShowSourcesModal(true)
+        }
+
         // Fetch chat history
         const history = await chatApi.getHistory(notebookId)
         setMessages(Array.isArray(history) ? history.map(apiMessageToMessage) : [])

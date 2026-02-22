@@ -6,6 +6,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useState } from "react"
 import { notebooksApi } from "@/lib/api"
 import { Notebook } from "@/lib/api/types"
@@ -29,6 +39,7 @@ export function NotebookCard({ notebook, variant, onUpdate, onDelete }: Notebook
   const [title, setTitle] = useState(notebook.title)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   // Unified card style - NoobBook-like with amber border accent on hover
   const cardStyle = "bg-card border-border hover:border-synapse-500/60 dark:bg-white/[0.03] dark:border-white/10 dark:hover:bg-white/[0.05] dark:hover:border-synapse-500/50 hover:shadow-xl"
@@ -60,17 +71,17 @@ export function NotebookCard({ notebook, variant, onUpdate, onDelete }: Notebook
     }
   }
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    if (!window.confirm("Are you sure you want to delete this notebook? This action cannot be undone.")) {
-      return
+  const handleDelete = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
     }
 
     setIsDeleting(true)
     try {
       await notebooksApi.delete(notebook.id)
+      const { toast } = await import("sonner")
+      toast.success("Notebook deleted successfully")
       onDelete?.(notebook.id)
     } catch (error) {
       console.error("Failed to delete notebook", error)
@@ -109,7 +120,11 @@ export function NotebookCard({ notebook, variant, onUpdate, onDelete }: Notebook
               <Pencil className="w-4 h-4 mr-2 text-muted-foreground" />
               Edit title
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive focus:text-destructive py-2.5 cursor-pointer" onClick={handleDelete}>
+            <DropdownMenuItem className="text-destructive focus:text-destructive py-2.5 cursor-pointer" onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setShowDeleteDialog(true)
+            }}>
               <Trash2 className="w-4 h-4 mr-2" />
               {isDeleting ? "Deleting..." : "Delete"}
             </DropdownMenuItem>
@@ -152,6 +167,32 @@ export function NotebookCard({ notebook, variant, onUpdate, onDelete }: Notebook
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your notebook
+              "{notebook.title}" and remove all of its data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDelete()
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Delete Notebook
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </article>
   )
 }
