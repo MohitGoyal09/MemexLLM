@@ -279,8 +279,8 @@ List all notebooks for the authenticated user.
 ```json
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "id": "550e8400-446655440000",
+    "user_id": "e07fc1f90ae7",
     "title": "Research Papers",
     "settings": {
       "theme": "dark"
@@ -289,8 +289,8 @@ List all notebooks for the authenticated user.
     "updated_at": "2024-01-15T10:30:00Z"
   },
   {
-    "id": "660e8400-e29b-41d4-a716-446655440001",
-    "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "id": "660e8400-446655440001",
+    "user_id": "7c9e6679-7425-40de",
     "title": "Meeting Notes",
     "settings": {},
     "created_at": "2024-01-10T00:00:00Z",
@@ -355,8 +355,8 @@ The `settings` field accepts a **NotebookRAGConfig** object with the following o
 
 ```json
 {
-  "id": "770e8400-e29b-41d4-a716-446655440002",
-  "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  "id": "770e8400-446655440002",
+  "user_id": "e07fc1f90ae7",
   "title": "My New Notebook",
   "settings": {
     "theme": "dark",
@@ -383,8 +383,8 @@ Get a specific notebook by ID.
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  "id": "550e8400-446655440000",
+  "user_id": "e07fc1f90ae7",
   "title": "Research Papers",
   "settings": {},
   "created_at": "2024-01-01T00:00:00Z",
@@ -429,8 +429,8 @@ Update notebook title and/or settings.
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  "id": "550e8400-446655440000",
+  "user_id": "e07fc1f90ae7",
   "title": "Updated Title",
   "settings": {
     "theme": "light",
@@ -501,7 +501,7 @@ Upload a document to private storage and start background processing.
 curl -X POST \
   -H "Authorization: Bearer <TOKEN>" \
   -F "file=@document.pdf" \
-  -F "notebook_id=550e8400-e29b-41d4-a716-446655440000" \
+  -F "notebook_id=550e8400-446655440000" \
   http://localhost:8000/api/v1/documents/upload
 ```
 
@@ -510,8 +510,8 @@ curl -X POST \
 ```json
 {
   "status": "uploaded",
-  "document_id": "880e8400-e29b-41d4-a716-446655440003",
-  "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
+  "document_id": "880e8400-446655440003",
+  "notebook_id": "550e8400-446655440000",
   "filename": "document.pdf",
   "file_path": "notebooks/550e8400.../document.pdf",
   "mime_type": "application/pdf",
@@ -584,8 +584,8 @@ List all documents in a notebook.
 ```json
 [
   {
-    "id": "880e8400-e29b-41d4-a716-446655440003",
-    "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
+    "id": "880e8400-446655440003",
+    "notebook_id": "550e8400-446655440000",
     "filename": "research_paper.pdf",
     "file_path": "notebooks/550e8400.../research_paper.pdf",
     "mime_type": "application/pdf",
@@ -595,8 +595,8 @@ List all documents in a notebook.
     "created_at": "2024-01-15T10:00:00Z"
   },
   {
-    "id": "990e8400-e29b-41d4-a716-446655440004",
-    "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
+    "id": "990e8400-446655440004",
+    "notebook_id": "550e8400-446655440000",
     "filename": "notes.txt",
     "file_path": "notebooks/550e8400.../notes.txt",
     "mime_type": "text/plain",
@@ -673,18 +673,18 @@ Send a message to the RAG engine and get a response.
   "content": "Based on the uploaded documents, the key findings are:\n\n1. The study shows a 35% improvement...\n2. Participants experienced...\n3. The methodology involved...",
   "citations": [
     {
-      "id": "cc0e8400-e29b-41d4-a716-446655440007",
-      "message_id": "bb0e8400-e29b-41d4-a716-446655440006",
-      "document_id": "880e8400-e29b-41d4-a716-4466554400003",
+      "id": "cc0e8400-446655440007",
+      "message_id": "bb0e8400-446655440006",
+      "document_id": "880e8400-446655440003",
       "filename": "research_paper.pdf",
       "text_preview": "The results demonstrate a statistically significant improvement of 35% (p < 0.01)...",
       "score": 0.89,
       "page_number": 12
     },
     {
-      "id": "dd0e8400-e29b-41d4-a716-446655440008",
-      "message_id": "bb0e8400-e29b-41d4-a716-446655440006",
-      "document_id": "880e8400-e29b-41d4-a716-446655440003",
+      "id": "dd0e8400-446655440008",
+      "message_id": "bb0e8400-446655440006",
+      "document_id": "880e8400-446655440003",
       "filename": "research_paper.pdf",
       "text_preview": "Participants in the experimental group showed...",
       "score": 0.82,
@@ -776,16 +776,16 @@ Get chat history for a notebook.
     "citations": []
   },
   {
-    "id": "bb0e8400-e29b-41d4-a716-446655440006",
-    "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
+    "id": "bb0e8400-446655440006",
+    "notebook_id": "550e8400-446655440000",
     "role": "assistant",
     "content": "This document discusses machine learning techniques for...",
     "created_at": "2024-01-16T10:00:05Z",
     "citations": [
       {
-        "id": "ee0e8400-e29b-41d4-a716-446655440009",
-        "message_id": "bb0e8400-e29b-41d4-a716-446655440006",
-        "document_id": "880e8400-e29b-41d4-a716-446655440003",
+        "id": "ee0e8400-446655440009",
+        "message_id": "bb0e8400-446655440006",
+        "document_id": "880e8400-446655440003",
         "filename": "research_paper.pdf",
         "text_preview": "Machine learning techniques such as...",
         "score": 0.91,
@@ -943,8 +943,8 @@ Generate content (podcast, quiz, flashcard, or mindmap) from documents.
 **Podcast:**
 ```json
 {
-  "id": "cc0e8400-e29b-41d4-a716-446655440007",
-  "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
+  "id": "cc0e8400-446655440007",
+  "notebook_id": "550e8400-446655440000",
   "content_type": "podcast",
   "status": "completed",
   "content": {
@@ -968,8 +968,8 @@ Generate content (podcast, quiz, flashcard, or mindmap) from documents.
 **Quiz:**
 ```json
 {
-  "id": "dd0e8400-e29b-41d4-a716-446655440008",
-  "notebook_id": "550e8400-e29b-41d4-a716-446655440000",
+  "id": "dd0e8400-446655440008",
+  "notebook_id": "550e8400-446655440000",
   "content_type": "quiz",
   "status": "completed",
   "content": {

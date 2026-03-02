@@ -1,0 +1,2 @@
+# Gitleaks false positives - documentation placeholder examples
+e3e6dd1fb80d0e3fe6cf0f4437e513ece9378b96:API.md:curl-auth-header:74
