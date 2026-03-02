@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { NotebookHeader } from "@/components/notebook-header"
 import { SourcesPanel } from "@/components/sources-panel"
 import { ChatPanel } from "@/components/chat-panel"
@@ -426,10 +427,17 @@ export function NotebookPageContent({ notebookId }: NotebookPageContentProps) {
   const handleSaveSettings = useCallback(
     async (settings: NotebookSettings) => {
       try {
-        await notebooksApi.update(notebookId, { settings })
-        setNotebookSettings(settings)
+        // Strip null values - API expects undefined/missing fields, not null
+        const cleanSettings = Object.fromEntries(
+          Object.entries(settings).filter(([_, v]) => v !== null)
+        ) as NotebookSettings
+        console.log('[Save Settings] Sending:', cleanSettings)
+        await notebooksApi.update(notebookId, { settings: cleanSettings })
+        setNotebookSettings(cleanSettings)
+        toast.success("Settings saved successfully")
       } catch (err) {
         console.error("Failed to save settings:", err)
+        toast.error("Failed to save settings")
       }
     },
     [notebookId]

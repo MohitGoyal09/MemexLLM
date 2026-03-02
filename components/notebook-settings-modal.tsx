@@ -21,7 +21,7 @@ export interface NotebookSettings {
   sentence_window_size: number
   response_mode: "compact" | "tree_summarize" | "refine"
   streaming: boolean
-  prompt_style: "notebooklm" | "citation" | "conversational" | "neutral"
+  prompt_style: "citation" | "conversational" | "neutral"
 }
 
 export const defaultSettings: NotebookSettings = {
@@ -38,7 +38,7 @@ export const defaultSettings: NotebookSettings = {
   sentence_window_size: 3,
   response_mode: "compact",
   streaming: true,
-  prompt_style: "notebooklm",
+  prompt_style: "citation",
 }
 
 interface NotebookSettingsModalProps {
@@ -146,9 +146,8 @@ export function NotebookSettingsModal({ open, onOpenChange, settings: initialSet
   )
 
   const PROMPT_STYLES = [
-    { value: "notebooklm", label: "Deep Dive" },
-    { value: "conversational", label: "Conversational" },
     { value: "citation", label: "Citation" },
+    { value: "conversational", label: "Conversational" },
     { value: "neutral", label: "Neutral" },
   ]
 

@@ -89,7 +89,7 @@ interface NotebookRAGSettings {
   sentence_window_size?: number
   response_mode?: "compact" | "tree_summarize" | "refine"
   streaming?: boolean
-  prompt_style?: "notebooklm" | "citation" | "conversational" | "neutral"
+  prompt_style?: "citation" | "conversational" | "neutral"
 }
 
 // Notebook interface

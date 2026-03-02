@@ -198,7 +198,8 @@ export async function apiClient<T>(
       if (!response.ok) {
         handleAuthError(response.status, endpoint);
         const error = await response.json().catch(() => ({ detail: "Unknown error" }));
-        throw new ApiError(response.status, error.detail || "Request failed");
+        console.error('[API Error]', endpoint, response.status, error);
+        throw new ApiError(response.status, error.detail || JSON.stringify(error) || "Request failed");
       }
 
       if (response.status === 204) return undefined as T;
